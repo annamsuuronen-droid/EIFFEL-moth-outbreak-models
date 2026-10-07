@@ -20,6 +20,9 @@ pass_profile(profile$max_prediction_draws == 1000L && profile$random_level_units
 pass_profile(identical(profile$Hmsc_version, "3.3.7") &&
                identical(profile$coda_version, "0.19.4.1"),
              "packageVersion-compatible reconstructed package strings")
+diag_script <- file.path(repository, "R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_INIT_DIAGNOSTIC.R")
+invisible(parse(diag_script))
+pass_profile(TRUE, "Hmsc initialization diagnostic parses without execution")
 wrapper_script <- file.path(repository, "R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_RUN_FOLD5.R")
 source(wrapper_script)
 refused_without_ack <- tryCatch({
