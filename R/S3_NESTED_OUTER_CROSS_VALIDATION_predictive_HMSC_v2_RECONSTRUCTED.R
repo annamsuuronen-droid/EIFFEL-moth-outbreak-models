@@ -500,15 +500,42 @@ recon_v1_backend <- function(inputs, profile) {
   list(fit = e$fit_train_model, predict = e$predict_new_data)
 }
 recon_profile_gate <- function(profile) {
-  required <- c("historical_compatibility_verified", "evidence_reference", "Hmsc_version", "rng_kind", "mcmc", "max_prediction_draws", "random_level_units")
-  recon_assert(is.list(profile) && all(required %in% names(profile)), "Missing verified final-profile contract: execution blocked.")
-  recon_assert(isTRUE(profile$historical_compatibility_verified) && nzchar(profile$evidence_reference) && file.exists(profile$evidence_reference), "Missing local verification evidence for final-profile compatibility.")
-  recon_assert(profile$random_level_units == "all_metadata" && profile$max_prediction_draws == 1000L,
-               "Profile differs from candidate v1 backend; further reconstruction required.")
-  recon_assert(setequal(names(profile$mcmc), c("samples", "transient", "thin", "chains", "parallel")) && all(unlist(profile$mcmc) > 0), "Invalid MCMC profile.")
-  recon_assert(length(profile$rng_kind) == 3L && nzchar(profile$Hmsc_version), "Missing historical RNG/package settings.")
-  recon_assert(requireNamespace("Hmsc", quietly = TRUE) && as.character(utils::packageVersion("Hmsc")) == profile$Hmsc_version,
-               "Hmsc package version does not match verified profile.")
+  required <- c(
+    "execution_profile_verified", "profile_basis", "historical_v2_exact",
+    "evidence_reference", "R_version", "Hmsc_version", "coda_version",
+    "rng_kind", "mcmc", "max_prediction_draws", "random_level_units",
+    "distribution", "annual_index_standard_days"
+  )
+  recon_assert(is.list(profile) && all(required %in% names(profile)),
+               "Missing verified reconstructed final-profile contract: execution blocked.")
+  recon_assert(
+    isTRUE(profile$execution_profile_verified) &&
+      identical(profile$profile_basis, "v1_source_plus_v2_outputs_plus_local_runtime") &&
+      identical(profile$historical_v2_exact, FALSE),
+    "Profile must be an explicitly verified reconstructed compatibility profile, not a claim of exact historical v2 identity."
+  )
+  recon_assert(nzchar(profile$evidence_reference) && file.exists(profile$evidence_reference),
+               "Missing local evidence document for reconstructed final-profile compatibility.")
+  recon_assert(profile$random_level_units == "all_metadata" &&
+                 profile$max_prediction_draws == 1000L &&
+                 profile$distribution == "lognormal poisson" &&
+                 identical(as.integer(profile$annual_index_standard_days), 7L),
+               "Profile differs from retained v1 backend; further reconstruction required.")
+  expected_mcmc <- c(samples = 5000L, transient = 10000L, thin = 20L, chains = 4L, parallel = 4L)
+  observed_mcmc <- unlist(profile$mcmc, use.names = TRUE)
+  recon_assert(identical(names(observed_mcmc), names(expected_mcmc)) &&
+                 identical(as.integer(observed_mcmc), as.integer(expected_mcmc)),
+               "MCMC profile differs from retained v1 outer-final settings.")
+  recon_assert(identical(profile$rng_kind, c("Mersenne-Twister", "Inversion", "Rejection")),
+               "RNG profile differs from verified local compatibility runtime.")
+  recon_assert(as.character(getRversion()) == profile$R_version,
+               "R version does not match reconstructed compatibility profile.")
+  recon_assert(requireNamespace("Hmsc", quietly = TRUE) &&
+                 as.character(utils::packageVersion("Hmsc")) == profile$Hmsc_version,
+               "Hmsc package version does not match reconstructed compatibility profile.")
+  recon_assert(requireNamespace("coda", quietly = TRUE) &&
+                 as.character(utils::packageVersion("coda")) == profile$coda_version,
+               "coda package version does not match reconstructed compatibility profile.")
   invisible(TRUE)
 }
 recon_exclusive_publish <- function(staged_file, destination) {
