@@ -1,0 +1,43 @@
+# Binary objects, GIS, archives and images (case-insensitive extensions)
+*.[Rr][Dd][Aa][Tt][Aa]
+*.[Rr][Dd][Ss]
+*.[Rr][Dd][Aa]
+*.[Tt][Ii][Ff]
+*.[Tt][Ii][Ff][Ff]
+*.[Vv][Rr][Tt]
+*.[Gg][Pp][Kk][Gg]
+*.[Ss][Hh][Pp]
+*.[Ss][Hh][Xx]
+*.[Dd][Bb][Ff]
+*.[Pp][Rr][Jj]
+*.[Nn][Cc]
+*.[Nn][Cc][Dd][Ff]
+*.[Zz][Ii][Pp]
+*.png
+*.jpg
+*.jpeg
+*.pdf
+# Raw data at any nesting level
+[Dd]ata/
+[Rr]aw/
+[Rr]aw[_-][Dd]ata/
+[Rr]aw[Dd]ata/
+[Dd]ata[_-][Rr]aw/
+# R and temporary/cache material
+.Rhistory
+.Rproj.user/
+.RDataTmp
+.Ruserdata
+Rplots.pdf
+*~
+*.tmp
+*.temp
+*.bak
+*.Rout
+*.Rout.fail
+[Tt]mp/
+[Tt]emp/
+[Cc]ache/
+.cache/
+__pycache__/
+work/
