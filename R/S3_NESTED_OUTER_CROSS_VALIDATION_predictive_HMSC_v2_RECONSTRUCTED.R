@@ -328,7 +328,7 @@ posterior_subset <- function(model, maximum_draws) {
   post
 }
 
-fit_train_model <- function(variables, train_ids, mcmc, seed) {
+prepare_train_model <- function(variables, train_ids, seed) {
   set.seed(seed)
   variables <- unique(as.character(variables))
   train_ids <- complete_ids(variables, train_ids)
@@ -367,11 +367,11 @@ fit_train_model <- function(variables, train_ids, mcmc, seed) {
   y_train <- Y_annual_all[train_ids, , drop = FALSE]
   loff_train <- Loff_annual_all[train_ids, , drop = FALSE]
 
-  # IMPORTANT: studyDesign factors must contain only levels observed in
-  # this TRAIN subset. Supplying full-data factor levels leaves unused level
-  # codes that Hmsc 3.3-7 can map beyond hM$np during initialization.
-  # The random-level objects still retain all metadata units, which is the
-  # Hmsc-supported way to keep potential prediction units available.
+  # IMPORTANT: studyDesign factors contain only levels observed in this TRAIN
+  # subset. Hmsc::Hmsc() turns factor levels into integer Pi codes but sets np
+  # from the observed unique codes. Carrying unused full-data factor levels can
+  # therefore create non-contiguous Pi codes and fail computeInitialParameters.
+  # Random-level objects still retain all metadata units, as recommended by Hmsc.
   study_design <- data.frame(
     site = factor(as.character(md$site)),
     year = factor(as.character(md$year))
@@ -395,15 +395,14 @@ fit_train_model <- function(variables, train_ids, mcmc, seed) {
     ranLevels = ran_levels
   )
 
-  model <- sampleMcmc(
-    model,
-    samples = mcmc$samples,
-    transient = mcmc$transient,
-    thin = mcmc$thin,
-    nChains = mcmc$chains,
-    nParallel = mcmc$parallel,
-    verbose = 0
-  )
+  # Defensive check for the exact failure observed in reconstruction r1.
+  for (r in seq_len(model$nr)) {
+    pi_r <- model$Pi[, r]
+    if (anyNA(pi_r) || min(pi_r) < 1L || max(pi_r) > model$np[r] ||
+        !identical(sort(unique(as.integer(pi_r))), seq_len(model$np[r]))) {
+      stop("Unsafe Hmsc random-level Pi coding before MCMC.")
+    }
+  }
 
   list(
     model = model,
@@ -413,6 +412,21 @@ fit_train_model <- function(variables, train_ids, mcmc, seed) {
     train_ids = train_ids,
     ran_levels = ran_levels
   )
+}
+
+fit_train_model <- function(variables, train_ids, mcmc, seed) {
+  prepared <- prepare_train_model(variables, train_ids, seed)
+  model <- sampleMcmc(
+    prepared$model,
+    samples = mcmc$samples,
+    transient = mcmc$transient,
+    thin = mcmc$thin,
+    nChains = mcmc$chains,
+    nParallel = mcmc$parallel,
+    verbose = 0
+  )
+  prepared$model <- model
+  prepared
 }
 
 predict_new_data <- function(fit, test_ids, seed, evaluation, model_type) {
@@ -502,10 +516,10 @@ recon_v1_backend <- function(inputs, profile) {
   e$max_prediction_draws <- profile$max_prediction_draws
   for (n in c("Hmsc", "HmscRandomLevel", "sampleMcmc", "poolMcmcChains")) assign(n, getExportedValue("Hmsc", n), envir = e)
   e$predict <- stats::predict
-  for (n in c("remove_zero_variance_names", "posterior_subset", "fit_train_model", "predict_new_data")) {
+  for (n in c("remove_zero_variance_names", "posterior_subset", "prepare_train_model", "fit_train_model", "predict_new_data")) {
     fun <- get(n); environment(fun) <- e; assign(n, fun, envir = e)
   }
-  list(fit = e$fit_train_model, predict = e$predict_new_data)
+  list(prepare = e$prepare_train_model, fit = e$fit_train_model, predict = e$predict_new_data)
 }
 recon_profile_gate <- function(profile) {
   required <- c(
