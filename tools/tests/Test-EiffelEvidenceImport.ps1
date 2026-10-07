@@ -193,6 +193,56 @@ try {
     Assert-Test $refused 'Overlapping roots accepted.'
     $testCount++
 
+    $f = New-Fixture 'changed-line-endings'
+    $csvText = [IO.File]::ReadAllText($f.Allow).Replace("`r`n", "`n").Replace("`n", "`r`n")
+    [IO.File]::WriteAllText($f.Allow, $csvText, (New-Object Text.UTF8Encoding $true))
+    Invoke-EiffelEvidenceImport $f.Source $f.Repo
+    $testCount++
+
+    $f = New-Fixture 'hash-verification-failure'
+    $before = Get-Snapshot $f.Source
+    $script:originalHash = (Get-Item Function:Get-EiffelHash).ScriptBlock
+    $script:hashCalls = 0
+    Set-Item Function:Get-EiffelHash -Value {
+        param($Stream)
+        $script:hashCalls++
+        # Canonical inventory hash + 51 source hashes precede first destination hash.
+        if ($script:hashCalls -eq 53) { return ('0' * 64) }
+        return & $script:originalHash $Stream
+    }
+    $refused = $false
+    try {
+        Invoke-EiffelEvidenceImport $f.Source $f.Repo
+    } catch {
+        $refused = $_.Exception.Message -match 'failed SHA256/size verification'
+    } finally { Set-Item Function:Get-EiffelHash -Value $script:originalHash }
+    Assert-Test $refused 'SHA256 verification failure was ignored.'
+    Assert-Test ((Get-Snapshot $f.Source) -ceq $before) 'Failed hash check changed source.'
+    $partial = @(Import-Csv -LiteralPath (Join-Path $f.Target 'evidence_manifest.csv'))
+    Assert-Test ($partial.Count -eq 51) 'Failure manifest coverage.'
+    Assert-Test ($partial[0].status -ceq 'FAILED') 'Failure status not recorded.'
+    Assert-Test (@($partial | Where-Object { $_.status -eq 'NOT_COPIED' }).Count -eq 50) 'Remaining failure statuses.'
+    $testCount++
+    Invoke-Refusal $f 'Destination already exists' $false
+
+    $f = New-Fixture 'source-lock'
+    $guards = New-Object 'System.Collections.Generic.List[System.IDisposable]'
+    $guarded = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    $sourcePath = Join-Path $f.Source $inventory[0].relative_path.Replace('/', '\')
+    $stream = Open-EiffelSource $sourcePath $guards $guarded
+    try {
+        $refused = $false
+        $writer = $null
+        try { $writer = [IO.File]::Open($sourcePath, [IO.FileMode]::Open, [IO.FileAccess]::Write, [IO.FileShare]::ReadWrite) }
+        catch { $refused = $true }
+        finally { if ($null -ne $writer) { $writer.Dispose() } }
+        Assert-Test $refused 'Source handle allowed concurrent writer.'
+        $testCount++
+    } finally {
+        $stream.Dispose()
+        for ($i = $guards.Count - 1; $i -ge 0; $i--) { $guards[$i].Dispose() }
+    }
+
     # Production entry point cannot accept alternative roots, even from a synthetic test.
     $exe = (Get-Process -Id $PID).Path
     $ErrorActionPreference = 'Continue'
@@ -200,6 +250,7 @@ try {
     $ErrorActionPreference = 'Stop'
     Assert-Test ($LASTEXITCODE -ne 0) 'Production accepted arguments.'
     Assert-Test (($output -join "`n") -match 'No arguments accepted') 'Unexpected production refusal.'
+    $global:LASTEXITCODE = 0 # The deliberately refused child must not fail a passing CI step.
     $testCount++
     Write-Host "PASS: syntax parser and $testCount synthetic safety cases on $($PSVersionTable.PSVersion). No local scientific project accessed."
 } finally {

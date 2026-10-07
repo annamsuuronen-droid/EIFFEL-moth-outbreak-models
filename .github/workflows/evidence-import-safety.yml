@@ -22,5 +22,6 @@ jobs:
         shell: powershell
         run: '& ./tools/tests/Test-EiffelEvidenceImport.ps1'
       - name: Parse and test PowerShell 7 using synthetic fixtures
+        if: always()
         shell: pwsh
         run: '& ./tools/tests/Test-EiffelEvidenceImport.ps1'

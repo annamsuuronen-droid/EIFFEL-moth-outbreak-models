@@ -201,7 +201,6 @@ function Assert-EiffelSummaryContent([string]$RelativePath, $Stream) {
 }
 
 function Invoke-EiffelEvidenceImport([string]$SourceRoot, [string]$RepositoryRoot) {
-    Initialize-EiffelNative
     $source = [IO.Path]::GetFullPath($SourceRoot).TrimEnd('\')
     $repo = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd('\')
     if ($source -notmatch '^[A-Za-z]:\\' -or $repo -notmatch '^[A-Za-z]:\\' -or
@@ -210,6 +209,18 @@ function Invoke-EiffelEvidenceImport([string]$SourceRoot, [string]$RepositoryRoo
         $source.StartsWith($repo + '\', [StringComparison]::OrdinalIgnoreCase)) {
         throw 'Source and repository must be separate, non-overlapping local drive directories.'
     }
+    # PowerShell 5.1 Add-Type may use compiler temporary files. Never permit its
+    # temporary directory to fall under the strictly read-only source root.
+    foreach ($temporary in @([IO.Path]::GetTempPath(), $env:TEMP, $env:TMP)) {
+        if (-not [string]::IsNullOrEmpty($temporary)) {
+            $temporary = [IO.Path]::GetFullPath($temporary).TrimEnd('\')
+            if ($temporary.Equals($source, [StringComparison]::OrdinalIgnoreCase) -or
+                $temporary.StartsWith($source + '\', [StringComparison]::OrdinalIgnoreCase)) {
+                throw 'Compiler temporary paths must be outside the read-only source root.'
+            }
+        }
+    }
+    Initialize-EiffelNative
     $target = [IO.Path]::Combine($repo, 'imported_local_evidence_v1')
     $allowPath = [IO.Path]::Combine($repo, 'project_state\audit_v1\LOCAL_EVIDENCE_REQUEST.csv')
     $guards = New-Object 'System.Collections.Generic.List[System.IDisposable]'
