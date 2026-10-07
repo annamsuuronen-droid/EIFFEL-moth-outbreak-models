@@ -102,8 +102,10 @@ recon_metrics <- function(predictions) {
       z <- predictions[predictions$model_type == model & predictions$species == species, , drop = FALSE]
       y <- number(z$observed); p <- number(z$predicted_median); pr <- number(z$presence_probability)
       occ <- as.numeric(y > 0); pos <- is.finite(y) & y > 0 & is.finite(p)
-      npos <- sum(occ == 1, na.rm = TRUE); nneg <- sum(occ == 0, na.rm = TRUE)
-      auc <- if (npos && nneg) (sum(rank(pr, ties.method = "average")[occ == 1]) - npos * (npos + 1) / 2) / (npos * nneg) else NA_real_
+      finite_occurrence <- is.finite(occ) & is.finite(pr)
+      occ_auc <- occ[finite_occurrence]; pr_auc <- pr[finite_occurrence]
+      npos <- sum(occ_auc == 1); nneg <- sum(occ_auc == 0)
+      auc <- if (npos && nneg) (sum(rank(pr_auc, ties.method = "average")[occ_auc == 1]) - npos * (npos + 1) / 2) / (npos * nneg) else NA_real_
       output[[length(output) + 1L]] <- data.frame(evaluation = "outer_year", model_type = model, species = species,
         n = sum(is.finite(y) & is.finite(p)), RMSE = sqrt(mean((y - p)^2, na.rm = TRUE)), SR2 = signed_r2(y, p),
         O.RMSE = sqrt(mean((occ - pr)^2, na.rm = TRUE)), O.AUC = auc,
@@ -132,6 +134,8 @@ recon_validate_predictions <- function(pred, metrics, partition, coverage, fold)
     recon_assert(identical(z$sample_id, reference_ids), "Unmatched final-model/species rows.")
     p <- as.numeric(gsub(",", ".", z$presence_probability, fixed = TRUE))
     recon_assert(all(is.finite(p) & p >= 0 & p <= 1), "Invalid occurrence probability.")
+    median <- as.numeric(gsub(",", ".", z$predicted_median, fixed = TRUE))
+    recon_assert(all(is.finite(median) & median >= 0), "Invalid abundance prediction.")
     if (model == models[2]) {
       ref <- pred[pred$model_type == models[1] & pred$species == sp, , drop = FALSE]
       recon_assert(identical(z$observed, ref$observed), "Observed outcomes differ between compared models.")

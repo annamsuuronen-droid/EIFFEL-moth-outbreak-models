@@ -64,6 +64,11 @@ tryCatch({
   refuses(recon_validate_predictions(r$predictions, bad, r$partition, r$coverage, 1), "Value mismatch", "metric recomputation mismatch")
   bad <- r$predictions; names(bad)[1] <- "other"
   refuses(recon_validate_predictions(bad, r$metrics, r$partition, r$coverage, 1), "schema", "prediction schema mismatch")
+  bad <- r$predictions; bad$predicted_median[1] <- "NaN"
+  refuses(recon_validate_predictions(bad, r$metrics, r$partition, r$coverage, 1), "Invalid abundance", "nonfinite prediction refused")
+  missing <- r$predictions; missing$observed[1] <- ""
+  recalculated <- recon_metrics(missing)
+  pass(recalculated$n[1] == as.integer(r$metrics$n[1]) - 1L && is.finite(recalculated$O.AUC[1]), "missing observation metric handling matches finite-pair rule")
   # Synthetic metadata IDs only; no invented scientific observations or fitted values.
   synthetic_ids <- function(years) unlist(lapply(years, function(y) paste0("SYNTHETIC", seq_len(as.integer(r$partition$n[r$partition$block_value == y])), "__", y)))
   cp <- list(scheme = "year", outer_fold = 1L, outer_train_ids = synthetic_ids(r$train_years),
