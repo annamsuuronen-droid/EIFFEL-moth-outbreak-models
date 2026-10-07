@@ -500,7 +500,8 @@ recon_profile_gate <- function(profile) {
   invisible(TRUE)
 }
 recon_exclusive_publish <- function(staged_file, destination) {
-  recon_assert(!file.exists(destination) && !dir.exists(destination) && !nzchar(Sys.readlink(destination)), "Refusing destination overwrite.")
+  link <- Sys.readlink(destination)
+  recon_assert(!file.exists(destination) && !dir.exists(destination) && (is.na(link) || !nzchar(link)), "Refusing destination overwrite.")
   recon_assert(file.link(staged_file, destination), "Exclusive hard-link publication failed; no overwrite attempted.")
   recon_assert(unname(tools::md5sum(staged_file)) == unname(tools::md5sum(destination)), "Published bytes differ.")
   invisible(destination)

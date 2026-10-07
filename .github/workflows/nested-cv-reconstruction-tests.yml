@@ -15,7 +15,10 @@ permissions:
   contents: read
 jobs:
   base-r-only:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -24,4 +27,5 @@ jobs:
           r-version: 'release'
           use-public-rspm: false
       - name: R syntax and non-scientific tests (no Hmsc installation)
+        shell: bash
         run: Rscript --vanilla tools/tests/test_nested_cv_reconstruction.R
