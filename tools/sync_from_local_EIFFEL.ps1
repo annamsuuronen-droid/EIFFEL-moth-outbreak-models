@@ -12,6 +12,14 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+    $scriptFile = $MyInvocation.MyCommand.Path
+    if ([string]::IsNullOrWhiteSpace($scriptFile)) {
+        throw 'Could not determine script path. Pass -RepositoryRoot explicitly.'
+    }
+    $scriptDir = Split-Path -Parent $scriptFile
+    $RepositoryRoot = Split-Path -Parent $scriptDir
+}
 $source = (Get-Item -LiteralPath $SourceRoot -Force).FullName.TrimEnd('\', '/')
 $repo = (Get-Item -LiteralPath $RepositoryRoot -Force).FullName.TrimEnd('\', '/')
 if (-not (Test-Path -LiteralPath $source -PathType Container)) { throw 'Source must be a directory.' }
