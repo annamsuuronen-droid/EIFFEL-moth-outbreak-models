@@ -17,6 +17,9 @@ pass_profile(identical(profile$rng_kind, c("Mersenne-Twister", "Inversion", "Rej
              "reconstructed RNG compatibility contract")
 pass_profile(profile$max_prediction_draws == 1000L && profile$random_level_units == "all_metadata",
              "reconstructed prediction/random-level contract")
+pass_profile(identical(profile$Hmsc_version, "3.3.7") &&
+               identical(profile$coda_version, "0.19.4.1"),
+             "packageVersion-compatible reconstructed package strings")
 fit_train_model <- predict_new_data <- recon_v1_backend <- function(...) stop("SCIENTIFIC EXECUTION FORBIDDEN IN TEST")
 root <- normalizePath(file.path(repository, "imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2"), winslash = "/")
 count <- 0L
