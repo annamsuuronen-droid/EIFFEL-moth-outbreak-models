@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - 'R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_FINAL_PROFILE.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_PREFLIGHT.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_RUN_FOLD5.R'
       - 'project_state/nested_cv_reconstruction_v1/expected_v2_evidence.R'
       - 'project_state/nested_cv_reconstruction_v1/EVIDENCE_INVENTORY.csv'
       - 'tools/tests/test_nested_cv_reconstruction.R'
@@ -10,6 +13,9 @@ on:
   pull_request:
     paths:
       - 'R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_FINAL_PROFILE.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_PREFLIGHT.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_RUN_FOLD5.R'
       - 'tools/tests/test_nested_cv_reconstruction.R'
 permissions:
   contents: read
