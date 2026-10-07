@@ -162,7 +162,15 @@ recon_load_inputs <- function(path) {
   inputs$sample_metadata <- md[match(ids, md$sample_id), , drop = FALSE]
   inputs$X_sample <- x[match(ids, x$sample_id), , drop = FALSE]
   recon_assert(identical(as.character(inputs$sample_metadata$sample_id), ids) && identical(as.character(inputs$X_sample$sample_id), ids), "Primary row-order mismatch.")
-  recon_assert(identical(colnames(inputs$Y_annual_all), c("Epirrita autumnata", "Operophtera brumata", "Operophtera fagata")), "Primary species/order mismatch.")
+  expected_species <- c("Epirrita autumnata", "Operophtera fagata", "Operophtera brumata")
+  primary_species <- as.character(inputs$target_species)
+  recon_assert(length(primary_species) == 3L && !anyDuplicated(primary_species) &&
+                 setequal(primary_species, expected_species),
+               "Primary target species mismatch.")
+  recon_assert(identical(colnames(inputs$Y_annual_all), primary_species),
+               "Primary Y species/order differs from target_species.")
+  recon_assert(identical(colnames(inputs$Loff_annual_all), colnames(inputs$Y_annual_all)),
+               "Primary offset species/order mismatch.")
   recon_assert(identical(dim(inputs$Y_annual_all), dim(inputs$Loff_annual_all)), "Offset dimensions mismatch.")
   storage.mode(inputs$Y_annual_all) <- "numeric"; storage.mode(inputs$Loff_annual_all) <- "numeric"
   dimnames(inputs$Loff_annual_all) <- dimnames(inputs$Y_annual_all)
