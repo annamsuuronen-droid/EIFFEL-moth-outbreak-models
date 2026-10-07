@@ -60,7 +60,8 @@ for (nm in names(cases)) {
         ", Pi_range=", min(m$Pi[, rr]), "-", max(m$Pi[, rr]),
         ", ranLevel_N=", m$rL[[rr]]$N, "\n", sep = "")
   }
-  invisible(Hmsc::computeInitialParameters(m, initPar = NULL))
+  compute_initial <- getFromNamespace("computeInitialParameters", "Hmsc")
+  invisible(compute_initial(m, initPar = NULL))
   cat("  computeInitialParameters: PASS\n")
 }
 
