@@ -20,6 +20,19 @@ pass_profile(profile$max_prediction_draws == 1000L && profile$random_level_units
 pass_profile(identical(profile$Hmsc_version, "3.3.7") &&
                identical(profile$coda_version, "0.19.4.1"),
              "packageVersion-compatible reconstructed package strings")
+wrapper_script <- file.path(repository, "R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_RUN_FOLD5.R")
+source(wrapper_script)
+refused_without_ack <- tryCatch({
+  run_fold5_main(character(0))
+  FALSE
+}, error = function(e) grepl("Missing explicit acknowledgement flag", conditionMessage(e), fixed = TRUE))
+pass_profile(refused_without_ack, "fold-5 execution wrapper refuses without explicit acknowledgements")
+refused_partial_ack <- tryCatch({
+  run_fold5_main("--execute-reconstructed-fold5")
+  FALSE
+}, error = function(e) grepl("--acknowledge-nonhistorical-v2", conditionMessage(e), fixed = TRUE))
+pass_profile(refused_partial_ack, "fold-5 execution wrapper requires nonhistorical-v2 acknowledgement")
+
 fit_train_model <- predict_new_data <- recon_v1_backend <- function(...) stop("SCIENTIFIC EXECUTION FORBIDDEN IN TEST")
 root <- normalizePath(file.path(repository, "imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2"), winslash = "/")
 count <- 0L
