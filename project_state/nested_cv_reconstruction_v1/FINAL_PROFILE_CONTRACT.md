@@ -66,3 +66,37 @@ missing fold completed under this documented reconstruction contract. They must 
 be described as bitwise reproduction of the lost historical v2 execution.
 
 Outer-site CV remains disabled and is outside this contract.
+
+
+## Reconstruction r2: Hmsc random-level factor coding
+
+The first explicitly authorized reconstructed fold-5 attempt on 2026-10-07
+stopped before any MCMC sample was drawn. Hmsc 3.3-7 failed inside
+`computeInitialParameters()` with an `Eta[[r]][hM$Pi[, r], ]` subscript
+error.
+
+The retained v1 source created TRAIN and TEST `studyDesign` factors with the
+full-data site/year level set. In Hmsc 3.3-7, `Hmsc()` converts these factors
+to integer `Pi` codes while setting `np` from the number of observed codes.
+Unused factor levels can therefore leave non-contiguous codes whose maximum is
+larger than `np`, producing the observed initialization failure.
+
+Reconstruction r2 changes only the `studyDesign` factor coding:
+
+- TRAIN `site` and `year` factors contain only units actually observed in
+  the fold-5 TRAIN data.
+- TEST `site` and `year` factors contain only units actually observed in
+  the supplied TEST data.
+- `HmscRandomLevel(units=...)` still receives the complete metadata-level
+  site/year unit sets, preserving the intended availability of random-level
+  units for prediction.
+
+This distinction is consistent with the Hmsc documentation, which recommends
+specifying all available units in `HmscRandomLevel` even if some are not used
+for model training. It is also necessary to explain why the retained v1 code
+cannot initialize the fold-5 fit as written while historical v2 folds 1-4
+nevertheless completed: the missing v2 producer must have differed from v1 in
+this or an equivalent random-level construction detail.
+
+Reconstruction r2 uses a new staging directory, `RECONSTRUCTED_r2`, leaving
+the failed pre-MCMC `RECONSTRUCTED_r1` staging record untouched for provenance.
