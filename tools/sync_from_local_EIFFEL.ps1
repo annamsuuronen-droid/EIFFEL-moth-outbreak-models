@@ -46,7 +46,7 @@ $totalLimit = 20MB
 # Broad data exclusions take precedence over summary names. All files in these
 # directories are logged as excluded, including scripts; review omitted scripts later.
 $excludedDirectoryPattern = '(?i)^(\.git|\.svn|\.hg|\.Rproj\.user|\.cache|__pycache__|node_modules|renv|packrat|tmp|temp|temporary|cache|caches|raw|data|raw[_-]?data|data[_-]?raw|input|inputs|hmsc|mcmc|mcmc[_-]?objects|model[_-]?objects|archive|archives|backup|backups)$'
-$excludedFilePattern = '(?i)(^|[_ .-])(raw|observations?|records?|mcmc|samples?|chains?|draws?|hmsc|cache|temp|temporary|backup)([_ .-]|$)'
+$excludedFilePattern = '(?i)(^|[_ .-])(raw|observations?|records?|mcmc|samples?|chains?|draws?|cache|temp|temporary|backup)([_ .-]|$)'
 $summaryPattern = '(?i)(^|[\\/_. -])(summary|summaries|results?[_-]?summary|model[_-]?fit|beta[_-]?effects|variance[_-]?partitioning|posterior[_-]?predictive[_-]?checks|species[_-]?dependencies|outer[_-]?cv|growth[_-]?models|population[_-]?lags|validation|metrics|coefficients|diagnostics|methods|readme|decisions)([\\/_. -]|$)'
 $rows = New-Object 'System.Collections.Generic.List[object]'
 $queue = New-Object 'System.Collections.Generic.Stack[object]'
