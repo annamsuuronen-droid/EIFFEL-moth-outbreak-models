@@ -1,0 +1,12 @@
+{
+  "manifest_rows": 8995,
+  "imported_files": 3176,
+  "scripts": 17,
+  "summaries": 3159,
+  "missing_copied_files": [],
+  "unmanifested_imports": [],
+  "convergence_checks": 285,
+  "metric_checks": 192,
+  "check_issues": 0,
+  "models_run": 0
+}

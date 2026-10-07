@@ -1,0 +1,6 @@
+fold,all_test_rows,complete_test_rows,excluded_test_rows,predictions_present
+1,305,305,0,True
+2,274,172,102,True
+3,274,242,32,True
+4,304,288,16,True
+5,273,222,51,False
