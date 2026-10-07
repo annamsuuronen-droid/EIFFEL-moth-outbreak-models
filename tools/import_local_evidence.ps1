@@ -179,7 +179,7 @@ function Assert-EiffelSummaryContent([string]$RelativePath, $Stream) {
             }
             $data = @($text | ConvertFrom-Csv -Delimiter ';')
             if ($data.Count -ne 3) { throw 'S5_sample_summary must contain exactly three aggregate species rows.' }
-            $expected = @('Epirrita_autumnata', 'Operophtera_brumata', 'Operophtera_fagata')
+            $expected = @('Epirrita autumnata', 'Operophtera brumata', 'Operophtera fagata')
             if ((@($data.species | Sort-Object) -join '|') -cne ($expected -join '|')) {
                 throw 'Unexpected or duplicate species in S5_sample_summary.'
             }

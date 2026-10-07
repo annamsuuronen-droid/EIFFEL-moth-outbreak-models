@@ -39,7 +39,7 @@ function New-Fixture([string]$Name) {
         $file = Join-Path $source $row.relative_path.Replace('/', '\')
         if ($row.relative_path.EndsWith('/S5_sample_summary.csv2')) {
             $text = 'species;n_original;n_with_exact_previous_year;n_matched_dynamic;proportion_retained' + "`n"
-            foreach ($species in @('Epirrita_autumnata','Operophtera_brumata','Operophtera_fagata')) {
+            foreach ($species in @('Epirrita autumnata','Operophtera brumata','Operophtera fagata')) {
                 $text += $species + ';2;2;1;0,5' + "`n"
             }
         } elseif ($file.EndsWith('.csv2')) {
