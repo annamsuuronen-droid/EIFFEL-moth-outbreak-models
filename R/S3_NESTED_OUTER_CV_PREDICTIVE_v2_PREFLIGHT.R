@@ -76,7 +76,7 @@ final_outputs <- file.path(fd, c(
   "OUTER_FOLD_COMPLETE.rds"
 ))
 if (any(file.exists(final_outputs))) stop("Fold-5 final output already exists; refusing preflight.")
-stage <- file.path(fd, "RECONSTRUCTED_r1")
+stage <- file.path(fd, "RECONSTRUCTED_r2")
 if (dir.exists(stage)) stop("A reconstructed staging directory already exists; inspect recovery state before starting a new run.")
 
 cat("RECONSTRUCTED FOLD-5 PREFLIGHT: PASS\n")
