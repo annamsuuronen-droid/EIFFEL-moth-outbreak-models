@@ -1,0 +1,43 @@
+{
+  "date_utc": "2026-10-07",
+  "base_audit_commit": "757b78c4ab10c203f5f070dd197f1c827524dfae",
+  "tested_code_commit": "e0b5bd541e68ea93eb387d89e55deea4d8103853",
+  "ci_run_url": "https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37604699690",
+  "ci_conclusion": "success",
+  "syntax_parser": "System.Management.Automation.Language.Parser",
+  "runtimes": [
+    {
+      "version": "5.1.26100.33438",
+      "synthetic_safety_cases": 32,
+      "status": "PASS"
+    },
+    {
+      "version": "7.6.6",
+      "synthetic_safety_cases": 32,
+      "status": "PASS"
+    }
+  ],
+  "requested_paths_reviewed": 51,
+  "approved_path_classes": 50,
+  "conditional_aggregate_schema_paths": 1,
+  "conditional_path": "hmsc_outputs/HMSC_ANNUAL_SPECIES_ABUNDANCE_DEPENDENCIES_v2_RANDOMLEVEL_REBUILT/results/S5_sample_summary.csv2",
+  "expected_payload_bytes": 50918,
+  "reviewed_inventory_canonical_sha256": "972501464c135ddaf50e0bb355dce0afe40772bee65bf0b874d928683a430b31",
+  "sha256_lf_repository_blobs": {
+    "tools/import_local_evidence.ps1": "a4390ce52d6fbccfb3a419e5e8e2be9ceaaf0564ed8c49f763ea41ff222c42c2",
+    "tools/tests/Test-EiffelEvidenceImport.ps1": "f7752b65d85086f6bbd221c5247c59efe77f6bb78f4e5f48b815cd1467bc9ce4",
+    ".github/workflows/evidence-import-safety.yml": "6b4d96301aa7ea78d91b362c5a00b4e8d7beeff40ac2f5ba09c40266e9231aa4"
+  },
+  "static_checks": [
+    "exact request/review path-size coverage",
+    "unique reviewed paths and allowed extensions",
+    "pinned inventory digest",
+    "source Read-only file access",
+    "CreateNew destination access",
+    "no source delete/move/write or R invocation"
+  ],
+  "scope": "Synthetic Windows fixtures only; actual D:\\EIFFEL source content unavailable to cloud and not verified",
+  "models_executed": 0,
+  "original_remote_blobs_preserved_before_documentation_update": 3226,
+  "failure_tests": "Preflight refusal performs no copy; injected hash-verification failure retains partial import and records FAILED/NOT_COPIED manifest; repeat refuses overwrite"
+}
