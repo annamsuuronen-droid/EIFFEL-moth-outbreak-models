@@ -1,0 +1,8 @@
+"species";"variance_group";"variance_proportion";"variance_percent"
+"Epirrita autumnata";"Intercept";0;0
+"Epirrita autumnata";"environment_weather";0,0893924823145141;8,93924823145141
+"Epirrita autumnata";"same_year_other_species";0,090173766002124;9,0173766002124
+"Epirrita autumnata";"lag1_own_species";0,569739453992828;56,9739453992828
+"Epirrita autumnata";"lag1_other_species";0,017258280592322;1,7258280592322
+"Epirrita autumnata";"Random: site";0,114269780731111;11,4269780731111
+"Epirrita autumnata";"Random: year";0,119166236367097;11,9166236367097

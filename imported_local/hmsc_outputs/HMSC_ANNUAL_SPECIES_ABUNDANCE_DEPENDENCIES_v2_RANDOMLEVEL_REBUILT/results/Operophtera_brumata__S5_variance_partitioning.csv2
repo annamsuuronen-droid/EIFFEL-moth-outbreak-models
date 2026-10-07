@@ -1,0 +1,8 @@
+"species";"variance_group";"variance_proportion";"variance_percent"
+"Operophtera brumata";"Intercept";0;0
+"Operophtera brumata";"environment_weather";0,105599962344842;10,5599962344842
+"Operophtera brumata";"same_year_other_species";0,364218132056646;36,4218132056646
+"Operophtera brumata";"lag1_own_species";0,212916475930791;21,2916475930791
+"Operophtera brumata";"lag1_other_species";0,0476540562937922;4,76540562937922
+"Operophtera brumata";"Random: site";0,213291855011503;21,3291855011503
+"Operophtera brumata";"Random: year";0,0563195183624263;5,63195183624263

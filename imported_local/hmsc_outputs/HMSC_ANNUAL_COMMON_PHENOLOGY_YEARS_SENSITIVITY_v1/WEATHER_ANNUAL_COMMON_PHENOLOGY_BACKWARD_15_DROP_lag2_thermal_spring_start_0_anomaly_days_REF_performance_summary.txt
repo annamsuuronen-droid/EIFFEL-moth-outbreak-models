@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_15_DROP_lag2_thermal_spring_start_0_anomaly_days_REF";"explanatory";0.52727734465466;0.512279811893203;2076.35930991062;115.851211472555;0.836401005824067;0.81688089117395;0.504474065536911;0.477455051510189

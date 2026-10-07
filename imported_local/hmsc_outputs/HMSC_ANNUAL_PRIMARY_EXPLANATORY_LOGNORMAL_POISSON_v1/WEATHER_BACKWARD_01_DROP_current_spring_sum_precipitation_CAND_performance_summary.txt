@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_BACKWARD_01_DROP_current_spring_sum_precipitation_CAND";"explanatory";0.537579316474824;0.50423942067734;4082.09461241902;118.058165947957;0.86124564884348;0.878349080035335;0.516953125408022;0.469811025708853

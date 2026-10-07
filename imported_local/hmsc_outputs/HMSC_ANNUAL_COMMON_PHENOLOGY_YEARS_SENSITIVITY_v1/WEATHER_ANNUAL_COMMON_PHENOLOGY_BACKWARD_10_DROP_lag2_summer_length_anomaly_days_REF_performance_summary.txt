@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_10_DROP_lag2_summer_length_anomaly_days_REF";"explanatory";0.530356672005603;0.517620460896539;2075.97542974408;115.566589111089;0.834402570046252;0.819525072808764;0.508879068556982;0.486366559354644

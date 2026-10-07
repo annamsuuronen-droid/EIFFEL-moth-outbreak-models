@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_EXPLANATORY_03_lag2_annual_temperature_REF";"explanatory";0.531637895725259;0.490960565846122;4083.57961008862;119.147338252413;0.850420357086114;0.866991258160894;0.51413939386636;0.4879351776277

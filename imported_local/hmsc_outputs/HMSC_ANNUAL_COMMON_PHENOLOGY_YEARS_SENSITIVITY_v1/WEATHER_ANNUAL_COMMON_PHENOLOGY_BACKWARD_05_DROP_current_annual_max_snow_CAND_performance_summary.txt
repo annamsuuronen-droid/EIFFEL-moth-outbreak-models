@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_05_DROP_current_annual_max_snow_CAND";"explanatory";0.499423793913221;0.434952275255784;2076.11046922641;115.790181107707;0.858572823479741;0.875149957155099;0.474819063805258;0.403167923325354

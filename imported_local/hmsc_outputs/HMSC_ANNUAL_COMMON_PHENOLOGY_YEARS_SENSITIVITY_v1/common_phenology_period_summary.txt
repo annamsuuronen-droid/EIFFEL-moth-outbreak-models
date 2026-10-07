@@ -1,0 +1,2 @@
+"first_year";"last_year";"n_eligible_years";"n_site_years_before_complete_case";"n_sites";"minimum_required_samples";"phenology_coverage_threshold";"primary_ppc_ok";"analysis_status"
+1993;2024;32;1430;118;1130;0.8;FALSE;"DIAGNOSTIC_ONLY_PRIMARY_PPC_REQUIRES_REVIEW"

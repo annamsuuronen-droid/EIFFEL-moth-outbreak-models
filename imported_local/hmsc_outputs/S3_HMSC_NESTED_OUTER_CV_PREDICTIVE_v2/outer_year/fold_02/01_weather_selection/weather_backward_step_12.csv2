@@ -1,0 +1,13 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag1_summer_max_Tmax";"fitted";991;0,043080225464589;0,0198376484976381;-0,00567223954820217;0,115075267444331;2;"lag1_summer_max_Tmax";TRUE;12
+"lag1_winter_length_days";"fitted";991;0,0163111242473301;0,019973515952606;0,00861776302311368;0,0203420937662706;3;"lag1_winter_length_days";TRUE;12
+"lag1_winter_start_anomaly_days";"fitted";991;0,0116847865004513;0,00807523172600338;0,000247695200902176;0,0267314325744483;3;"lag1_winter_start_anomaly_days";TRUE;12
+"lag1_autumn_length_anomaly_days";"fitted";991;0,0091599645075951;0,00775225201880236;-0,00927712581359913;0,0290047673175821;2;"lag1_autumn_length_anomaly_days";TRUE;12
+"lag1_autumn_start_anomaly_days";"fitted";991;0,00722876033659422;0,00348520145948944;0,000760756993280209;0,017440322557013;3;"lag1_autumn_start_anomaly_days";TRUE;12
+"lag1_winter_length_anomaly_days";"fitted";991;0,00579924422036782;0,0084465817865636;-0,00935259107862035;0,0183037419531602;2;"lag1_winter_length_anomaly_days";TRUE;12
+"lag1_spring_length_anomaly_days";"fitted";991;-0,00557899835673633;0,00397379774042989;-0,0384728296225856;0,0177620368119467;2;"lag1_spring_length_anomaly_days";FALSE;12
+"lag1_thermal_summer_start_10_doy";"fitted";991;-0,00906669041237464;0,000253262230621776;-0,0492455279165634;0,0217921944488177;2;"lag1_thermal_summer_start_10_doy";FALSE;12
+"lag1_spring_start_anomaly_days";"fitted";991;-0,010153012325841;-0,00294952567040152;-0,0301897054813507;0,00268019417422938;1;"lag1_spring_start_anomaly_days";FALSE;12
+"lag1_biological_spring_start_5_doy";"fitted";991;-0,0130776962698378;-0,00663406059948179;-0,0406662788892653;0,00806725067923353;1;"lag1_biological_spring_start_5_doy";FALSE;12
+"lag1_summer_start_anomaly_days";"fitted";991;-0,0167776936479632;-0,00672441642165822;-0,0372786646069408;-0,0063299999152906;0;"lag1_summer_start_anomaly_days";FALSE;12
+"lag1_summer_min_Tmin";"fitted";991;-0,0261590719758214;-0,0136289205375976;-0,0630675505967974;-0,00178074479306928;0;"lag1_summer_min_Tmin";FALSE;12

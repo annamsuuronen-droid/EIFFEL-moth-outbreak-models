@@ -1,0 +1,6 @@
+"species";"calibration_stage";"component";"random_level";"n_parameters";"maximum_PSRF_upper";"median_PSRF_upper";"minimum_ESS";"median_ESS";"PSRF_limit";"ESS_limit";"blocks_inference";"diagnostic_accepted";"accepted"
+"Operophtera fagata";"stage1";"Beta";;14;1,54687069566369;1,01428244082527;100,623536687078;912,428418076867;1,1;100;TRUE;FALSE;FALSE
+"Operophtera fagata";"stage1";"Gamma";;14;1,03309446456727;1,00283955767929;2239,63134942499;3890,81646172604;1,15;100;TRUE;TRUE;TRUE
+"Operophtera fagata";"stage1";"V";;196;1,3209364507722;1,17984206391823;3453,04692879712;4000;1,15;100;FALSE;FALSE;TRUE
+"Operophtera fagata";"stage1";"Omega";"site";1;1,04654220183456;1,04654220183456;605,443202448706;605,443202448706;1,15;100;TRUE;TRUE;TRUE
+"Operophtera fagata";"stage1";"Omega";"year";1;1,00502984294242;1,00502984294242;1806,16412229799;1806,16412229799;1,15;100;TRUE;TRUE;TRUE

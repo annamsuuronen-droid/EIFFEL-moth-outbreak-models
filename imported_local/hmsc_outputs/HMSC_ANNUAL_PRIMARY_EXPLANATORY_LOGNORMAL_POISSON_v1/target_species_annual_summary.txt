@@ -1,0 +1,4 @@
+"species";"n_site_years";"n_zero_counts"
+"Epirrita autumnata";1430;7
+"Operophtera fagata";1430;594
+"Operophtera brumata";1430;177

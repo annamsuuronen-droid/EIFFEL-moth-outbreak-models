@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_13_DROP_lag2_thermal_autumn_start_10_doy_CAND";"explanatory";0.499625879173046;0.442904218403563;2077.77414114345;116.538787688204;0.849811754990746;0.863924592973436;0.483474238943837;0.414784624178562

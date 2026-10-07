@@ -1,0 +1,3 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"ecological_group";"accepted";"stage";"step"
+"soil_moisture_retention";"fitted";969;0,00955157866206078;0,0067661890532007;0,00434471577575912;0,0175438311572225;3;"soil_moisture_retention";TRUE;"confirm";1
+"DTW_wetness";"fitted";969;0,00344678098281252;0,00432025743690784;-0,0123044908921555;0,0183245764036852;2;"DTW_wetness";TRUE;"confirm";1

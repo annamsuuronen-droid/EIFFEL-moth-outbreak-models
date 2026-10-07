@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"ecological_group";"removal_accepted";"stage";"step"
+"SoilMoistureRetentionIndex__b2000m";"fitted";969;0,00643181128920043;0,0108792675813778;-0,0171286237914096;0,0255447900776331;2;"SoilMoistureRetentionIndex__b2000m";"soil_moisture_retention";FALSE;"confirm";1

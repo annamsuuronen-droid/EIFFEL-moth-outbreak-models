@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_BACKWARD_03_DROP_lag2_winter_cold_exposure_below_minus37_CAND";"explanatory";0.531432132055361;0.500151306138212;4081.91751385317;117.929530778274;0.869806186816305;0.881899734985575;0.50918869578336;0.456090568406767

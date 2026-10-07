@@ -1,0 +1,6 @@
+"species";"component";"random_level";"n_parameters";"maximum_PSRF_upper";"median_PSRF_upper";"minimum_ESS";"median_ESS";"PSRF_limit";"ESS_limit";"blocks_inference";"diagnostic_accepted";"accepted"
+"Epirrita autumnata";"Beta";;14;1,00177762339721;1,00039629128424;4632,5076271566;11598,1645420039;1,05;400;TRUE;TRUE;TRUE
+"Epirrita autumnata";"Gamma";;14;1,00262685044067;1,000598911444;11044,864796164;12000;1,1;200;TRUE;TRUE;TRUE
+"Epirrita autumnata";"V";;196;1,26632379574417;1,03028726180246;10090,378979555;12000;1,1;200;FALSE;FALSE;TRUE
+"Epirrita autumnata";"Omega";"site";1;1,00170727732778;1,00170727732778;9889,55320965959;9889,55320965959;1,1;200;TRUE;TRUE;TRUE
+"Epirrita autumnata";"Omega";"year";1;1,00062171653074;1,00062171653074;8666,78118490782;8666,78118490782;1,1;200;TRUE;TRUE;TRUE

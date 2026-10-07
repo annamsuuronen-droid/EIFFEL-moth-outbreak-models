@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_01_DROP_lag1_winter_sum_precipitation_REF";"explanatory";0.539897124337095;0.506852776990005;2075.93900844349;115.483930408494;0.840571074034741;0.823137944230757;0.5240042916394;0.473956725491123

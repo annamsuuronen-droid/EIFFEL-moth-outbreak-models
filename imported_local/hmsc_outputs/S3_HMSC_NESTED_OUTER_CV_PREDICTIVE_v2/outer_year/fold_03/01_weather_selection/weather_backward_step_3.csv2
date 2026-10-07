@@ -1,0 +1,4 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag1_summer_min_Tmin";"fitted";1034;0,00747376694321931;0,00609355271995987;0,00281432795222314;0,0135134201574749;3;"lag1_summer_min_Tmin";TRUE;3
+"lag1_summer_max_Tmax";"fitted";1034;0,00213245165264005;0,0279579278877606;-0,069499117706613;0,0479385447767726;2;"lag1_summer_max_Tmax";FALSE;3
+"lag1_summer_mean_Tmin";"fitted";1034;-0,00660643899088492;-0,0126443558604533;-0,0623840029773501;0,0552090418651486;1;"lag1_summer_mean_Tmin";FALSE;3

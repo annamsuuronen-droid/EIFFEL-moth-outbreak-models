@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"current_summer_temperature";"fitted";1125;-0,00656216996082237;-0,00629100634068519;-0,0211397262896412;0,0077442227478593;1;FALSE;FALSE;FALSE;"current_summer_temperature";"current_summer_mean_Tmin|current_summer_min_Tmin|current_summer_mean_Tmax|current_summer_max_Tmax";1

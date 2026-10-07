@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_09_DROP_current_annual_API_mean_CAND";"explanatory";0.528385631194417;0.51875626975166;2075.33677639926;115.007848634084;0.864205001950664;0.880377035132819;0.502624950760968;0.471819925516253

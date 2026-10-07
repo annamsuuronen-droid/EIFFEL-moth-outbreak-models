@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"BUFFER_SCALE_vegetation_productivity_2000m_CAND";"explanatory";0.54904548212259;0.510746983957758;4090.84347693686;117.743599176596;0.878289754131347;0.899092036199767;0.537073742606224;0.522164173631505

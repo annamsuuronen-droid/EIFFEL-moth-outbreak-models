@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_04_DROP_lag2_biological_spring_start_5_doy_REF";"explanatory";0.517234725055963;0.505243558959542;2075.13268168702;114.776933457576;0.842837474052658;0.840252057779998;0.474165279120288;0.458518041420503

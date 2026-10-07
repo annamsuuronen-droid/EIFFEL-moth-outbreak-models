@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_10_DROP_lag2_biological_winter_start_doy_CAND";"explanatory";0.537698990753634;0.497344153648631;2075.72445667775;115.134893619046;0.844682622823244;0.828959402222208;0.512120553784528;0.462222171097431

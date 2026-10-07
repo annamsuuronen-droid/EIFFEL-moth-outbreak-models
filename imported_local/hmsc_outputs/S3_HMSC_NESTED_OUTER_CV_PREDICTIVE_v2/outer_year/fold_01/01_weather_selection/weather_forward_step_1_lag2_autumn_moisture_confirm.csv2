@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"lag2_autumn_moisture";"fitted";913;-0,0123260579265484;-0,0108996009672975;-0,0292927554170209;0,00321418260467315;1;FALSE;FALSE;FALSE;"lag2_autumn_moisture";"lag2_autumn_sum_precipitation|lag2_autumn_mean_precipitation";1

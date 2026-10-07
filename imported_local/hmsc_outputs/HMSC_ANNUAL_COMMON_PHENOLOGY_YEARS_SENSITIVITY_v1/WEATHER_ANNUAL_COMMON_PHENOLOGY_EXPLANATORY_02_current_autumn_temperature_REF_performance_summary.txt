@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_EXPLANATORY_02_current_autumn_temperature_REF";"explanatory";0.53490475280251;0.508763800582123;4350.60342420335;146.255023625641;0.805360257481674;0.817824871228845;0.521689651982686;0.510368947466164

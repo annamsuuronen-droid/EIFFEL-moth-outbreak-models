@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_EXPLANATORY_01_lag1_spring_moisture_snow_CAND";"explanatory";0.522788447708605;0.52114638288101;4114.20661673996;141.450693799019;0.859546820199453;0.884171660786493;0.507281960719772;0.521987976630061

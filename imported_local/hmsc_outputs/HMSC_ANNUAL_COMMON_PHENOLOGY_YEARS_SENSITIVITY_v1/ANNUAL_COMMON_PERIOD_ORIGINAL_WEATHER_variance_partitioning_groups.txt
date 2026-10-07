@@ -1,0 +1,15 @@
+"variable";"group_name";"group_id"
+"(Intercept)";"Intercept";1
+"current_summer_mean_Tmin";"weather";2
+"current_summer_min_Tmin";"weather";2
+"current_summer_mean_Tmax";"weather";2
+"current_spring_mean_snow";"weather";2
+"current_annual_max_snow";"weather";2
+"current_annual_API_mean";"weather";2
+"current_annual_API_max";"weather";2
+"current_annual_min_Tmin";"weather";2
+"current_annual_GDD_5";"weather";2
+"current_annual_days_Tmin_below_minus37";"weather";2
+"current_annual_cold_exposure_below_minus37";"weather";2
+"lag2_winter_min_Tmin";"weather";2
+"lag2_winter_days_Tmin_below_minus37";"weather";2

@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"lag1_growing_temperature";"fitted";1154;0,0228988251604707;0,0380145608821836;-0,0100804885215107;0,0407624031207391;2;TRUE;TRUE;FALSE;"lag1_growing_temperature";"lag1_growing_mean_Tmin|lag1_growing_mean_Tmax|lag1_growing_GDD_minus5";1

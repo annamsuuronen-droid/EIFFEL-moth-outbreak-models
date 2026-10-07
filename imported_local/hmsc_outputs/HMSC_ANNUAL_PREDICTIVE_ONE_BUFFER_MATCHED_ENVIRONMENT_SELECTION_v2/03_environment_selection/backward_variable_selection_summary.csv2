@@ -1,0 +1,4 @@
+"result_block";"step";"removed_variable";"ecological_group";"n_samples";"stage";"comparison";"evaluation";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removal_accepted"
+"step_1_screen";1;"NDVI_max__b100m";"vegetation_productivity";1250;"screen";"drop_NDVI_max__b100m";"cv_year";-0,00921466518364593;-0,0101409656900577;-0,0195041187749183;0,00200108891403816;1;FALSE
+"step_1_screen";1;"NDVI_mean__b100m";"vegetation_productivity";1250;"screen";"drop_NDVI_mean__b100m";"cv_year";-0,0123649156980873;-0,0118952431438888;-0,0140826956107418;-0,0111168083396314;0;FALSE
+"step_1_screen";1;"NDVI_median__b100m";"vegetation_productivity";1250;"screen";"drop_NDVI_median__b100m";"cv_year";-0,0202267867708971;-0,0204355831728809;-0,0429317501983844;0,00268697305857418;1;FALSE

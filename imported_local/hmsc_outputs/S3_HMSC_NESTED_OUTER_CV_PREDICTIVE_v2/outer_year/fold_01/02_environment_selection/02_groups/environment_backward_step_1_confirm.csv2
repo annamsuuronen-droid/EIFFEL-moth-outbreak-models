@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"ecological_group";"removal_accepted";"stage";"step"
+"NDVI_median__b2000m";"fitted";1102;-0,00441452744168924;-0,0040177855568429;-0,00727985511458512;-0,0019459416536397;0;"NDVI_median__b2000m";"vegetation_productivity";FALSE;"confirm";1

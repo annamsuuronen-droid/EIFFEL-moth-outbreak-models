@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_04_lag2_summer_temperature_CAND";"explanatory";0.543941406769359;0.508915968357006;4081.62510084643;118.112340754558;0.877942240678133;0.891216839550038;0.525343717635643;0.471755867950533

@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_01_DROP_lag1_winter_snowmelt_sum_CAND";"explanatory";0.488863365271709;0.527982068720596;2074.74535786273;114.730696324832;0.827885703527195;0.831586355410551;0.445584908040563;0.483054790518394

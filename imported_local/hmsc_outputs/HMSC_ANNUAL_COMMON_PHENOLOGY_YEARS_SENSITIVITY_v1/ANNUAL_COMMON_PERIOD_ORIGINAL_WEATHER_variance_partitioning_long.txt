@@ -1,0 +1,13 @@
+"model";"variance_source";"species";"variance_proportion"
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Intercept";"Epirrita autumnata";0
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Intercept";"Operophtera fagata";0
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Intercept";"Operophtera brumata";0
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"weather";"Epirrita autumnata";0.217125202348387
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"weather";"Operophtera fagata";0.196756741842996
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"weather";"Operophtera brumata";0.201091226813539
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Random: site";"Epirrita autumnata";0.539965367741036
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Random: site";"Operophtera fagata";0.578467394635044
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Random: site";"Operophtera brumata";0.597239017545812
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Random: year";"Epirrita autumnata";0.242909429910578
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Random: year";"Operophtera fagata";0.224775863521958
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"Random: year";"Operophtera brumata";0.201669755640651

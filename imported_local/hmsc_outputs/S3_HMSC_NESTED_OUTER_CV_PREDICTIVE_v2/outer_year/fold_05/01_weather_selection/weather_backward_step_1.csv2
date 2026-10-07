@@ -1,0 +1,7 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag2_autumn_mean_precipitation";"fitted";937;0,00787494150181822;0,0113867865761602;-0,0242754689622369;0,0365135068915314;2;"lag2_autumn_mean_precipitation";FALSE;1
+"lag1_summer_mean_Tmax";"fitted";937;0,00262417213016475;-0,00275920885280057;-0,00616853436827275;0,0168002596115676;1;"lag1_summer_mean_Tmax";FALSE;1
+"lag1_summer_mean_Tmin";"fitted";937;-0,00615817710959382;-0,00716230648634963;-0,0248108425760935;0,0134986177336617;1;"lag1_summer_mean_Tmin";FALSE;1
+"lag1_summer_min_Tmin";"fitted";937;-0,00930582122803231;-0,0038152997472673;-0,0233421811498577;-0,000759982786971924;0;"lag1_summer_min_Tmin";FALSE;1
+"lag2_autumn_sum_precipitation";"fitted";937;-0,0126529010493915;-0,0211757827684342;-0,021291888215581;0,00450896783584065;1;"lag2_autumn_sum_precipitation";FALSE;1
+"lag1_summer_max_Tmax";"fitted";937;-0,0193759572544205;-0,0336891535208395;-0,050358067767429;0,0259193495250071;1;"lag1_summer_max_Tmax";FALSE;1

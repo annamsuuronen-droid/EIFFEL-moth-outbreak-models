@@ -1,0 +1,8 @@
+"species";"variance_group";"variance_proportion";"variance_percent"
+"Operophtera fagata";"Intercept";0;0
+"Operophtera fagata";"environment_weather";0,262928020563964;26,2928020563964
+"Operophtera fagata";"same_year_other_species";0,219348987085171;21,9348987085171
+"Operophtera fagata";"lag1_own_species";0,109052871453073;10,9052871453073
+"Operophtera fagata";"lag1_other_species";0,0265179245739425;2,65179245739425
+"Operophtera fagata";"Random: site";0,275019295228003;27,5019295228003
+"Operophtera fagata";"Random: year";0,107132901095852;10,7132901095852

@@ -1,0 +1,17 @@
+"species";"variance_group";"variance_proportion";"variance_percent"
+"Epirrita autumnata";"Intercept";0;0
+"Epirrita autumnata";"weather: current_summer_mean_Tmin";0,0751510064464763;7,51510064464763
+"Epirrita autumnata";"weather: current_summer_min_Tmin";0,00287889783186594;0,287889783186594
+"Epirrita autumnata";"weather: current_summer_mean_Tmax";0,0306942384941196;3,06942384941196
+"Epirrita autumnata";"weather: current_spring_mean_snow";0,000668476845190945;0,0668476845190945
+"Epirrita autumnata";"weather: current_annual_max_snow";0,0104722969500602;1,04722969500602
+"Epirrita autumnata";"weather: current_annual_API_mean";0,00329909719484001;0,329909719484001
+"Epirrita autumnata";"weather: current_annual_API_max";0,00437302392779428;0,437302392779428
+"Epirrita autumnata";"weather: current_annual_min_Tmin";0,00542990504863554;0,542990504863554
+"Epirrita autumnata";"weather: current_annual_GDD_5";0,0491700382582487;4,91700382582487
+"Epirrita autumnata";"weather: current_annual_days_Tmin_below_minus37";0,000713938516510136;0,0713938516510136
+"Epirrita autumnata";"weather: current_annual_cold_exposure_below_minus37";0,00937372902935715;0,937372902935716
+"Epirrita autumnata";"weather: lag2_winter_min_Tmin";0,00343819296511102;0,343819296511102
+"Epirrita autumnata";"weather: lag2_winter_days_Tmin_below_minus37";0,000414003293855009;0,0414003293855009
+"Epirrita autumnata";"Random: site";0,553914807599486;55,3914807599485
+"Epirrita autumnata";"Random: year";0,25000834759845;25,000834759845

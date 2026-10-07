@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_BACKWARD_10_DROP_lag2_spring_length_days_CAND";"explanatory";0.519270411743962;0.511140658059567;2075.7536603025;115.339585239449;0.850496599614393;0.847814910025707;0.4949932229;0.466147570370155

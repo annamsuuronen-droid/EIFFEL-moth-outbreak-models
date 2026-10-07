@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"BUFFER_SCALE_DTW_wetness_1000m_CAND";"explanatory";0.504299554831672;0.472380150682837;4088.93809203503;118.744916445917;0.862087191817248;0.863575566787857;0.480091234417343;0.411877081841364

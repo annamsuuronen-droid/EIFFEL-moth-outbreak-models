@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_BACKWARD_01_DROP_current_spring_mean_snow_REF";"explanatory";0.479671019792858;0.431197637228103;4081.36104172785;117.979222237711;0.8545525152473;0.833980672686649;0.470772598474897;0.400650260311252

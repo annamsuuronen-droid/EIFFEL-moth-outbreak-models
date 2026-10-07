@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_03_lag1_growing_phenology_REF";"explanatory";0.523951523048744;0.512984923800721;4117.02710270887;141.449406852343;0.863164837272484;0.886008017586965;0.499573951189342;0.496452149270523

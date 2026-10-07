@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"current_growing_phenology";"fitted";1157;-0,0171226769449962;-0,00872484436942883;-0,0379312016200797;-0,00471198484548008;0;FALSE;FALSE;FALSE;"current_growing_phenology";"lag1_summer_mean_Tmin|lag1_summer_min_Tmin|lag1_summer_mean_Tmax|lag1_summer_max_Tmax|current_growing_start_doy|current_growing_end_doy";2

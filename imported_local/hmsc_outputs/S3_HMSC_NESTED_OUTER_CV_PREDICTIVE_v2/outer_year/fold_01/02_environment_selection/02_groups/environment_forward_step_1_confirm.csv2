@@ -1,0 +1,3 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"ecological_group";"accepted";"stage";"step"
+"vegetation_productivity";"fitted";1102;0,00685127030743796;0,00897777452062368;-0,00352421156235022;0,0151002479640404;2;"vegetation_productivity";TRUE;"confirm";1
+"DTW_wetness";"fitted";1102;-0,00767638157212911;-0,00840753580489817;-0,0157249143298473;0,00110330541835812;1;"DTW_wetness";FALSE;"confirm";1

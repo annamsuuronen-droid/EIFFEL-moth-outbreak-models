@@ -1,0 +1,6 @@
+"species";"calibration_stage";"component";"random_level";"n_parameters";"maximum_PSRF_upper";"median_PSRF_upper";"minimum_ESS";"median_ESS";"PSRF_limit";"ESS_limit";"accepted"
+"Operophtera brumata";"stage2";"Beta";;14;1,00229624944137;1,00098724191625;3566,35470565138;5407,35860085752;1,1;100;TRUE
+"Operophtera brumata";"stage2";"Gamma";;14;1,00338803677355;1,00073411538228;7620,54771358507;8019,83759783568;1,15;100;TRUE
+"Operophtera brumata";"stage2";"V";;196;1,3037342875994;1,09779267348168;6919,45901266866;8000;1,15;100;FALSE
+"Operophtera brumata";"stage2";"Omega";"site";1;1,00154882290799;1,00154882290799;5193,23796797212;5193,23796797212;1,15;100;TRUE
+"Operophtera brumata";"stage2";"Omega";"year";1;1,00012712083901;1,00012712083901;6277,37316207929;6277,37316207929;1,15;100;TRUE

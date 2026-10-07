@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"lag2_growing_moisture";"fitted";1040;0,00710813105572122;0,0068049673857154;0,00402431898627142;0,0104951067951768;3;TRUE;TRUE;TRUE;"lag2_growing_moisture";"lag1_summer_mean_Tmin|lag1_summer_min_Tmin|lag1_summer_mean_Tmax|lag1_summer_max_Tmax|lag2_growing_sum_precipitation";2

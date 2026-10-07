@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"current_annual_temperature";"fitted";1125;-0,00349403601578337;0,0380659283541955;-0,100556440399516;0,0520084039979708;2;FALSE;FALSE;FALSE;"current_annual_temperature";"current_annual_min_Tmin|current_annual_max_Tmax|current_annual_GDD_5|current_annual_days_Tmin_below_minus37|current_annual_cold_exposure_below_minus37";1

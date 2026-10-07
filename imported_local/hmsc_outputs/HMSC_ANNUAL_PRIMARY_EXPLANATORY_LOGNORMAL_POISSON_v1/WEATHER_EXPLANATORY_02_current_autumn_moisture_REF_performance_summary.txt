@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_02_current_autumn_moisture_REF";"explanatory";0.46104558648626;0.486188320308922;4356.11496270374;146.139006859972;0.814476799899983;0.816915227629513;0.453708570371377;0.48466447015037

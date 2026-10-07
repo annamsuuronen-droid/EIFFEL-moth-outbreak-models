@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_BACKWARD_03_DROP_current_annual_days_Tmin_below_minus37_CAND";"explanatory";0.535942461147337;0.490496135173687;4081.4386202478;118.480278796897;0.875788167430704;0.891478672823419;0.52154043174553;0.488339943874028

@@ -1,0 +1,17 @@
+"species";"variance_group";"variance_proportion";"variance_percent"
+"Operophtera fagata";"Intercept";0;0
+"Operophtera fagata";"weather: current_summer_mean_Tmin";0,0578877441479402;5,78877441479402
+"Operophtera fagata";"weather: current_summer_min_Tmin";0,00254922492440394;0,254922492440394
+"Operophtera fagata";"weather: current_summer_mean_Tmax";0,00942183286833961;0,942183286833961
+"Operophtera fagata";"weather: current_spring_mean_snow";0,000674865141005964;0,0674865141005964
+"Operophtera fagata";"weather: current_annual_max_snow";0,00426939374456525;0,426939374456525
+"Operophtera fagata";"weather: current_annual_API_mean";0,00480093745632126;0,480093745632126
+"Operophtera fagata";"weather: current_annual_API_max";0,00191928935436089;0,191928935436089
+"Operophtera fagata";"weather: current_annual_min_Tmin";0,0253935396073716;2,53935396073716
+"Operophtera fagata";"weather: current_annual_GDD_5";0,0182555844237387;1,82555844237387
+"Operophtera fagata";"weather: current_annual_days_Tmin_below_minus37";0,00204359126307106;0,204359126307106
+"Operophtera fagata";"weather: current_annual_cold_exposure_below_minus37";0,0165265746602657;1,65265746602657
+"Operophtera fagata";"weather: lag2_winter_min_Tmin";0,0904308479629616;9,04308479629616
+"Operophtera fagata";"weather: lag2_winter_days_Tmin_below_minus37";0,0130944883777674;1,30944883777674
+"Operophtera fagata";"Random: site";0,532525885257508;53,2525885257508
+"Operophtera fagata";"Random: year";0,220206200810381;22,0206200810381

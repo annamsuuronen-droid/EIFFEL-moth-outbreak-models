@@ -1,0 +1,17 @@
+"species";"variance_group";"variance_proportion";"variance_percent"
+"Operophtera brumata";"Intercept";0;0
+"Operophtera brumata";"weather: current_summer_mean_Tmin";0,0505982311668423;5,05982311668423
+"Operophtera brumata";"weather: current_summer_min_Tmin";0,00750541942240626;0,750541942240626
+"Operophtera brumata";"weather: current_summer_mean_Tmax";0,0251196901419658;2,51196901419658
+"Operophtera brumata";"weather: current_spring_mean_snow";0,000463410798366934;0,0463410798366934
+"Operophtera brumata";"weather: current_annual_max_snow";0,00414055806501453;0,414055806501453
+"Operophtera brumata";"weather: current_annual_API_mean";0,00372292750078659;0,372292750078659
+"Operophtera brumata";"weather: current_annual_API_max";0,00985452377233265;0,985452377233265
+"Operophtera brumata";"weather: current_annual_min_Tmin";0,00352658144026655;0,352658144026655
+"Operophtera brumata";"weather: current_annual_GDD_5";0,0964132453553995;9,64132453553995
+"Operophtera brumata";"weather: current_annual_days_Tmin_below_minus37";0,00092266509446014;0,092266509446014
+"Operophtera brumata";"weather: current_annual_cold_exposure_below_minus37";0,00624392305720604;0,624392305720604
+"Operophtera brumata";"weather: lag2_winter_min_Tmin";0,00837965771765294;0,837965771765294
+"Operophtera brumata";"weather: lag2_winter_days_Tmin_below_minus37";0,00051376742066114;0,051376742066114
+"Operophtera brumata";"Random: site";0,570015945411522;57,0015945411522
+"Operophtera brumata";"Random: year";0,212579453635113;21,2579453635113

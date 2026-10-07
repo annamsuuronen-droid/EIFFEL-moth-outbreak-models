@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"BUFFER_SCALE_soil_moisture_retention_250m_CAND";"explanatory";0.5407752074416;0.516178145078363;4119.61386646401;113.11765420157;0.859912292783513;0.888399909726924;0.528054641794879;0.530331730329587

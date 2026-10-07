@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_01_current_winter_temperature_REF";"explanatory";0.540066415103154;0.512737742682165;4111.6304291711;141.209626942566;0.866453643760142;0.886633479934915;0.530800630707467;0.524439370941279

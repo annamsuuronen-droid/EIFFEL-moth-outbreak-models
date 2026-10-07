@@ -1,0 +1,14 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag1_summer_length_anomaly_days";"fitted";991;0,0248852894303578;0,0193260535564722;0,0157925804529924;0,0395372342816087;3;"lag1_summer_length_anomaly_days";TRUE;11
+"lag1_winter_length_anomaly_days";"fitted";991;0,0194240969026596;0,014992351463837;0,00244923061630087;0,0408307086278409;3;"lag1_winter_length_anomaly_days";TRUE;11
+"lag1_biological_spring_start_5_doy";"fitted";991;0,0164678103368099;0,0202984869729448;0,00540812297075011;0,0236968210667348;3;"lag1_biological_spring_start_5_doy";TRUE;11
+"lag1_spring_start_anomaly_days";"fitted";991;0,00639310982069267;-0,00714160051861945;-0,0204209707049927;0,0467419006856902;1;"lag1_spring_start_anomaly_days";FALSE;11
+"lag1_summer_min_Tmin";"fitted";991;0,00624338387865592;-0,0016033627389333;-0,0075223346153796;0,0278558489902807;1;"lag1_summer_min_Tmin";FALSE;11
+"lag1_autumn_length_anomaly_days";"fitted";991;0,00278299348607893;-0,00704621898937163;-0,0246169681421713;0,0400121675897797;1;"lag1_autumn_length_anomaly_days";FALSE;11
+"lag1_winter_length_days";"fitted";991;0,000195967480176214;0,0138285691325389;-0,0567566390498722;0,0435159723578619;2;"lag1_winter_length_days";FALSE;11
+"lag1_thermal_summer_start_10_doy";"fitted";991;-0,00369154871131735;0,0120403909558731;-0,058184022517631;0,0350689854278059;2;"lag1_thermal_summer_start_10_doy";FALSE;11
+"lag1_summer_max_Tmax";"fitted";991;-0,00768006696677642;-0,0195568847691535;-0,022821276150255;0,0193379600190792;1;"lag1_summer_max_Tmax";FALSE;11
+"lag1_winter_start_anomaly_days";"fitted";991;-0,0182803469961903;0,0211066142435278;-0,102108214590282;0,0261605593581833;2;"lag1_winter_start_anomaly_days";FALSE;11
+"lag1_autumn_start_anomaly_days";"fitted";991;-0,0216486515398819;-0,000573517750229513;-0,0836146281057312;0,0192421912363149;1;"lag1_autumn_start_anomaly_days";FALSE;11
+"lag1_spring_length_anomaly_days";"fitted";991;-0,0295911791906018;-0,012121410512143;-0,0856589171735604;0,00900679011389816;1;"lag1_spring_length_anomaly_days";FALSE;11
+"lag1_summer_start_anomaly_days";"fitted";991;-0,0811386043447541;-0,0971108564807224;-0,133719367574058;-0,0125855889794823;0;"lag1_summer_start_anomaly_days";FALSE;11

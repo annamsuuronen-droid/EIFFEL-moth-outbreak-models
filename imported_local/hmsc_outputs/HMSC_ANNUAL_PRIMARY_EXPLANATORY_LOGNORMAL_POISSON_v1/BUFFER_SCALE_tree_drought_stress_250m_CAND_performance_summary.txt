@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"BUFFER_SCALE_tree_drought_stress_250m_CAND";"explanatory";0.488769844899248;0.428919955727292;4119.51507257429;113.577794297228;0.853801217910201;0.861665926912265;0.460134686466772;0.37305140519545

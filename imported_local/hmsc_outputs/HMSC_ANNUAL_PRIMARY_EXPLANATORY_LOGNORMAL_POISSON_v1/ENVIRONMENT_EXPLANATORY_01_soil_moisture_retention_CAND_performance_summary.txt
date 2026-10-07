@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"ENVIRONMENT_EXPLANATORY_01_soil_moisture_retention_CAND";"explanatory";0.495360380453836;0.470856769514418;4111.94462671353;113.630148471379;0.856155008268666;0.887443238257415;0.479787125136189;0.47568672391552

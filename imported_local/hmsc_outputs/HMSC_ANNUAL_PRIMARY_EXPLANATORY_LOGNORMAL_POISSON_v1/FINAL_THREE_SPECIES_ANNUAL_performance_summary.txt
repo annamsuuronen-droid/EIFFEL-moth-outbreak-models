@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"FINAL_THREE_SPECIES_ANNUAL";"explanatory";0.553382279788901;0.512019663273391;4081.58851445444;117.581851142205;0.879352889330927;0.904110292984092;0.540699361491538;0.511020444127314

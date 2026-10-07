@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"current_autumn_temperature";"fitted";1034;0,00640588412671718;-0,00124411101941097;-0,00161452276903851;0,022076286168601;1;TRUE;FALSE;TRUE;"current_autumn_temperature";"lag1_summer_mean_Tmin|lag1_summer_min_Tmin|lag1_summer_mean_Tmax|lag1_summer_max_Tmax|current_autumn_min_Tmin|current_autumn_mean_Tmax";2

@@ -1,0 +1,7 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag1_summer_mean_Tmax";"fitted";1034;0,0199594511316623;0,021585764065217;0,00362575861669456;0,0346668307130752;3;"lag1_summer_mean_Tmax";TRUE;1
+"lag1_summer_min_Tmin";"fitted";1034;0,00338687420952231;0,00541808603900351;-0,00723871326406705;0,0119812498536305;2;"lag1_summer_min_Tmin";TRUE;1
+"current_autumn_mean_Tmax";"fitted";1034;-0,00319434274183043;-0,00411456534765081;-0,0103941851535144;0,00492572227567389;1;"current_autumn_mean_Tmax";FALSE;1
+"current_autumn_min_Tmin";"fitted";1034;-0,00694963405150802;0,000283291079602288;-0,0306222031563132;0,00949000992218685;2;"current_autumn_min_Tmin";FALSE;1
+"lag1_summer_mean_Tmin";"fitted";1034;-0,0257423444065312;-0,0245927621369644;-0,0597683013050523;0,00713403022242326;1;"lag1_summer_mean_Tmin";FALSE;1
+"lag1_summer_max_Tmax";"fitted";1034;-0,0286518185780362;-0,0154467762041345;-0,0624497746470524;-0,00805890488292166;0;"lag1_summer_max_Tmax";FALSE;1

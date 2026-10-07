@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_02_lag1_growing_temperature_REF";"explanatory";0.541336692630878;0.522206004324636;4114.75642707117;141.210086450672;0.854531971968883;0.867095606715593;0.523038916155956;0.514721586735521

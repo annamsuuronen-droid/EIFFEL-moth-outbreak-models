@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"accepted";"community_support";"strong_species_support";"candidate_group";"variables_after_correlation";"step"
+"lag1_summer_temperature";"fitted";1157;0,0425875934011823;0,0637317449701818;-0,012429154876611;0,076460190109976;2;TRUE;TRUE;FALSE;"lag1_summer_temperature";"lag1_summer_mean_Tmin|lag1_summer_min_Tmin|lag1_summer_mean_Tmax|lag1_summer_max_Tmax";1

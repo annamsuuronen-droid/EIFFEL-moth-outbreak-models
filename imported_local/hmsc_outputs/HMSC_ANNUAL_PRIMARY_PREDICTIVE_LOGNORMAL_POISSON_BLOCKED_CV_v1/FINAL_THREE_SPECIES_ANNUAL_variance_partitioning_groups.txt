@@ -1,0 +1,7 @@
+"variable";"group_name";"group_id"
+"(Intercept)";"Intercept";1
+"lag1_summer_mean_Tmin";"weather";2
+"lag1_summer_mean_Tmax";"weather";2
+"lag1_summer_max_Tmax";"weather";2
+"lag1_growing_sum_precipitation";"weather";2
+"lag1_autumn_mean_Tmax";"weather";2

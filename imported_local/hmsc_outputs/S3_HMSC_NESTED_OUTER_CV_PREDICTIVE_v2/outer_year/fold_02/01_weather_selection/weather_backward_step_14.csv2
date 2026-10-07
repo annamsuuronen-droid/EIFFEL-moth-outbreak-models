@@ -1,0 +1,10 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag1_autumn_start_anomaly_days";"fitted";991;0,0195689927522953;0,0162251704082409;0,00633831208656538;0,0361434957620798;3;"lag1_autumn_start_anomaly_days";TRUE;14
+"lag1_winter_start_anomaly_days";"fitted";991;0,0142250753165839;0,0140893061844816;0,0103390668847181;0,0182468528805519;3;"lag1_winter_start_anomaly_days";TRUE;14
+"lag1_biological_spring_start_5_doy";"fitted";991;0,026545953317797;0,0224480358858473;-0,0289664198631389;0,0861562439306826;2;"lag1_biological_spring_start_5_doy";FALSE;14
+"lag1_spring_length_anomaly_days";"fitted";991;5,54866735088718e-05;-0,00141296136917574;-0,00178385392987962;0,00336327531958197;1;"lag1_spring_length_anomaly_days";FALSE;14
+"lag1_winter_length_days";"fitted";991;-0,00480635318258863;-0,00235686565283705;-0,0216937976887855;0,00963160379385664;1;"lag1_winter_length_days";FALSE;14
+"lag1_autumn_length_anomaly_days";"fitted";991;-0,00549757771391405;0,00463073774629985;-0,0270680422272565;0,0059445713392145;2;"lag1_autumn_length_anomaly_days";FALSE;14
+"lag1_spring_start_anomaly_days";"fitted";991;-0,00975663246910755;0,00602648472811873;-0,0430351328685915;0,00773875073315006;2;"lag1_spring_start_anomaly_days";FALSE;14
+"lag1_thermal_summer_start_10_doy";"fitted";991;-0,0101628360271044;0,0014977600555337;-0,0538904453692369;0,0219041772323899;2;"lag1_thermal_summer_start_10_doy";FALSE;14
+"lag1_summer_start_anomaly_days";"fitted";991;-0,0282169152397576;-0,00774526073749099;-0,0717695966944984;-0,00513588828728334;0;"lag1_summer_start_anomaly_days";FALSE;14

@@ -1,0 +1,9 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"ecological_group";"removal_accepted";"stage";"step"
+"SoilMoistureRetentionIndex__b2000m";"fitted";969;0,0109601625398354;0,0117278952593811;0,00125194367389952;0,0199006486862256;3;"SoilMoistureRetentionIndex__b2000m";"soil_moisture_retention";TRUE;"screen";1
+"soil_retention_min__b2000m";"fitted";969;0,00536916279812111;0,00450225339554516;0,0021604613831922;0,00944477361562596;3;"soil_retention_min__b2000m";"soil_moisture_retention";TRUE;"screen";1
+"soil_retention_gt05_prop__b2000m";"fitted";969;0,00338577641683435;0,00884995926777798;-0,00874332245569298;0,0100506924384181;2;"soil_retention_gt05_prop__b2000m";"soil_moisture_retention";TRUE;"screen";1
+"soil_retention_max__b2000m";"fitted";969;0,00293391686680864;0,0027217505888254;0,00173214295387986;0,00434785705772067;3;"soil_retention_max__b2000m";"soil_moisture_retention";TRUE;"screen";1
+"soil_retention_sd__b2000m";"fitted";969;0,0131222421556197;-0,00639093199112384;-0,0142651700395789;0,0600228284975618;1;"soil_retention_sd__b2000m";"soil_moisture_retention";FALSE;"screen";1
+"soil_retention_mean__b2000m";"fitted";969;0,0067836980217129;-0,00433416279749754;-0,0124965576104272;0,0371818144730634;1;"soil_retention_mean__b2000m";"soil_moisture_retention";FALSE;"screen";1
+"OverwinteringSoilBufferIndex__b2000m";"fitted";969;0,00602065460739483;0,00153657723449047;-0,0221200461488053;0,0386454327364993;2;"OverwinteringSoilBufferIndex__b2000m";"soil_moisture_retention";FALSE;"screen";1
+"low_soil_retention_lt025_prop__b2000m";"fitted";969;0,0027634582390544;0,00412481584940166;-0,0171212312870916;0,0212867901548531;2;"low_soil_retention_lt025_prop__b2000m";"soil_moisture_retention";FALSE;"screen";1

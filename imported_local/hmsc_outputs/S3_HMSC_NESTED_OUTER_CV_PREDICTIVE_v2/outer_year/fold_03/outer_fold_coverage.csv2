@@ -1,0 +1,5 @@
+"label";"n_site_years";"n_sites";"n_years";"first_year";"last_year";"scheme";"outer_fold"
+"outer_train_all";1156;118;26;1993;2024;"year";3
+"outer_train_final_complete";1034;117;26;1993;2024;"year";3
+"outer_test_all";274;74;6;1997;2012;"year";3
+"outer_test_final_complete";242;72;6;1997;2012;"year";3

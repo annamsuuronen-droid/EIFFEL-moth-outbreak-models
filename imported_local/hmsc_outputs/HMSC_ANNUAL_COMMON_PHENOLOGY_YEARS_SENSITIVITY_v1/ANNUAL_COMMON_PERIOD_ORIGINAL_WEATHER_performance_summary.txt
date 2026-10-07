@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"ANNUAL_COMMON_PERIOD_ORIGINAL_WEATHER";"explanatory";0.557416138288094;0.516756782744335;4081.64228484549;117.640923752954;0.878002617483276;0.904676782729771;0.545943456125683;0.523142343373422

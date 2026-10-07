@@ -1,0 +1,7 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag2_spring_mean_snow";"fitted";1010;0,0319525019793858;0,0275346891055802;0,0165316940639045;0,0517911227686728;3;"lag2_spring_mean_snow";TRUE;2
+"lag2_spring_sum_precipitation";"fitted";1010;0,0193471551220303;0,020628726785038;0,015687556825804;0,0217251817552488;3;"lag2_spring_sum_precipitation";TRUE;2
+"lag1_summer_mean_Tmin";"fitted";1010;0,0160711031344837;0,0196099722918838;0,000525537374776786;0,0280777997367906;3;"lag1_summer_mean_Tmin";TRUE;2
+"lag1_summer_min_Tmin";"fitted";1010;0,00114350323293531;0,00796267393689076;-0,0167144298522321;0,0121822656141473;2;"lag1_summer_min_Tmin";FALSE;2
+"lag1_summer_max_Tmax";"fitted";1010;-0,00806107917490502;-0,00501000101223914;-0,0315974450402584;0,0124242085277824;1;"lag1_summer_max_Tmax";FALSE;2
+"lag2_spring_snow_days";"fitted";1010;-0,0170046986306459;-0,0165653312260051;-0,0391496641614794;0,00470089949554686;1;"lag2_spring_snow_days";FALSE;2

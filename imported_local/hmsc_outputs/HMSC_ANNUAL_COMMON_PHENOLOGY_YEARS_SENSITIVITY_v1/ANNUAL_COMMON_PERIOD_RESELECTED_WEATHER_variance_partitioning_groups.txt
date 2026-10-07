@@ -1,0 +1,7 @@
+"variable";"group_name";"group_id"
+"(Intercept)";"Intercept";1
+"current_annual_API_end";"weather";2
+"lag1_winter_snowmelt_sum";"weather";2
+"lag2_spring_days_above_10";"weather";2
+"lag1_annual_API_max";"weather";2
+"lag2_thermal_autumn_start_10_doy";"weather";2

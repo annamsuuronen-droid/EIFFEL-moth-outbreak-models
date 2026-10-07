@@ -1,0 +1,3 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"removal_accepted";"step"
+"lag1_summer_mean_Tmin";"fitted";1010;-0,00810619712547587;0,00723989062668651;-0,044641858816648;0,0130833768135338;2;"lag1_summer_mean_Tmin";FALSE;5
+"lag1_summer_max_Tmax";"fitted";1010;-0,00872702686493023;-0,016854984250401;-0,0196870864881303;0,0103609901437406;1;"lag1_summer_max_Tmax";FALSE;5

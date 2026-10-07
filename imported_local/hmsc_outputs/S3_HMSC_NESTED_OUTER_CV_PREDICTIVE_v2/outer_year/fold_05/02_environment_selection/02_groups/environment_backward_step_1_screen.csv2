@@ -1,0 +1,3 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"removed_variable";"ecological_group";"removal_accepted";"stage";"step"
+"HostTreeDroughtStressIndex__b100m";"fitted";916;-0,0112665559337929;-0,00140600537392688;-0,0482586733083965;0,0158650108809447;1;"HostTreeDroughtStressIndex__b100m";"tree_drought_stress";FALSE;"screen";1
+"SoilDrynessSensitivityIndex__b100m";"fitted";916;-0,021665444247627;-0,0302292967588851;-0,0524474154129643;0,0176803794289684;1;"SoilDrynessSensitivityIndex__b100m";"tree_drought_stress";FALSE;"screen";1

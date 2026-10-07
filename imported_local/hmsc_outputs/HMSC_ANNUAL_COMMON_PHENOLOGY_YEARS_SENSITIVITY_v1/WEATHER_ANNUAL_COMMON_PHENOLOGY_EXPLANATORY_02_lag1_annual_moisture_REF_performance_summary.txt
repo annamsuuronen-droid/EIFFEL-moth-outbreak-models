@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_ANNUAL_COMMON_PHENOLOGY_EXPLANATORY_02_lag1_annual_moisture_REF";"explanatory";0.544027926636062;0.522544240631694;4110.6643147994;141.050770753193;0.857633672660101;0.866077703041863;0.532585460572475;0.530537657602741

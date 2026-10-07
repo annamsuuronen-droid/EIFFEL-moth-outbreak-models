@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"ENVIRONMENT_EXPLANATORY_01_vegetation_productivity_REF";"explanatory";0.523356575558236;0.498350468159654;4084.0841301752;118.196933320185;0.864377525322275;0.867812887617129;0.503138636885947;0.459115701669913

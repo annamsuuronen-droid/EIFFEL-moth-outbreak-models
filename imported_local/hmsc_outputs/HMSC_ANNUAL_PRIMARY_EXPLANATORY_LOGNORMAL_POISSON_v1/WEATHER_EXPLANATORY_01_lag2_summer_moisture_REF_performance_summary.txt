@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_01_lag2_summer_moisture_REF";"explanatory";0.542879143743792;0.513789685037783;4082.68125808484;118.099678623225;0.870030683675709;0.889606687270743;0.53274094510001;0.523530509418141

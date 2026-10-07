@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"ENVIRONMENT_EXPLANATORY_01_tree_drought_stress_CAND";"explanatory";0.551201335903788;0.526352981645326;4112.13890872745;112.237629193091;0.873206945623614;0.889867015345943;0.536606198889477;0.520891711626406

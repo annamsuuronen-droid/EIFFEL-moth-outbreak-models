@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_EXPLANATORY_04_lag2_spring_temperature_CAND";"explanatory";0.5339426432595;0.505052183841577;4084.14485045853;119.304678522728;0.858994284468104;0.885209356501907;0.514331334422537;0.500603377411661

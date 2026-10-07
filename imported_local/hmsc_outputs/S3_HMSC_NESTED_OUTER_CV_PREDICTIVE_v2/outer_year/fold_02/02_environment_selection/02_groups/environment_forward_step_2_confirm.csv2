@@ -1,0 +1,2 @@
+"label";"status";"n_samples";"mean_delta_SR2";"median_delta_SR2";"min_delta_SR2";"max_delta_SR2";"n_nonnegative_species";"ecological_group";"accepted";"stage";"step"
+"tree_drought_stress";"fitted";969;0,00187065506313873;0,00783103883349057;-0,0156160518075243;0,01339697816345;2;"tree_drought_stress";FALSE;"confirm";2

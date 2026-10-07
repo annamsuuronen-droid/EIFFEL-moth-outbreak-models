@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_CONFIRM_04_current_annual_temperature_REF";"explanatory";0.546130990892277;0.509456266433018;4111.16602784933;141.14548116446;0.867702605453596;0.887410902519827;0.530529655834755;0.509518978112413

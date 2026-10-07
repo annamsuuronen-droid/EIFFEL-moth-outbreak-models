@@ -1,0 +1,2 @@
+"model";"evaluation";"mean_SR2";"median_SR2";"mean_RMSE";"median_RMSE";"mean_occurrence_AUC";"median_occurrence_AUC";"mean_conditional_SR2";"median_conditional_SR2"
+"WEATHER_BACKWARD_05_DROP_current_annual_cold_exposure_below_minus37_CAND";"explanatory";0.515123887646456;0.463470968098681;4082.1986631172;119.072029902428;0.859226397378456;0.88072270877533;0.501750934310525;0.441477085508273
