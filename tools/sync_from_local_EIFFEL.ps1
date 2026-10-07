@@ -8,7 +8,7 @@ Directory links/junctions are not traversed; inaccessible paths cause failure.
 [CmdletBinding()]
 param(
     [string]$SourceRoot = 'D:\EIFFEL',
-    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$RepositoryRoot = ''
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
