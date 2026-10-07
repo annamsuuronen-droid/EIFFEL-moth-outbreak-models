@@ -2,7 +2,7 @@
 # CLI is validation/dry-run ONLY. No package installation or model fitting at entry.
 # An explicit fold-5 recovery API is defined below, gated by local validation and
 # independently verified historical final-fit settings. No site-CV driver exists.
-recon_version <- "S3_v2_RECONSTRUCTED_r1"
+recon_version <- "S3_v2_RECONSTRUCTED_r2"
 recon_basename <- "S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2"
 recon_assert <- function(ok, message) {
   if (length(ok) != 1L || is.na(ok) || !ok) stop(message, call. = FALSE)
@@ -367,9 +367,14 @@ fit_train_model <- function(variables, train_ids, mcmc, seed) {
   y_train <- Y_annual_all[train_ids, , drop = FALSE]
   loff_train <- Loff_annual_all[train_ids, , drop = FALSE]
 
+  # IMPORTANT: studyDesign factors must contain only levels observed in
+  # this TRAIN subset. Supplying full-data factor levels leaves unused level
+  # codes that Hmsc 3.3-7 can map beyond hM$np during initialization.
+  # The random-level objects still retain all metadata units, which is the
+  # Hmsc-supported way to keep potential prediction units available.
   study_design <- data.frame(
-    site = factor(as.character(md$site), levels = all_site_levels),
-    year = factor(as.character(md$year), levels = all_year_levels)
+    site = factor(as.character(md$site)),
+    year = factor(as.character(md$year))
   )
   rownames(study_design) <- train_ids
 
@@ -432,9 +437,12 @@ predict_new_data <- function(fit, test_ids, seed, evaluation, model_type) {
 
   y_test <- Y_annual_all[test_ids, , drop = FALSE]
   loff_test <- Loff_annual_all[test_ids, , drop = FALSE]
+  # As in TRAIN, use only observed factor levels in the supplied
+  # prediction studyDesign. All potential units remain represented in
+  # fit$ran_levels.
   study_design_test <- data.frame(
-    site = factor(as.character(md$site), levels = all_site_levels),
-    year = factor(as.character(md$year), levels = all_year_levels)
+    site = factor(as.character(md$site)),
+    year = factor(as.character(md$year))
   )
   rownames(study_design_test) <- test_ids
 
@@ -570,12 +578,12 @@ recon_resume_fold5 <- function(root, repository, primary_file, verified_profile 
   # Selected predictor lists are immutable; no post-hoc zero-variance removal allowed.
   x <- inputs$X_sample[match(r$ids$final_train, inputs$base_ids), vars, drop = FALSE]
   recon_assert(all(vapply(x, function(z) is.finite(sd(z)) && sd(z) > 0, logical(1))), "Selected final predictors do not vary on recorded TRAIN rows.")
-  stage <- file.path(fd, "RECONSTRUCTED_r1")
+  stage <- file.path(fd, "RECONSTRUCTED_r2")
   provenance <- list(producer = recon_version, evidence_commit = "3176b29093d3bf0cc97252604c23522d390a36e2",
     profile = verified_profile, primary_md5 = unname(tools::md5sum(primary_file)), weather = r$weather, environment = r$environment,
     train_ids = r$ids$final_train, test_ids = r$ids$final_test, partition = r$partition)
   if (dir.exists(stage)) {
-    recon_path(root, "outer_year/fold_05/RECONSTRUCTED_r1")
+    recon_path(root, "outer_year/fold_05/RECONSTRUCTED_r2")
     recon_assert(file.exists(file.path(stage, "PROVENANCE.rds")), "Missing recovery provenance/checkpoint: refusal.")
     recon_assert(identical(readRDS(file.path(stage, "PROVENANCE.rds")), provenance), "Recovery provenance/profile mismatch.")
   } else {
@@ -597,7 +605,7 @@ recon_resume_fold5 <- function(root, repository, primary_file, verified_profile 
     seed <- seed_base + if (model_type == "WEATHER_ONLY") 30000000L else 40000000L
     checkpoint <- file.path(stage, paste0(model_type, "_FINAL_FIT.rds"))
     if (file.exists(checkpoint)) {
-      recon_path(root, paste0("outer_year/fold_05/RECONSTRUCTED_r1/", basename(checkpoint)))
+      recon_path(root, paste0("outer_year/fold_05/RECONSTRUCTED_r2/", basename(checkpoint)))
       fit <- readRDS(checkpoint)
       recon_check_final_fit(fit, v, r$ids$final_train, inputs)
     } else {
