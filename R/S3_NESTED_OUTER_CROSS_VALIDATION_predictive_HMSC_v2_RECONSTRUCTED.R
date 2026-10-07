@@ -506,6 +506,15 @@ recon_exclusive_publish <- function(staged_file, destination) {
   recon_assert(unname(tools::md5sum(staged_file)) == unname(tools::md5sum(destination)), "Published bytes differ.")
   invisible(destination)
 }
+recon_check_final_fit <- function(fit, variables, train_ids, inputs) {
+  required <- c("model", "variables", "means", "sds", "train_ids", "ran_levels")
+  recon_assert(is.list(fit) && all(required %in% names(fit)) && identical(fit$variables, variables) && identical(fit$train_ids, train_ids) && inherits(fit$model, "Hmsc"), "Incompatible final-fit checkpoint; refusing refit.")
+  x <- inputs$X_sample[match(train_ids, inputs$base_ids), variables, drop = FALSE]
+  means <- vapply(x, mean, numeric(1)); sds <- vapply(x, sd, numeric(1))
+  recon_assert(isTRUE(all.equal(fit$means, means, tolerance = 1e-12)) && isTRUE(all.equal(fit$sds, sds, tolerance = 1e-12)), "Final-fit checkpoint TRAIN scaling mismatch.")
+  recon_assert(is.list(fit$ran_levels) && setequal(names(fit$ran_levels), c("site", "year")) && length(fit$model$postList) > 0L, "Missing random-level/posterior checkpoint structure.")
+  invisible(TRUE)
+}
 recon_resume_fold5 <- function(root, repository, primary_file, verified_profile = NULL, fold = 5L) {
   # NOT invoked by CLI; intentionally no runnable scientific command is documented.
   recon_assert(identical(as.integer(fold), 5L), "Refusing to run or overwrite completed folds 1-4.")
@@ -534,6 +543,11 @@ recon_resume_fold5 <- function(root, repository, primary_file, verified_profile 
     recon_assert(dir.create(stage), "Could not exclusively create recovery staging directory.")
     saveRDS(provenance, file.path(stage, "PROVENANCE.rds"))
   }
+  lock <- file.path(stage, "EXECUTION_LOCK")
+  lock_source <- tempfile("lock-", tmpdir = stage)
+  writeLines(paste(recon_version, Sys.getpid()), lock_source)
+  recon_exclusive_publish(lock_source, lock)
+  on.exit(unlink(c(lock, lock_source)), add = TRUE) # Own transient locks only, never results.
   old_rng <- RNGkind(); on.exit(do.call(RNGkind, as.list(old_rng)), add = TRUE)
   do.call(RNGkind, as.list(verified_profile$rng_kind))
   backend <- recon_v1_backend(inputs, verified_profile)
@@ -546,10 +560,10 @@ recon_resume_fold5 <- function(root, repository, primary_file, verified_profile 
     if (file.exists(checkpoint)) {
       recon_path(root, paste0("outer_year/fold_05/RECONSTRUCTED_r1/", basename(checkpoint)))
       fit <- readRDS(checkpoint)
-      recon_assert(is.list(fit) && identical(fit$variables, v) && identical(fit$train_ids, r$ids$final_train) && inherits(fit$model, "Hmsc"), "Incompatible final-fit checkpoint; refusing refit.")
+      recon_check_final_fit(fit, v, r$ids$final_train, inputs)
     } else {
       fit <- backend$fit(v, r$ids$final_train, verified_profile$mcmc, seed)
-      recon_assert(identical(fit$variables, v) && identical(fit$train_ids, r$ids$final_train), "Final model changed selected variables/matched rows.")
+      recon_check_final_fit(fit, v, r$ids$final_train, inputs)
       tmp <- tempfile("fit-", tmpdir = stage); saveRDS(fit, tmp)
       recon_exclusive_publish(tmp, checkpoint)
     }
@@ -564,6 +578,14 @@ recon_resume_fold5 <- function(root, repository, primary_file, verified_profile 
   result <- list(scheme = "year", outer_fold = 5L, outer_train_ids = r$ids$outer_train, outer_test_ids = r$ids$outer_test,
                  final_train_ids = r$ids$final_train, final_test_ids = r$ids$final_test, coverage = r$coverage,
                  weather = weather, environment = environment, predictions = pred, metrics = metrics, reconstructed_provenance = provenance)
+  selection_table <- function(values, column) {
+    table <- data.frame(scheme = rep("year", length(values)), outer_fold = rep(5L, length(values)), stringsAsFactors = FALSE)
+    table[[column]] <- values; table
+  }
+  result$selected_weather_groups <- selection_table(weather$groups, "group")
+  result$selected_weather_variables <- selection_table(weather$variables, "variable")
+  result$selected_environment_groups <- selection_table(environment$groups, "group")
+  result$selected_environment_variables <- selection_table(environment$variables, "variable")
   staged <- file.path(stage, basename(outputs))
   recon_assert(!any(file.exists(staged)), "Staged exports already exist; no overwrite.")
   write.table(pred, staged[1], sep = ";", dec = ",", quote = TRUE, row.names = FALSE, na = "")

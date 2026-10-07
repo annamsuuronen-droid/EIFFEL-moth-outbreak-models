@@ -78,6 +78,16 @@ tryCatch({
   refuses(recon_validate_checkpoint(bad, r), "matched rows|test rows", "checkpoint row inconsistency")
   bad <- cp; bad$weather$variables <- "other"
   refuses(recon_validate_checkpoint(bad, r), "selection mismatch", "checkpoint predictor inconsistency")
+  # Mock class/list metadata only: never construct or fit an Hmsc model.
+  input_mock <- list(base_ids = c("SYNTHETIC1", "SYNTHETIC2"), X_sample = data.frame(v = c(1, 3)))
+  fit_mock <- list(model = structure(list(postList = list("SYNTHETIC")), class = "Hmsc"), variables = "v",
+                   means = c(v = 2), sds = c(v = sd(c(1, 3))), train_ids = input_mock$base_ids,
+                   ran_levels = list(site = "SYNTHETIC", year = "SYNTHETIC"))
+  pass(isTRUE(recon_check_final_fit(fit_mock, "v", input_mock$base_ids, input_mock)), "compatible final-fit checkpoint scaling")
+  bad <- fit_mock; bad$means[1] <- 99
+  refuses(recon_check_final_fit(bad, "v", input_mock$base_ids, input_mock), "scaling mismatch", "corrupt final-fit checkpoint refused")
+  bad <- fit_mock; bad$model$postList <- list()
+  refuses(recon_check_final_fit(bad, "v", input_mock$base_ids, input_mock), "posterior", "missing posterior structure refused")
   # The grouped-fold generator must not be called: explicit existing partition is used.
   make_grouped_folds <- function(...) stop("REPARTITION FORBIDDEN")
   pass(identical(plan$folds[["5"]]$test_years, c("1999", "1994", "2013", "2019", "2020", "2014")), "saved fold-5 years retained")
