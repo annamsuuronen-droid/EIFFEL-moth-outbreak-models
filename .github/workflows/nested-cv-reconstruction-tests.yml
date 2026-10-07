@@ -6,6 +6,7 @@ on:
       - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_FINAL_PROFILE.R'
       - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_PREFLIGHT.R'
       - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_RUN_FOLD5.R'
+      - 'R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_INIT_DIAGNOSTIC.R'
       - 'project_state/nested_cv_reconstruction_v1/expected_v2_evidence.R'
       - 'project_state/nested_cv_reconstruction_v1/EVIDENCE_INVENTORY.csv'
       - 'tools/tests/test_nested_cv_reconstruction.R'
