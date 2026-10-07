@@ -1,0 +1,26 @@
+name: Evidence importer safety (synthetic Windows files only)
+on:
+  push:
+    paths:
+      - 'tools/import_local_evidence.ps1'
+      - 'tools/tests/Test-EiffelEvidenceImport.ps1'
+      - '.github/workflows/evidence-import-safety.yml'
+  pull_request:
+    paths:
+      - 'tools/import_local_evidence.ps1'
+      - 'tools/tests/Test-EiffelEvidenceImport.ps1'
+      - '.github/workflows/evidence-import-safety.yml'
+permissions:
+  contents: read
+jobs:
+  windows-powershell:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse and test Windows PowerShell 5.1 using synthetic fixtures
+        shell: powershell
+        run: '& ./tools/tests/Test-EiffelEvidenceImport.ps1'
+      - name: Parse and test PowerShell 7 using synthetic fixtures
+        shell: pwsh
+        run: '& ./tools/tests/Test-EiffelEvidenceImport.ps1'
