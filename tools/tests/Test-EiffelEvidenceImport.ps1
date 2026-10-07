@@ -9,7 +9,7 @@ if ($parseErrors.Count -ne 0) { throw ($parseErrors | Out-String) }
 . $scriptPath
 $allowOriginal = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'project_state\audit_v1\LOCAL_EVIDENCE_REQUEST.csv'
 $inventory = @(Read-EiffelAllowList $allowOriginal)
-$workspace = Join-Path ([IO.Path]::GetTempPath()) ('eiffel-synthetic-' + [guid]::NewGuid().ToString('N'))
+$workspace = Join-Path ([IO.Path]::GetTempPath()) ('ef-' + [guid]::NewGuid().ToString('N').Substring(0, 16))
 [void][IO.Directory]::CreateDirectory($workspace)
 $utf8 = New-Object Text.UTF8Encoding $false
 $testCount = 0
