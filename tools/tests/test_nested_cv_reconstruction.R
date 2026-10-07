@@ -34,6 +34,36 @@ refuses(recon_main(c("--dry-run", "--fold", "4", "--output-root", root, "--repos
 
 workspace <- tempfile("recon-synthetic-"); dir.create(workspace)
 tryCatch({
+  # Synthetic primary-RData contract: use the historical predictive-producer
+  # target-species order (Epirrita, fagata, brumata), not metric display order.
+  primary_path <- file.path(workspace, "primary.RData")
+  ids <- sprintf("S%04d__2000", seq_len(1430L))
+  target_species <- c("Epirrita autumnata", "Operophtera fagata", "Operophtera brumata")
+  Y_annual_all <- matrix(1, nrow = length(ids), ncol = 3L,
+                         dimnames = list(ids, target_species))
+  Loff_annual_all <- matrix(0, nrow = length(ids), ncol = 3L,
+                            dimnames = list(ids, target_species))
+  sample_metadata <- data.frame(sample_id = ids, site = sprintf("S%04d", seq_len(1430L)),
+                                year = rep(2000L, 1430L), stringsAsFactors = FALSE)
+  X_sample <- data.frame(sample_id = ids, synthetic_predictor = seq_along(ids),
+                         stringsAsFactors = FALSE)
+  weather_groups <- list(synthetic = "synthetic_predictor")
+  environment_groups_buffered <- list()
+  environment_candidate_table <- data.frame()
+  save(target_species, Y_annual_all, Loff_annual_all, sample_metadata, X_sample,
+       weather_groups, environment_groups_buffered, environment_candidate_table,
+       file = primary_path)
+  loaded_primary <- recon_load_inputs(primary_path)
+  pass(identical(colnames(loaded_primary$Y_annual_all), target_species),
+       "historical primary target-species order accepted")
+  bad_primary_path <- file.path(workspace, "primary_bad_order.RData")
+  target_species <- c("Epirrita autumnata", "Operophtera brumata", "Operophtera fagata")
+  save(target_species, Y_annual_all, Loff_annual_all, sample_metadata, X_sample,
+       weather_groups, environment_groups_buffered, environment_candidate_table,
+       file = bad_primary_path)
+  refuses(recon_load_inputs(bad_primary_path), "species/order differs from target_species",
+          "primary target/Y order mismatch refused")
+
   fixture <- file.path(workspace, "hmsc_outputs", recon_basename)
   dir.create(dirname(fixture), recursive = TRUE)
   stopifnot(file.copy(root, dirname(fixture), recursive = TRUE))
