@@ -1,0 +1,27 @@
+name: Nested CV reconstruction (base R validation only)
+on:
+  push:
+    paths:
+      - 'R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R'
+      - 'project_state/nested_cv_reconstruction_v1/expected_v2_evidence.R'
+      - 'project_state/nested_cv_reconstruction_v1/EVIDENCE_INVENTORY.csv'
+      - 'tools/tests/test_nested_cv_reconstruction.R'
+      - '.github/workflows/nested-cv-reconstruction-tests.yml'
+  pull_request:
+    paths:
+      - 'R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R'
+      - 'tools/tests/test_nested_cv_reconstruction.R'
+permissions:
+  contents: read
+jobs:
+  base-r-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: false
+      - name: R syntax and non-scientific tests (no Hmsc installation)
+        run: Rscript --vanilla tools/tests/test_nested_cv_reconstruction.R
