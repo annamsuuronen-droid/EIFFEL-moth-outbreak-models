@@ -1,0 +1,40 @@
+{
+  "date_utc": "2026-10-07",
+  "base_evidence_commit": "3176b29093d3bf0cc97252604c23522d390a36e2",
+  "tested_code_commit": "1cd0b0e7a9efb615b5570c6b82910e7549fb629d",
+  "ci_url": "https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37612554414",
+  "ci_conclusion": "success",
+  "jobs": [
+    {
+      "os": "ubuntu-latest",
+      "non_scientific_tests": 35,
+      "status": "PASS"
+    },
+    {
+      "os": "windows-latest",
+      "non_scientific_tests": 35,
+      "status": "PASS"
+    }
+  ],
+  "syntax_parser": "R parse()",
+  "evidence_files_checked": 166,
+  "selection_decision_flags_checked": 2468,
+  "selection_decision_mismatches": 0,
+  "saved_metric_values_checked": 192,
+  "historical_script_rewritten": false,
+  "models_executed": 0,
+  "Hmsc_installed_or_invoked_for_testing": false,
+  "dry_run_scientific_output_changes": 0,
+  "historical_final_profile_verified": false,
+  "fold5_selection_reusable": true,
+  "fold5_scientific_fit_ready": false,
+  "local_rdata_completion_checkpoint_contents_available_to_cloud": false,
+  "sha256_lf_repository_blobs": {
+    "R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R": "1528ff54bf79c4f1452d4f6a15031aa7a0872f29003ac18fb043ff5ad06300d4",
+    "tools/tests/test_nested_cv_reconstruction.R": "fb297361aa7a5c514b55c294fb58fe02f2ec19a73af4196b833bf241a5b8f10b",
+    ".github/workflows/nested-cv-reconstruction-tests.yml": "bc116e8cfc14313a22a004e1e1f22496e96ffe1ec66701a323a800a9cd3d2776",
+    "project_state/nested_cv_reconstruction_v1/expected_v2_evidence.R": "447554c853d696573d261430f7a556cdb8531e155f9a905a5489cb68ff357f2c",
+    "project_state/nested_cv_reconstruction_v1/EVIDENCE_INVENTORY.csv": "1e9b83854b423c18d986af79990bc752c672a31842acc06f7f1703618b5bdedf"
+  },
+  "validation_scope": "Existing lightweight evidence and temporary test copies/mock metadata only. No scientific fits/posterior draws/new model results. Local checkpoint/data checks are required separately."
+}
