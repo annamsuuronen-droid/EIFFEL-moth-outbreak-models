@@ -1,0 +1,4 @@
+"group"
+"lag1_summer_temperature"
+"lag1_growing_moisture"
+"lag1_autumn_temperature"

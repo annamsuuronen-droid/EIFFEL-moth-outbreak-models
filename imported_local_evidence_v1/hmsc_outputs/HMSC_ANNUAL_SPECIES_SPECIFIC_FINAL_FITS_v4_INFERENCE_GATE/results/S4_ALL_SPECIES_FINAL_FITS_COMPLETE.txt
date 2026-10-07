@@ -1,0 +1,13 @@
+S4_ALL_SPECIES_FINAL_FITS_COMPLETE
+species=Epirrita autumnata|Operophtera fagata|Operophtera brumata
+status=ACCEPTED_FOR_SPECIES_SPECIFIC_INFERENCE_GATE
+V_blocks_inference=FALSE
+species_fitted_separately=TRUE
+site_random_effect=TRUE
+year_random_effect=TRUE
+site_nfMin=1
+site_nfMax=1
+year_nfMin=1
+year_nfMax=1
+offset_prediction_used=TRUE
+predictive_cross_validation=FALSE

@@ -1,0 +1,4 @@
+"ecological_group";"raw_variable";"selected_buffer_m";"model_variable"
+"vegetation_productivity";"NDVI_mean";100;"NDVI_mean__b100m"
+"vegetation_productivity";"NDVI_median";100;"NDVI_median__b100m"
+"vegetation_productivity";"NDVI_max";100;"NDVI_max__b100m"

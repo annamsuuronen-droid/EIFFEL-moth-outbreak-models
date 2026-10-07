@@ -1,0 +1,6 @@
+"variable"
+"lag1_summer_mean_Tmin"
+"lag1_summer_mean_Tmax"
+"lag1_summer_max_Tmax"
+"lag1_growing_sum_precipitation"
+"lag1_autumn_mean_Tmax"

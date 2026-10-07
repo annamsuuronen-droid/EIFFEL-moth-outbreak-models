@@ -1,0 +1,10 @@
+S3_ALL_SPECIES_CALIBRATION_COMPLETE
+species=Epirrita autumnata|Operophtera fagata|Operophtera brumata
+all_species_accepted=TRUE
+V_blocks_inference=FALSE
+acceptance_target=Beta_and_random_effect_inference
+site_nfMin=1
+site_nfMax=1
+year_nfMin=1
+year_nfMax=1
+offset_used=TRUE

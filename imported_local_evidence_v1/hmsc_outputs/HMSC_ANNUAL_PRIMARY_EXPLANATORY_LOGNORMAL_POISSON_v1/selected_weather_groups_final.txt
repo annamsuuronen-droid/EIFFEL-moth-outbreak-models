@@ -1,0 +1,6 @@
+"group"
+"current_summer_temperature"
+"current_spring_moisture_snow"
+"current_annual_moisture"
+"current_annual_temperature"
+"lag2_winter_temperature"

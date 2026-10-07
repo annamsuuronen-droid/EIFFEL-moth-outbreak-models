@@ -1,0 +1,9 @@
+S5_SPECIES_ABUNDANCE_DEPENDENCIES_COMPLETE
+species=Epirrita autumnata|Operophtera fagata|Operophtera brumata
+lag1=exact_previous_calendar_year_same_site
+same_year_other_species=TRUE
+lag1_own_species=TRUE
+lag1_other_species=TRUE
+abundance_predictor=z(log1p(count/exp(Loff)))
+baseline_and_dynamic_samples_matched=TRUE
+V_blocks_inference=FALSE
