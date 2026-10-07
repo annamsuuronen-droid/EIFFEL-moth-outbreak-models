@@ -4,6 +4,19 @@ repository <- normalizePath(if (length(args)) args[1] else getwd(), winslash = "
 script <- file.path(repository, "R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R")
 invisible(parse(script))
 source(script)
+profile_script <- file.path(repository, "R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_FINAL_PROFILE.R")
+source(profile_script)
+profile <- recon_final_profile(repository)
+pass_profile <- function(ok, label) { stopifnot(isTRUE(ok)); cat("PASS", label, "\n") }
+pass_profile(isTRUE(profile$execution_profile_verified) && identical(profile$historical_v2_exact, FALSE),
+             "reconstructed profile is explicit and non-historical")
+pass_profile(identical(unlist(profile$mcmc, use.names = FALSE),
+                       c(5000L, 10000L, 20L, 4L, 4L)),
+             "reconstructed outer-final MCMC matches retained v1")
+pass_profile(identical(profile$rng_kind, c("Mersenne-Twister", "Inversion", "Rejection")),
+             "reconstructed RNG compatibility contract")
+pass_profile(profile$max_prediction_draws == 1000L && profile$random_level_units == "all_metadata",
+             "reconstructed prediction/random-level contract")
 fit_train_model <- predict_new_data <- recon_v1_backend <- function(...) stop("SCIENTIFIC EXECUTION FORBIDDEN IN TEST")
 root <- normalizePath(file.path(repository, "imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2"), winslash = "/")
 count <- 0L
