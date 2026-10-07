@@ -80,7 +80,7 @@ while ($queue.Count -gt 0) {
         if (-not $reason -and $extension -notin ($scriptExtensions + $tableExtensions)) {
             $reason = 'extension not allowlisted (binary/GIS/archive/image/model objects excluded)'
         }
-        if (-not $reason -and $item.BaseName -match $excludedFilePattern) {
+        if (-not $reason -and $extension -in $tableExtensions -and $item.BaseName -match $excludedFilePattern) {
             $reason = 'raw data/model object/temporary filename marker'
         }
         if (-not $reason -and $extension -in $scriptExtensions -and $item.Length -gt $scriptLimit) {
