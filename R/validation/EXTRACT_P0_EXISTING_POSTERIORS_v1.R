@@ -8,7 +8,7 @@ p0_write <- function(x, path) {
 p0_chains <- function(x) {
   if (!inherits(x,"mcmc.list") || length(x)<2L) stop("At least two separate saved chains required")
   z <- lapply(x, as.matrix)
-  if (length(unique(vapply(z,nrow,integer(1))))!=1L ||
+  if (!ncol(z[[1]]) || length(unique(vapply(z,nrow,integer(1))))!=1L ||
       length(unique(vapply(z,ncol,integer(1))))!=1L || nrow(z[[1]])<8L) stop("Incompatible/short chains")
   if (!all(vapply(z,function(a) identical(colnames(a),colnames(z[[1]])),logical(1)))) stop("Parameter order differs")
   if (!all(vapply(z,function(a) all(is.finite(a)),logical(1)))) stop("Nonfinite saved draws")
@@ -44,6 +44,7 @@ p0_model_observations <- function(model) {
   if (any(y[is.finite(y)]<0) || any(abs(y[is.finite(y)]-round(y[is.finite(y)]))>1e-8) || any(!is.finite(off))) stop("Invalid count/offset")
   do.call(rbind,lapply(seq_len(ncol(y)),function(j) {
     keep<-is.finite(y[,j]); effort<-7*exp(off[keep,j])
+    if(!any(keep) || any(!is.finite(effort)) || any(effort<=0)) stop("Missing observations or invalid inferred effort")
     data.frame(species=colnames(y)[j],rows=nrow(y),finite_observations=sum(keep),missing_observations=sum(!keep),
       zeros=sum(y[keep,j]==0),zero_fraction=mean(y[keep,j]==0),maximum=max(y[keep,j]),
       inferred_effort_days_min=min(effort),inferred_effort_days_median=median(effort),inferred_effort_days_max=max(effort),
@@ -59,10 +60,28 @@ p0_raw_extreme <- function(raw) {
   d<-unique(g); v<-suppressWarnings(as.numeric(as.character(d$KokMaara)))
   valid<-all(is.finite(v)) && all(v>=0) && all(abs(v-round(v))<1e-8)
   total<-if(valid) sum(v) else NA_real_
+  missing_dates<-nonpositive<-events<-effort<-NA_real_; date_status<-"DATE_COLUMNS_UNAVAILABLE"
+  if(all(c("PvmAlku","PvmLoppu")%in%names(raw))) {
+    q<-raw[as.character(raw$site)=="1308" & as.character(raw$year)=="2004",c("PvmAlku","PvmLoppu"),drop=FALSE]
+    q<-unique(q)
+    parse_date<-function(x) {
+      text<-trimws(as.character(x));ans<-as.Date(rep(NA_character_,length(x)))
+      for(fmt in c("%Y-%m-%d","%d.%m.%Y","%d/%m/%Y","%d-%m-%Y")) {
+        idx<-which(is.na(ans));if(length(idx))ans[idx]<-as.Date(text[idx],format=fmt)
+      }
+      ans
+    }
+    days<-as.numeric(parse_date(q$PvmLoppu)-parse_date(q$PvmAlku))
+    missing_dates<-sum(!is.finite(days));nonpositive<-sum(days<=0,na.rm=TRUE);events<-length(days)
+    effort<-if(all(is.finite(days)) && all(days>0))sum(days) else NA_real_
+    date_status<-"RAW_YEAR_ALL_SPECIES_DISTINCT_DATEPAIR_SUM_NOT_VERIFIED_ACTIVE_JOIN"
+  }
   data.frame(site="1308",year=2004,species="Epirrita autumnata",raw_rows=nrow(g),exact_distinct_rows=nrow(d),
     exact_duplicate_rows=nrow(g)-nrow(d),missing_or_invalid_counts=sum(!is.finite(v)|v<0),
     original_sum=if(valid)sum(as.numeric(as.character(g$KokMaara))) else NA_real_,
     exact_distinct_sum=total,model_extreme_reference=379332,sum_matches_reference=isTRUE(total==379332),
+    raw_site_year_distinct_datepairs=events,unparsed_datepairs=missing_dates,nonpositive_date_durations=nonpositive,
+    raw_distinct_datepair_effort_days=effort,date_provenance_status=date_status,
     provenance_status="AGGREGATE_RAW_COMPARISON_NOT_EXECUTED_GIS_JOIN_PROOF",stringsAsFactors=FALSE)
 }
 p0_extract <- function(source, output, allow) {
@@ -91,16 +110,28 @@ p0_extract <- function(source, output, allow) {
     converter<-getExportedValue("Hmsc","convertToCodaObject")
     options<-list(Beta=TRUE,Gamma=TRUE,V=TRUE,Sigma=TRUE,rho=TRUE,Eta=FALSE,Lambda=TRUE,alpha=TRUE,Omega=TRUE,Psi=FALSE,Delta=FALSE)
     unknown<-setdiff(names(options),names(formals(converter)))
-    if(length(unknown)) stop("Hmsc converter API differs; reviewed options unavailable: ",paste(unknown,collapse=","))
-    converted<-tryCatch(do.call(converter,c(list(m),options)),error=function(e)e)
+    converted<-list()
+    for(requested in c("Beta","Gamma","V","Sigma","rho","Omega","Lambda","alpha")) {
+      opt<-options; opt[]<-FALSE;opt[[requested]]<-TRUE
+      if(requested=="Omega") opt$Lambda<-TRUE
+      block<-if(length(unknown)) simpleError(paste("Reviewed converter options unavailable:",paste(unknown,collapse=","))) else
+        tryCatch(do.call(converter,c(list(m),opt)),error=function(e)e)
+      if(inherits(block,"error")) {
+        statuses[[length(statuses)+1L]]<-data.frame(id=id,component=requested,status="UNRECOVERED",detail=conditionMessage(block))
+      } else {
+        candidate<-block[[requested]]
+        if(is.null(candidate) && requested=="rho") candidate<-block$Rho
+        if(is.null(candidate)) {
+          statuses[[length(statuses)+1L]]<-data.frame(id=id,component=requested,status="NOT_RETURNED",detail="Component absent/not applicable or unsupported; inspect execution/model structure")
+        } else converted[[requested]]<-candidate
+      }
+    }
     pieces<-list()
     flatten<-function(x,n) {
       if(inherits(x,"mcmc.list")) {pieces[[n]]<<-x;return(invisible(NULL))}
       if(is.list(x)) for(j in seq_along(x)) flatten(x[[j]],paste0(n,"/",if(!is.null(names(x)) && nzchar(names(x)[j]))names(x)[j] else j))
     }
-    if(inherits(converted,"error")) {
-      statuses[[length(statuses)+1L]]<-data.frame(id=id,component="CONVERTER",status="UNRECOVERED",detail=conditionMessage(converted))
-    } else {
+    {
       for(n in names(converted)) flatten(converted[[n]],n)
       if(!length(pieces)) statuses[[length(statuses)+1L]]<-data.frame(id=id,component="ALL",status="UNRECOVERED",detail="No separate coda chains returned")
       for(n in names(pieces)) {
@@ -121,7 +152,9 @@ p0_extract <- function(source, output, allow) {
         p0_write(do.call(rbind,blocks),file.path(output,paste0(id,"_",safe,"_chain_blocks.csv")))
         # Actual saved-draw trace plots only for the six worst finite modern R-hats (or first6 if unavailable).
         ix<-head(order(d$rank_normalized_split_Rhat,decreasing=TRUE,na.last=TRUE),6)
-        pdf(file.path(output,paste0(id,"_",safe,"_selected_traces.pdf")),width=10,height=7)
+        trace_path<-file.path(output,paste0(id,"_",safe,"_selected_traces.pdf"))
+        if(file.exists(trace_path)) stop("Refusing trace overwrite")
+        pdf(trace_path,width=10,height=7)
         tryCatch({for(j in ix) {
           a<-vapply(z,function(q)q[,j],numeric(nrow(z[[1]])))
           matplot(a,type="l",lty=1,xlab="Retained draw index (not sampler iteration)",ylab=d$parameter[j],main=paste(id,n,"saved-chain trace"))
