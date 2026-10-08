@@ -1,0 +1,6 @@
+"relative_path","size","sha256","md5"
+"checkpoint_verification.csv","382","b033268d73c30d0f76808e59874283a53d5b9d37dcc321073ee01de67fb14fb9","497ba1b6c8caa45335859e0343d905b4"
+"reconstructed_provenance_summary.csv","830","064dcc99b2e0164d2bea94e4d60f1f741c938201d7ecd7446e74c4c96b7174c8","5de29a54faac3e5d51f05c5fc619315b"
+"source_manifest.csv","1609","b06ad750d338f2f0a9f36e0694410f2cca4afca3b51ded899cf6df1f5d6ee364","e1d82558b2b316c0af26dfdac8f7d4f6"
+"hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/outer_test_metrics.csv2","1211","ee9127f31fb21a02457e88939ad05cf4165b1c4fd8711c3d0edf8bc3b1d0aaec","85f6f7c89ae386bb031c85ec062f7234"
+"hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/outer_test_predictions.csv2","135713","e2ff8c8a756c4d0df3fe4965e4ee6575f89568ed5f31477ce39180eeb1b886a8","3c68fcf5203f0d9a56b6e3d77fff26f4"
