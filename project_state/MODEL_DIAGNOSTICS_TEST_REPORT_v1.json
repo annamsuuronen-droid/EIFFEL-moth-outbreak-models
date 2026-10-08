@@ -1,0 +1,172 @@
+{
+  "tested_code_commit": "abac0418422446a97b9a0d9cea6f9bbdc5bcd22b",
+  "ci_run": 37765371408,
+  "ci_url": "https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37765371408",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 113271606804,
+      "name": "synthetic-linux-arithmetic",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 37765371408,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run r-lib/actions/setup-r@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run Rscript --vanilla tools/tests/test_completed_outer_year_cv.R",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run python tools/tests/test_fold5_capture_hashes.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Independently verify captured SHA256 when evidence arrives",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Independently recompute published full-year summaries when evidence arrives",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Readiness arithmetic tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Reproduce real-evidence diagnostic checks without models",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        }
+      ]
+    },
+    {
+      "id": 113271607954,
+      "name": "synthetic-windows-safety",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 37765371408,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run r-lib/actions/setup-r@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "PowerShell 5.1 parser and synthetic safety tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "PowerShell 7 parser and synthetic safety tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Base R arithmetic and refusal tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "powershell_51_capture_cases": 24,
+    "powershell_51_import_cases": 32,
+    "powershell_7_capture_cases": 24,
+    "powershell_7_import_cases": 32,
+    "R_reconstruction_tests_per_windows_linux_platform": 37,
+    "R_completed_CV_arithmetic_refusal_and_configuration_tests": "PASS on Windows and Linux",
+    "python_transport_integrity_tests": 9,
+    "python_readiness_arithmetic_tests": 4,
+    "actual_source_audit_hash_identities": 12,
+    "actual_frozen_historical_table_fingerprints": 166,
+    "actual_fold_and_pooled_metric_cells": 288,
+    "actual_PPC_flags": 45,
+    "actual_convergence_policy_flags": 45,
+    "actual_base_R_five_fold_summary_recomputation": "EXECUTED_PASS_NOT_SKIPPED",
+    "local_generated_summary_copy_comparison": "15 generated outputs identical to independent assessment directory",
+    "original_protected_files_byte_unchanged": 3278
+  },
+  "operations_executed": [
+    "Fetch main and immutable evidence through GitHub",
+    "Read lightweight tables/scripts only",
+    "Restore text EOL in fresh temporary directories only after exact size/SHA256/MD5 proof",
+    "Recompute hashes, CV metrics and diagnostic policy arithmetic",
+    "Execute Python tests locally and Python/base-R/PowerShell tests in CI",
+    "Publish new summaries/code and mutable current-state documents via leased fast-forward commits"
+  ],
+  "scientific_model_runs": 0,
+  "posterior_RDS_or_primary_RData_opened_in_cloud": false,
+  "predictive_convergence_available": false,
+  "final_spatial_prediction_ready": false
+}

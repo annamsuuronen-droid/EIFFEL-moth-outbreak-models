@@ -15,3 +15,7 @@ Updated 2026-10-08. Real completed evidence is pinned to main `145fecf7e94da8be3
 - No model fitting, MCMC, S4/S5 refit, site CV or population model ran. New readiness summaries are derived only from existing real exports and lightweight arithmetic; original scientific outputs/imports/historical audits remain unchanged.
 
 **Next scientific action:** recover lightweight diagnostics/execution metadata from the existing predictive posterior objects and verify count/effort/extreme/preparation provenance read-only. Resolve observation-model/export semantics and V policy before choosing any remedy. Then freeze deployment/availability and validation design; expensive execution is deferred.
+
+## Completed lightweight test record
+
+[CI run37765371408](https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37765371408) passed all Windows/Linux safety, Python, base-R and actual-evidence diagnostic steps for assessment commit `abac0418422446a97b9a0d9cea6f9bbdc5bcd22b`. Real-source hash and full-summary steps were executed, not skipped. [Machine-readable test/operations report](MODEL_DIAGNOSTICS_TEST_REPORT_v1.json) records counts and limits. All3278 original scientific/evidence/historical-audit blobs remained identical. No scientific model ran.
