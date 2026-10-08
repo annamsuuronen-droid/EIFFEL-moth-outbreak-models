@@ -6,7 +6,9 @@ $script=Join-Path $repo 'tools\extract_p0_existing_evidence.ps1'
 $tokens=$null;$errors=$null
 [void][Management.Automation.Language.Parser]::ParseFile($script,[ref]$tokens,[ref]$errors)
 if($errors.Count){throw ($errors|Out-String)}
-. $script
+$testP0RuntimePath='C:\SYNTHETIC_ONLY\Rscript.exe'
+. $script -RscriptPath $testP0RuntimePath
+if($RscriptPath -cne $testP0RuntimePath) {throw 'Explicit Rscript path lost when loading shared helpers.'}
 $workspace=Join-Path ([IO.Path]::GetTempPath()) ('eiffel-p0-'+[Guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($workspace)
 function Assert($ok,$message){if(-not $ok){throw $message}}

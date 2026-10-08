@@ -3,7 +3,10 @@
 param([string]$RscriptPath='D:\ProgramFiles\R\R-4.5.2\bin\x64\Rscript.exe')
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+# Dot-sourced capture helper declares a same-named parameter; preserve the caller's executable.
+$requestedP0RscriptPath=$RscriptPath
 . (Join-Path $PSScriptRoot 'capture_completed_fold5.ps1')
+$RscriptPath=$requestedP0RscriptPath
 function Read-P0AllowList([string]$Path) {
     $rows=@(Import-Csv -LiteralPath $Path -Encoding UTF8)
     if ($rows.Count -ne 36 -or (@($rows[0].PSObject.Properties.Name)-join '|') -cne 'id|relative_path|expected_size|action') { throw 'Unexpected P0 allow-list schema/count.' }
