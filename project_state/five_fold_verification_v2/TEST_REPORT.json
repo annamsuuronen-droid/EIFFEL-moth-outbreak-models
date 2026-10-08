@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-08",
+  "tested_commit": "bdd87ae3411c0d7114c55e0cbbd93a1f58a763d4",
+  "ci_run": 37760965373,
+  "ci_url": "https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37760965373",
+  "jobs": [
+    {
+      "name": "synthetic-linux-arithmetic",
+      "conclusion": "success"
+    },
+    {
+      "name": "synthetic-windows-safety",
+      "conclusion": "success"
+    }
+  ],
+  "python_integrity_cases": 7,
+  "reconstruction_R_tests_per_platform": 37,
+  "independent_real_historical_files_sha256_md5": 166,
+  "real_historical_metric_cells": 192,
+  "recorded_convergence_policy_checks": 285,
+  "scientific_model_runs": 0,
+  "real_fold5_capture_available": false,
+  "real_five_fold_verification_complete": false,
+  "real_capture_hash_and_full_summary_CI": "SKIPPED - real capture absent",
+  "published_scientific_five_fold_metrics": false,
+  "capture_safety_cases_per_powershell": 24,
+  "dependent_importer_cases_per_powershell": 32,
+  "powershell_versions": [
+    "Windows PowerShell 5.1",
+    "PowerShell 7.6.6"
+  ],
+  "completed_CV_R_tests": {
+    "Windows": "PASS",
+    "Linux": "PASS",
+    "scope": "synthetic arithmetic, primary-row rejection, temporary full-pipeline fixture, overwrite/corruption checks; never real fold5"
+  }
+}
