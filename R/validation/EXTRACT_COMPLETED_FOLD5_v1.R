@@ -1,4 +1,11 @@
 # Base-R read-only validation. No Hmsc loading, fitting, prediction or model execution.
+fold5_validate_primary_rows <- function(predictions, inputs, expected_ids) {
+  if (!setequal(unique(predictions$sample_id),expected_ids)) stop("Matched TEST IDs differ from primary complete cases.",call.=FALSE)
+  observed <- inputs$Y_annual_all[cbind(match(predictions$sample_id,inputs$base_ids),match(predictions$species,colnames(inputs$Y_annual_all)))]
+  actual <- as.numeric(gsub(",", ".", predictions$observed, fixed=TRUE))
+  if (!isTRUE(all.equal(unname(actual),unname(observed),tolerance=1e-12))) stop("Observed values differ from saved primary input.",call.=FALSE)
+  invisible(TRUE)
+}
 fold5_extract <- function(source_root, repository, target) {
   source(file.path(repository, "R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R"), local = TRUE)
   source(file.path(repository, "R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_FINAL_PROFILE.R"), local = TRUE)
@@ -10,6 +17,14 @@ fold5_extract <- function(source_root, repository, target) {
   provenance <- readRDS(file.path(local_dir, "RECONSTRUCTED_r2/PROVENANCE.rds"))
   primary <- file.path(source_root, "hmsc_outputs/HMSC_ANNUAL_PRIMARY_PREDICTIVE_LOGNORMAL_POISSON_BLOCKED_CV_v1/HMSC_annual_three_species_weather_environment_buffers_results.RData")
   inputs <- recon_load_inputs(primary)
+  # Validate the immutable historical snapshots against the SAME saved primary input.
+  # This reads repository copies only, not additional Windows source directories.
+  historical_root <- file.path(repository,"imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
+  historical_plan <- recon_inspect(historical_root,repository,evidence_only=TRUE,inputs=inputs)
+  for (fold in 1:4) {
+    r <- historical_plan$folds[[as.character(fold)]]
+    fold5_validate_primary_rows(r$predictions,inputs,r$ids$final_test)
+  }
   pred <- recon_table(file.path(imported, "outer_test_predictions.csv2"))
   metrics <- recon_table(file.path(imported, "outer_test_metrics.csv2"))
   report <- list(fold=5L, weather=f$weather, environment=f$environment, coverage=f$coverage,
@@ -33,12 +48,10 @@ fold5_extract <- function(source_root, repository, target) {
     recon_coverage(inputs,ids$test,f$coverage$label[3],5L),
     recon_coverage(inputs,recon_complete_ids(inputs,matched,ids$test),f$coverage$label[4],5L))
   recon_same_table(derived,f$coverage,"primary-derived coverage")
-  observed <- inputs$Y_annual_all[cbind(match(pred$sample_id,inputs$base_ids),match(pred$species,colnames(inputs$Y_annual_all)))]
-  actual <- as.numeric(gsub(",", ".", pred$observed, fixed=TRUE))
-  recon_assert(isTRUE(all.equal(unname(actual),unname(observed),tolerance=1e-12)), "Observed values differ from saved primary input.")
+  fold5_validate_primary_rows(pred,inputs,cp$final_test_ids)
   output <- file.path(target,"checkpoint_verification.csv")
   recon_assert(!file.exists(output) && !file.exists(file.path(target,"reconstructed_provenance_summary.csv")),"Summary overwrite forbidden.")
-  checks <- c("checkpoint_schema", "predictions_metrics", "primary_partition_and_matched_ids", "primary_observed_values", "coverage", "selected_predictors", "r2_provenance", "profile_compatibility_not_historical_identity")
+  checks <- c("checkpoint_schema", "predictions_metrics", "primary_partition_and_matched_ids", "primary_observed_values", "coverage", "selected_predictors", "r2_provenance", "profile_compatibility_not_historical_identity", "historical_folds_primary_observations", "all_folds_exact_primary_matched_test_ids")
   write.csv(data.frame(check=checks,status="PASS"),output,row.names=FALSE,na="")
   # Whitelisted scalars/vectors only: no binary objects or raw input tables are exported.
   fields <- list(producer=provenance$producer, historical_v2_exact=FALSE,

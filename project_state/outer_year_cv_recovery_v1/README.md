@@ -10,7 +10,7 @@ Every entry in `LOCAL_EVIDENCE_ALLOWLIST.csv` is independently pinned by its ord
 | --- | --- | ---: | --- |
 | hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/outer_test_predictions.csv2 | COPY | 2097152 | Derived held-out predictions explicitly requested for verification, including their observed evaluation responses. This narrow exception does not authorize raw observation/abundance datasets. |
 | hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/outer_test_metrics.csv2 | COPY | 65536 | Six model/species aggregate rows; recomputed independently. |
-| hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/OUTER_FOLD_COMPLETE.rds | EXTRACT ONLY | 2097152 | Validate IDs, selections, coverage, predictions, metrics and embedded provenance; export eight PASS checks only. No binary imported. |
+| hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/OUTER_FOLD_COMPLETE.rds | EXTRACT ONLY | 2097152 | Validate IDs, selections, coverage, predictions, metrics and embedded provenance; export ten PASS checks only. No binary imported. |
 | hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/RECONSTRUCTED_r2/PROVENANCE.rds | EXTRACT ONLY | 262144 | Compare with completion provenance; export whitelisted scalar/profile/predictor summary. No binary imported. |
 | hmsc_outputs/HMSC_ANNUAL_PRIMARY_PREDICTIVE_LOGNORMAL_POISSON_BLOCKED_CV_v1/HMSC_annual_three_species_weather_environment_buffers_results.RData | VERIFY ONLY | 4194304 | Read existing prepared input to verify exact observed values, partition, matched IDs and coverage; verify training-provenance MD5. Never copy/export its tables. |
 
@@ -23,12 +23,12 @@ Sizes of the new outputs are not remotely known. The manifest explicitly records
 From `D:\EIFFEL-control`, after this revision is in main:
 
 ```powershell
-git -c core.hooksPath=NUL pull --ff-only origin main; if ($LASTEXITCODE -eq 0) { powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\capture_completed_fold5.ps1 -PublishGit }
+git -c core.hooksPath=NUL pull --ff-only origin main; if ($LASTEXITCODE -eq 0) { powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\capture_completed_fold5.ps1 -RscriptPath 'D:\ProgramFiles\R\R-4.5.2\bin\x64\Rscript.exe' -PublishGit }
 ```
 
 The pull also disables local Git hooks (Windows NUL hook path), so it cannot trigger a competing model through a post-merge hook.
 
-Requires Rscript.exe on PATH (the existing R installation), Git and Windows PowerShell 5.1 or newer. No packages are installed; R runs only base-R read/verification/arithmetic code, with `--vanilla`. The maintained recovery R defaults now use D:\EIFFEL_runtime; historical imported code retains its original paths as provenance. Do not run the historical or current fold-5 execution wrapper again.
+Uses the supplied explicit Rscript.exe path; PATH fallback is available if -RscriptPath is omitted. Requires Git and Windows PowerShell 5.1 or newer. No packages are installed; R runs only base-R read/verification/arithmetic code, with `--vanilla`. The maintained recovery R defaults now use D:\EIFFEL_runtime; historical imported code retains its original paths as provenance. Do not run the historical or current fold-5 execution wrapper again.
 
 `-PublishGit` is explicit consent for a scoped commit/push of only the new evidence and full-CV summary directories. It requires main, the expected origin and no pre-existing staged changes. Unrelated working-tree changes are not staged. Empty per-command Git hooks prevent hooks from starting local analyses. Push is non-forced. Failure leaves evidence/any local commit intact; it does not retry or overwrite anything.
 
@@ -49,7 +49,7 @@ A successful `-PublishGit` run also prints the evidence commit and push output. 
 
 ## Verification chain
 
-The eight local extraction checks validate the RDS records against the fixed reconstructed r2 contract and independently against primary inputs. Species, exact ordered sample IDs, six held-out years (1999, 1994, 2013, 2019, 2020, 2014), model types, 11-column schema, observations, 222 matched TEST/916 TRAIN, selected seven weather/two environment variables, primary-derived coverage and all six metric rows must agree. The training profile records R 4.5.2/Hmsc 3.3.7/coda 0.19.4.1, accepted RNGkind, 5000 samples, 10000 transient, thin20, four chains/workers and 1000 prediction draws. Extractor runtime is recorded separately; no current Hmsc installation is needed for this lightweight step.
+The ten local extraction checks validate the RDS records against the fixed reconstructed r2 contract and independently against primary inputs. Species, exact ordered sample IDs, six held-out years (1999, 1994, 2013, 2019, 2020, 2014), model types, 11-column schema, observations, 222 matched TEST/916 TRAIN, selected seven weather/two environment variables, primary-derived coverage and all six metric rows must agree. The training profile records R 4.5.2/Hmsc 3.3.7/coda 0.19.4.1, accepted RNGkind, 5000 samples, 10000 transient, thin20, four chains/workers and 1000 prediction draws. Extractor runtime is recorded separately; no current Hmsc installation is needed for this lightweight step.
 
 PowerShell verifies SHA256 of each copied file and records hashes of every inspected source and output artifact. The package-free R audit checks artifact byte counts/MD5 against that SHA256 capture and validates the source manifest/check records. This is a reproducibility/accidental-change chain, not signed forensic attestation of an untrusted machine. On the evidence push, CI automatically independently recomputes the supplied SHA256 values (`tools/verify_fold5_capture.py`), reruns the full audit into a temporary directory, and compares all five published summary tables. Synthetic Python integrity tests also reject corruption, hash tampering, traversal and duplicate entries.
 
@@ -64,3 +64,5 @@ All comparisons are audit computations. They do not choose predictors, buffers, 
 `tools/tests/test_completed_outer_year_cv.R` parses new R code and exercises exact synthetic metrics and rejection of held-out-year, probability, species, observation and metric corruption, missing evidence, output overwrite, and frozen S4 configuration. Existing reconstruction CI also covers the maintained producer helpers. New CI runs PowerShell 5.1/7 and base R on Windows, plus base R on Linux. No model or Hmsc sampling is permitted in these tests. Local Windows roots cannot be accessed from cloud; successful real evidence capture remains a local dependency.
 
 Verified initial CI: [run 37747198259](https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37747198259). All 18 synthetic Windows capture cases passed on each of PowerShell 5.1 and PowerShell 7; base-R arithmetic/refusal and full-pipeline fixture tests passed on Windows and Linux. No model execution. See TEST_REPORT.json for the verified code revision; subsequent maintenance revisions have their own Actions checks.
+
+Verification-v2 corrections: historical1–4 predictions are also checked against the saved primary input and exact matched TEST sets. Capture SHA256 is rechecked immediately before publication; seven audit outputs receive AUDIT_ARTIFACT_MANIFEST.csv and are independently hash-checked in cloud. See ../five_fold_verification_v2/REPORT.md for current availability/limitations. Original baseline test counts above describe their recorded revisions; current test results are in the versioned v2 report.

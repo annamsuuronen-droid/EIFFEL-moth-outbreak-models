@@ -45,8 +45,19 @@ try {
  Assert (@(Get-ChildItem -LiteralPath $target -Recurse -Filter '*.RData').Count-eq 0) 'Primary RData copied'
  Assert (@($manifest|Where-Object status -ceq 'COPIED_SHA256_VERIFIED').Count-eq 2) 'Copied count'
  foreach($row in @($manifest|Where-Object action -ceq 'COPY')) { Assert ((Get-FileHash -LiteralPath (Join-Path $target $row.destination_path.Replace('/','\')) -Algorithm SHA256).Hash.ToLowerInvariant()-ceq $row.sha256) 'Hash mismatch' }
- $count++
+ Assert-Fold5CapturedHashes $target
+ $copied=Join-Path $target $rows[0].relative_path.Replace('/','\');[IO.File]::AppendAllText($copied,'CORRUPTION')
+ $caught=$false;try { Assert-Fold5CapturedHashes $target } catch { $caught=$true };Assert $caught 'Prepublication corruption accepted'
+ $count+=2
  Refuse $f 'already exists'
+ $exe=Join-Path $workspace 'Rscript.exe';Write-TestFile $exe 'NOT EXECUTABLE - RESOLUTION TEST ONLY'
+ Assert ((Resolve-Fold5Rscript $exe)-ceq $exe) 'Explicit Rscript path not preserved'
+ foreach($bad in @('relative/Rscript.exe',(Join-Path $workspace 'missing/Rscript.exe'),(Join-Path $workspace 'R.exe'))) { $caught=$false;try { Resolve-Fold5Rscript $bad } catch { $caught=$true };Assert $caught 'Bad Rscript path accepted';$count++ }
+ $auditFixture=Join-Path $workspace 'audit-only-fixture';[void][IO.Directory]::CreateDirectory($auditFixture)
+ foreach($name in @('recomputed_fold_metrics.csv','pooled_five_fold_metrics.csv','equal_weight_fold_metrics.csv','fold_coverage.csv','STATUS.csv','INPUT_ARTIFACT_MANIFEST.csv','README.md')) { Write-TestFile (Join-Path $auditFixture $name) 'SYNTHETIC ONLY' }
+ Write-Fold5AuditManifest $auditFixture
+ Assert (@(Import-Csv -LiteralPath (Join-Path $auditFixture 'AUDIT_ARTIFACT_MANIFEST.csv')).Count -eq 7) 'Audit manifest missing hashes'
+ $caught=$false;try { Write-Fold5AuditManifest $auditFixture } catch { $caught=$true };Assert $caught 'Audit manifest overwrite accepted';$count+=2
  $f=Fixture 'missing';[IO.File]::Delete((Join-Path $f.Source $rows[0].relative_path.Replace('/','\')));Refuse $f 'find|exist|Exception calling'
  $f=Fixture 'oversize';$path=Join-Path $f.Source $rows[1].relative_path.Replace('/','\');[IO.File]::WriteAllBytes($path,(New-Object byte[] 65537));Refuse $f 'oversized'
  $f=Fixture 'empty';[IO.File]::WriteAllText((Join-Path $f.Source $rows[0].relative_path.Replace('/','\')),'');Refuse $f 'Empty'

@@ -50,7 +50,7 @@ jobs:
       - run: python tools/tests/test_fold5_capture_hashes.py
       - name: Independently verify captured SHA256 when evidence arrives
         if: ${{ hashFiles('imported_fold5_completed_r2_v1/artifact_manifest.csv') != '' }}
-        run: python tools/verify_fold5_capture.py imported_fold5_completed_r2_v1
+        run: python tools/verify_fold5_capture.py imported_fold5_completed_r2_v1 --audit project_state/outer_year_cv_full_v1
       - name: Independently recompute published full-year summaries when evidence arrives
         if: ${{ hashFiles('imported_fold5_completed_r2_v1/artifact_manifest.csv') != '' }}
         run: Rscript --vanilla tools/tests/verify_published_outer_year_cv.R

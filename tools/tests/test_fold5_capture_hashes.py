@@ -44,6 +44,23 @@ class CaptureHashes(unittest.TestCase):
     def test_traversal(self):
         self.inventory[0]['relative_path']='../escape.csv';self.write('artifact_manifest.csv',self.inventory)
         with self.assertRaises(ValueError): module.verify(self.root)
+    def audit_fixture(self):
+        directory = self.root/'audit'
+        directory.mkdir()
+        records = []
+        for name in sorted(module.AUDIT_EXPECTED):
+            data = b'SYNTHETIC TEST FIXTURE ONLY'
+            (directory/name).write_bytes(data)
+            records.append(dict(relative_path=name,size=len(data),sha256=hashlib.sha256(data).hexdigest(),md5=hashlib.md5(data).hexdigest()))
+        with (directory/'AUDIT_ARTIFACT_MANIFEST.csv').open('w', newline='') as handle:
+            writer=csv.DictWriter(handle,fieldnames=list(records[0]));writer.writeheader();writer.writerows(records)
+        return directory
+    def test_audit_integrity(self):
+        module.verify_audit(self.audit_fixture())
+    def test_audit_corruption(self):
+        directory = self.audit_fixture()
+        (directory/'STATUS.csv').write_bytes(b'CORRUPTED')
+        with self.assertRaises(ValueError): module.verify_audit(directory)
     def test_duplicate(self):
         self.inventory.append(self.inventory[0]);self.write('artifact_manifest.csv',self.inventory)
         with self.assertRaises(ValueError): module.verify(self.root)

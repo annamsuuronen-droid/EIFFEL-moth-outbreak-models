@@ -13,7 +13,7 @@ full_cv_audit <- function(repository, snapshot, output=file.path(repository,"pro
   }
   # SHA256 is independently verified in PowerShell at capture; MD5 here detects later edits without a package dependency.
   checks <- read.csv(file.path(snapshot,"checkpoint_verification.csv"),colClasses="character")
-  expected_checks <- c("checkpoint_schema","predictions_metrics","primary_partition_and_matched_ids","primary_observed_values","coverage","selected_predictors","r2_provenance","profile_compatibility_not_historical_identity")
+  expected_checks <- c("checkpoint_schema","predictions_metrics","primary_partition_and_matched_ids","primary_observed_values","coverage","selected_predictors","r2_provenance","profile_compatibility_not_historical_identity","historical_folds_primary_observations","all_folds_exact_primary_matched_test_ids")
   recon_assert(identical(checks$check,expected_checks) && all(checks$status=="PASS"),"Local primary/checkpoint checks incomplete.")
   sources <- read.csv(file.path(snapshot,"source_manifest.csv"),colClasses="character")
   allow <- read.csv(file.path(repository,"project_state/outer_year_cv_recovery_v1/LOCAL_EVIDENCE_ALLOWLIST.csv"),colClasses="character")

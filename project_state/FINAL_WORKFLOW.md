@@ -44,3 +44,5 @@ This standard-library utility parses imports, checks manifest coverage, recalcul
 2. Independently verify captured SHA256 in cloud and review pooled and equal-fold metrics, reporting matched coverage and mixed producer provenance.
 3. Restrict claims to held-out years in the sampled network unless separately validating new sites; do not claim advance forecasting without availability/chronological evidence.
 4. Inspect existing full-data v2 fit diagnostics and frozen configuration before deciding whether any S4 fit is required. No site/S4/S5/population execution is authorized.
+
+Current local verification uses the exact Rscript path supplied by the user; see [verification review v2](five_fold_verification_v2/REPORT.md). Both historical1–4 and r2-fold5 primary observations/matched TEST sets must pass. New local evidence needs its capture and audit SHA256 manifests and independent cloud recomputation before final cloud validation status. No S4/S5 fit is authorized.

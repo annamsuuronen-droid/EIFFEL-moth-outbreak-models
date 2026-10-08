@@ -42,7 +42,29 @@ def verify(snapshot):
             raise ValueError('Copied-source manifest mismatch')
     print('PASS: all five captured artifacts independently SHA256 verified; no scientific computation.')
 
+AUDIT_EXPECTED = {'recomputed_fold_metrics.csv', 'pooled_five_fold_metrics.csv',
+                  'equal_weight_fold_metrics.csv', 'fold_coverage.csv', 'STATUS.csv',
+                  'INPUT_ARTIFACT_MANIFEST.csv', 'README.md'}
+
+def verify_audit(directory):
+    directory = Path(directory).resolve(strict=True)
+    inventory = rows(directory/'AUDIT_ARTIFACT_MANIFEST.csv')
+    if len(inventory) != 7 or {r['relative_path'] for r in inventory} != AUDIT_EXPECTED:
+        raise ValueError('Unexpected audit manifest')
+    for record in inventory:
+        path = directory/record['relative_path']
+        if path.is_symlink():
+            raise ValueError('Audit symlink forbidden')
+        data = path.read_bytes()
+        if len(data) != int(record['size']) or hashlib.sha256(data).hexdigest() != record['sha256'] or hashlib.md5(data).hexdigest() != record['md5']:
+            raise ValueError('Audit SHA256/size mismatch')
+    print('PASS: all seven published audit artifacts independently SHA256 verified.')
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('snapshot', type=Path)
-    verify(parser.parse_args().snapshot)
+    parser.add_argument('--audit', type=Path)
+    args = parser.parse_args()
+    verify(args.snapshot)
+    if args.audit is not None:
+        verify_audit(args.audit)

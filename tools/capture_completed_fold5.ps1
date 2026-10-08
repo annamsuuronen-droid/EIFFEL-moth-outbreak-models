@@ -1,6 +1,6 @@
 #requires -Version 5.1
 [CmdletBinding()]
-param([switch]$PublishGit)
+param([switch]$PublishGit, [string]$RscriptPath)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'import_local_evidence.ps1')
@@ -20,6 +20,49 @@ function Read-Fold5AllowList([string]$Path) {
     $stream = New-Object IO.MemoryStream (,[Text.Encoding]::UTF8.GetBytes(($canonical -join "`n")))
     try { if ((Get-EiffelHash $stream) -cne '9fdbb1e7685b8ccf9c79f6067ff72847c3d1a2bf670fda39188d71112d12cd45') { throw 'Allow-list differs from the five reviewed entries.' } } finally { $stream.Dispose() }
     return $rows
+}
+function Resolve-Fold5Rscript([string]$Path) {
+    if ([string]::IsNullOrWhiteSpace($Path)) { return (Get-Command Rscript.exe -CommandType Application -ErrorAction Stop).Source }
+    if ($Path -notmatch '^[A-Za-z]:\\' -or [IO.Path]::GetFileName($Path) -ine 'Rscript.exe') { throw 'Rscript must be an absolute local path ending in Rscript.exe.' }
+    $full = ConvertTo-EiffelFullPath $Path
+    if (-not [IO.File]::Exists($full) -or ([IO.File]::GetAttributes($full) -band ([IO.FileAttributes]::Directory -bor [IO.FileAttributes]::ReparsePoint)) -ne 0) { throw 'Rscript executable is missing or a reparse point.' }
+    return $full
+}
+function Assert-Fold5CapturedHashes([string]$Target) {
+    $rows = @(Import-Csv -LiteralPath (Join-Path $Target 'artifact_manifest.csv') -Encoding UTF8)
+    $prefix = 'hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_05/'
+    $expected = @(($prefix+'outer_test_predictions.csv2'), ($prefix+'outer_test_metrics.csv2'), 'checkpoint_verification.csv', 'reconstructed_provenance_summary.csv', 'source_manifest.csv')
+    if ($rows.Count -ne 5 -or ((@($rows.relative_path | Sort-Object) -join '|') -cne (@($expected | Sort-Object) -join '|'))) { throw 'Unexpected captured artifact paths.' }
+    $guards = New-Object 'System.Collections.Generic.List[System.IDisposable]'
+    $guarded = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    try {
+        Protect-EiffelDirectory $Target $guards $guarded
+        foreach ($row in $rows) {
+            $path = Join-Path $Target $row.relative_path.Replace('/','\')
+            $stream = Open-EiffelSource $path $guards $guarded
+            try { if ($stream.Length -ne [long]$row.size -or (Get-EiffelHash $stream) -cne $row.sha256) { throw 'Captured artifact SHA256/size mismatch before publication.' } }
+            finally { $stream.Dispose() }
+        }
+    } finally { for ($i=$guards.Count-1;$i -ge 0;$i--) { $guards[$i].Dispose() } }
+}
+function Write-Fold5AuditManifest([string]$Directory) {
+    $expected = @('recomputed_fold_metrics.csv','pooled_five_fold_metrics.csv','equal_weight_fold_metrics.csv','fold_coverage.csv','STATUS.csv','INPUT_ARTIFACT_MANIFEST.csv','README.md')
+    $files = @(Get-ChildItem -LiteralPath $Directory -Force)
+    if (($files.Count -ne 7) -or ((@($files.Name | Sort-Object) -join '|') -cne (@($expected | Sort-Object) -join '|'))) { throw 'Unexpected audit output files; publication refused.' }
+    $guards = New-Object 'System.Collections.Generic.List[System.IDisposable]'
+    $guarded = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    $records = @()
+    try {
+        Protect-EiffelDirectory $Directory $guards $guarded
+        foreach ($file in $files) {
+            $stream = Open-EiffelSource $file.FullName $guards $guarded
+            try {
+                if ($stream.Length -le 0 -or $stream.Length -gt 262144) { throw 'Unexpected audit file size.' }
+                $records += [pscustomobject]@{relative_path=$file.Name;size=$stream.Length;sha256=(Get-EiffelHash $stream);md5=(Get-FileHash -LiteralPath $file.FullName -Algorithm MD5).Hash.ToLowerInvariant()}
+            } finally { $stream.Dispose() }
+        }
+        Write-Fold5CsvNew $records (Join-Path $Directory 'AUDIT_ARTIFACT_MANIFEST.csv')
+    } finally { for ($i=$guards.Count-1;$i -ge 0;$i--) { $guards[$i].Dispose() } }
 }
 function Write-Fold5CsvNew($Rows, [string]$Path) {
     $stream = [IO.File]::Open($Path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
@@ -102,7 +145,7 @@ function Invoke-Fold5Capture([string]$SourceRoot, [string]$RepositoryRoot, [scri
 if ($MyInvocation.InvocationName -ne '.') {
     $repo = ConvertTo-EiffelFullPath (Join-Path $PSScriptRoot '..')
     if (-not $repo.Equals('D:\EIFFEL-control',[StringComparison]::OrdinalIgnoreCase)) { throw 'Production repository must be D:\EIFFEL-control.' }
-    $rscript = (Get-Command Rscript.exe -CommandType Application -ErrorAction Stop).Source
+    $rscript = Resolve-Fold5Rscript $RscriptPath
     if ($PublishGit) {
         $branch = & git -C $repo branch --show-current
         if ($LASTEXITCODE -ne 0 -or $branch -cne 'main') { throw 'Publication requires main.' }
@@ -119,6 +162,8 @@ if ($MyInvocation.InvocationName -ne '.') {
     $target = Invoke-Fold5Capture 'D:\EIFFEL_runtime' $repo $extractor
     & $rscript --vanilla (Join-Path $repo 'R\validation\AUDIT_COMPLETE_OUTER_YEAR_CV_v1.R') $repo $target
     if ($LASTEXITCODE -ne 0) { throw 'Full five-fold audit failed; no publication.' }
+    Assert-Fold5CapturedHashes $target
+    Write-Fold5AuditManifest (Join-Path $repo 'project_state\outer_year_cv_full_v1')
     if ($PublishGit) {
         & git -C $repo diff --cached --quiet
         if ($LASTEXITCODE -ne 0) { throw 'Staging changed during capture; publication refused.' }
