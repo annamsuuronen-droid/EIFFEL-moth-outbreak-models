@@ -32,3 +32,5 @@ User requested a lightweight local import before scientific auditing. Source ori
 - Outer-site CV is conditional on new-site claims; current evidence supports only a temporal/network claim. No expensive site run is justified now.
 - A fixed eight-variable full-data predictive configuration is legitimate independently of outer scores. Existing v2 fitted objects must be inspected before any S4 refit; the corrected preflight is configuration-only and cannot fit.
 - No new scientific-review issue is needed for this resolved engineering/scope work; existing issue #1 remains open for its genuine diagnostic policy question.
+
+- Existing C+D v2 final offset-corrected PPC tables were reviewed (30 interval flags reproduced; alternate exports are identical aliases). E. autumnata upper-tail and O. fagata zero discrepancies require adequacy/preparation/convergence follow-up before any longer S4 run; no new sampling or diagnostic threshold was chosen.

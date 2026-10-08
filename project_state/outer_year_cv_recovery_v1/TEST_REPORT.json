@@ -1,7 +1,7 @@
 {
-  "tested_commit": "4964f007d566825bbe75bc8ca70612def6f80fcd",
-  "run_id": 37747198259,
-  "run_url": "https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37747198259",
+  "tested_commit": "35ee146d78a80ae142a8f5b93405809c54bccbfd",
+  "run_id": 37747690427,
+  "run_url": "https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37747690427",
   "status": "success",
   "windows_powershell_5_1_cases": 18,
   "powershell_7_cases": 18,
@@ -10,5 +10,10 @@
   "cloud_historical_metric_checks": 192,
   "cloud_convergence_policy_checks": 285,
   "models_run": 0,
-  "completed_real_fold5_import": "PENDING_LOCAL_CAPTURE"
+  "completed_real_fold5_import": "PENDING_LOCAL_CAPTURE",
+  "reconstruction_tests_run": 37747690487,
+  "reconstruction_tests_status": "PASS Windows/Linux",
+  "python_synthetic_integrity_cases": 5,
+  "full_data_ppc_flags_reproduced": 30,
+  "cloud_actual_capture_checks": "NOT_RUN_EVIDENCE_NOT_YET_IMPORTED"
 }

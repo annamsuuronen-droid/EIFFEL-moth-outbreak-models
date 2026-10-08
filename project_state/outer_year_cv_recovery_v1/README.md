@@ -23,8 +23,10 @@ Sizes of the new outputs are not remotely known. The manifest explicitly records
 From `D:\EIFFEL-control`, after this revision is in main:
 
 ```powershell
-git pull --ff-only origin main; if ($LASTEXITCODE -eq 0) { powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\capture_completed_fold5.ps1 -PublishGit }
+git -c core.hooksPath=NUL pull --ff-only origin main; if ($LASTEXITCODE -eq 0) { powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\capture_completed_fold5.ps1 -PublishGit }
 ```
+
+The pull also disables local Git hooks (Windows NUL hook path), so it cannot trigger a competing model through a post-merge hook.
 
 Requires Rscript.exe on PATH (the existing R installation), Git and Windows PowerShell 5.1 or newer. No packages are installed; R runs only base-R read/verification/arithmetic code, with `--vanilla`. The maintained recovery R defaults now use D:\EIFFEL_runtime; historical imported code retains its original paths as provenance. Do not run the historical or current fold-5 execution wrapper again.
 
