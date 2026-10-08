@@ -61,6 +61,19 @@ class CaptureHashes(unittest.TestCase):
         directory = self.audit_fixture()
         (directory/'STATUS.csv').write_bytes(b'CORRUPTED')
         with self.assertRaises(ValueError): module.verify_audit(directory)
+    def test_transport_normalization(self):
+        data = b'SOURCE WINDOWS TEXT\r\n'
+        path = self.root/'checkpoint_verification.csv'
+        path.write_bytes(data.replace(b'\r\n',b'\n'))
+        record = dict(size=len(data),sha256=hashlib.sha256(data).hexdigest(),md5=hashlib.md5(data).hexdigest())
+        with self.assertRaises(ValueError): module.verified_bytes(path,record)
+        actual, status = module.verified_bytes(path,record,True)
+        self.assertEqual(actual,data);self.assertEqual(status,'VERIFIED_CRLF_RESTORATION')
+    def test_transport_cannot_hide_corruption(self):
+        data = b'SOURCE WINDOWS TEXT\r\n'
+        path = self.root/'checkpoint_verification.csv';path.write_bytes(b'CORRUPTED\n')
+        record = dict(size=len(data),sha256=hashlib.sha256(data).hexdigest(),md5=hashlib.md5(data).hexdigest())
+        with self.assertRaises(ValueError): module.verified_bytes(path,record,True)
     def test_duplicate(self):
         self.inventory.append(self.inventory[0]);self.write('artifact_manifest.csv',self.inventory)
         with self.assertRaises(ValueError): module.verify(self.root)
