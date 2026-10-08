@@ -1,48 +1,31 @@
-# Current workflow and next steps — Phase 2 audit v1
+# Current workflow — verified evidence and scientific readiness
 
-Source snapshot: `427136e134caf6e93cfdc3080c1520170627a9d5`. [Full audit](audit_v1/REPORT.md), [script roles](audit_v1/SCRIPT_AUDIT.csv), [folder statuses](audit_v1/FOLDER_STATUS.csv) and [recorded predictors](audit_v1/LOCKED_PREDICTORS.csv).
+See [model diagnostics v1](model_diagnostics_v1/REPORT.md), [readiness matrix](model_diagnostics_v1/READINESS_MATRIX.csv), and [prioritized plan](model_diagnostics_v1/REMAINING_PLAN.csv). Historical audit/recovery documents are immutable snapshots; this page supersedes their pending-capture status.
 
-## Observed explanatory branch
+## Explanatory inference
 
-1. Annual explanatory S1/S2a selects the historical weather structure; S1/S2b is a common-phenology-period sensitivity, not a replacement selection.
-2. Explanatory C+D (`S1_S2_c_d_explanatory model with posterior predictive model checking.R`) performs offset-corrected, matched environment comparisons. Latest selector retains the 13 weather variables and no environmental variables.
-3. Latest calibration family is species-specific v2_INFERENCE_GATE; latest final coefficient family is species-specific final v4_INFERENCE_GATE. Exact producing scripts are absent. Imported S3/S4 explanatory scripts are pooled legacy producers and must not be used as though they reproduce those families.
-4. Treat v4 coefficients as the latest recorded explanatory export, conditional on producer/PPC recovery and review of its V gate. Do not use pooled legacy Omega/fit results as final inference.
-5. S5 species dependencies v2_RANDOMLEVEL_REBUILT continues this explanatory branch, with same-year and exact previous-year effort-normalized species abundance. Baseline/full models use identical lag-matched rows. It is association inference, not population growth or forecast validation.
+Historical explanatory selection retains13 weather predictors and no environment. Species-specific calibrationv2 and finalv4 exports are the latest recorded branch; imported pooled S3/S4 are legacy producers, not their exact implementations. Recovered v4 PPCs still flag autumnata upper tail and fagata zeros. Beta/Gamma/Omega pass recorded classic diagnostic limits; failed V is nonblocking, not converged. Resolve issue#1 and producer/observation provenance before final inference. Generic occurrence columns conflict with dedicated realized-occurrence exports; preserve both and reconcile their estimands in a new version.
 
-## Observed predictive ecological branch
+S5 uses final explanatoryv4 and calibrationv2 templates, effort-standardized same-year/previous-calendar-year abundances and identical lag-matched baseline/dynamic observations. It remains conditional association evidence, not advance prediction, growth-response inference or lag selection. Do not use its explanatory baseline as the eight-variable predictive ecology baseline.
 
-1. Predictive S1/S2a selects five lag1 weather variables; predictive common-phenology sensitivity reports the same set.
-2. Predictive C+D v2 adds NDVI_mean__b100m, NDVI_median__b100m and NDVI_max__b100m on a 1,277-row panel. This is the eight-variable full-data selected ecological structure. Older primary/no-environment summaries do not supersede C+D.
-3. Nested outer CV must reselect weather, buffer and environment within each outer training set using inner CV. The imported S3 is a design reference targeting failed v1; the exact successful v2 producer is unrecoverable after the completed local search. The new resume-only reconstruction is documented in [nested_cv_reconstruction_v1/REPORT.md](nested_cv_reconstruction_v1/REPORT.md), with immutable partition/selection exports and a validation-only CLI.
-4. Historical folds1–4 have verified outer-year outputs. The user reports reconstructed r2 fold5 complete locally (916 TRAIN / 222 TEST); cloud evidence capture and full five-fold arithmetic verification are pending. Use [recovery v1](outer_year_cv_recovery_v1/README.md), never rerun completed folds or selection. The resulting versioned full-year STATUS.csv becomes the current validation record when captured. No outer-test tuning or historical bitwise-identity claim.
-5. Legacy adaptive S4 references selector v1/CV v1; do not execute it. The v2 configuration-only preflight fixes eight full-data variables independently of outer scores, with fitting disabled. Existing C+D v2 full-data model objects are recorded locally. Final PPC evidence is already reviewed and flags upper-tail/zero discrepancies in two species. Inspect provenance/convergence/preparation and observation-model adequacy before justifying any refit. See [site-CV and S4 assessment](outer_year_cv_recovery_v1/NEXT_PREDICTIVE_STAGE.md).
+## Predictive ecological validation
 
-## Population branch still to locate or specify
+1. Retain full-data C+Dv2 selection: five lag1 weather variables plus NDVI mean/median/max at100m,1277 matched rows. Exact names and fold selections are in diagnosticsv1. Full-data selection and evaluation of the nested selection procedure are distinct.
+2. Five outer-year folds are numerically verified for autumnata/brumata/fagata. Preserve historical1–4 and compatibility-r2 fold5, their frozen selections, matched observations and provenance. No outer-test predictor/lag/threshold/buffer tuning. Exact historical producer identity remains unresolved, not hidden by the compatibility label.
+3. Preserve completed evidence under `imported_fold5_completed_r2_v1` and full summaries under `outer_year_cv_full_v1`. Explicit Git-EOL restoration must reproduce recorded size/SHA256/MD5 before using temporary source-byte copies. The cloud base-R audit and Python independently reproduce real arithmetic; primary input identities are local attestations.
+4. Report conditional coverage1229/1430,31/32years,1993excluded; signed-squared-Spearman SR2, count-median RMSE, occurrence class support and mixed environmental increments. No six-species, causal, spatial or chronological-advance claim follows from this evidence.
+5. Inspect already-existing full-data fits read-only. Predictive chain diagnostics are missing; PPC discrepancies persist. Legacy adaptiveS4 has stalev1 inputs; correctedv2 preflight is configuration-only. Do not execute S4/S5/MCMC because a completion flag or arithmetic validation passed.
 
-No population-growth or abundance-forecasting producer/output is evidenced in this synchronized snapshot. S5 neither uses the selected predictive ecology baseline nor compares alternative lags. First locate existing local evidence; do not assume a new analysis is necessary merely because it was not imported.
+## Readiness gates and future stages
 
-If a forecast branch is needed, document its ecological baseline, available information at forecast issuance, response, candidate population lags, training-only choices, lag-matched common observations and fully separated outer validation before implementation. Keep growth-model inference separate. Same-year cross-species responses are not advance predictors. Current-year weather and NDVI availability cannot be assumed at an advance forecast cutoff. Held-out-year CV is not automatically chronological forecasting.
+First recover predictive posterior/execution summaries and count/offset/extreme preparation evidence. Diagnose Monte Carlo uncertainty separately from observation-model adequacy. Resolve failed nonblockingV policy and occurrence-export inconsistencies. Retain fits/exports unchanged until a correction is evidenced; changed producers/likelihood/data require separately versioned results and validation.
 
-## Recovery before expensive work
+Define deployment target, forecast issuance, current-year weather/NDVI availability and unseen site/year treatment before future validation. Existing fixed-predictor siteCV is exploratory because selection/scaling use the full panel. Spatial/new-site claims require training-only nested site/external validation. Shuffled-year validation does not establish chronological advance forecasts. Prepare cheap design/preflight first; no such expensive run was executed or authorized here.
 
-1. Supplemental import is now present with 51 VERIFIED manifest entries; inspect the recovered summaries separately. For any later recovery, export only the existing metadata/summary paths in [LOCAL_EVIDENCE_REQUEST.csv](audit_v1/LOCAL_EVIDENCE_REQUEST.csv), after content review; keep raw observations, row-level abundance tables, GIS, RData/rds and MCMC objects local. Copy into a new supplemental-import version; do not overwrite imported_local originals or the original manifest. The original sync script is intentionally one-time; do not delete its prior outputs to force a second run.
-2. Recover the exact species-specific S3/S4 revisions and any local population scripts separately. The nested-CV v2 producer search is closed; use the controlled reconstruction and verify available local configuration/package/checkpoint compatibility. All 17 on-disk scripts discovered by the original manifest were already imported; missing revisions may need source-history/session recovery.
-3. Verify final v4 PPC/fit and S5 sample/effect tables; resolve [scientific review #1](https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/issues/1). Recover preparation/GIS/zero-filling provenance and extreme-count verification. Missing exports are not a reason to fit models again.
-4. Capture locally completed fold5 from D:\EIFFEL_runtime using the reviewed versioned importer and base-R extraction/audit. Preserve completed outputs and old snapshots. No further fitting is authorized; exact historical identity remains unproven and is not required for the labelled r2 compatibility audit. Site CV remains disabled unless a new-site claim is established and a separately frozen/preflighted design is prepared. Do not inspect the concurrent conifer result tree or use the E: backup as active workspace.
-5. Once evidence is recovered, update state and registries and create audit_v2. Existing audit/scientific exports stay immutable. Populate separately versioned scientific summaries only from verified source tables.
+Locate existing population-growth/forecast workflows before implementing new ones. Keep growth inference distinct from abundance forecasting; predictive lags must use identical lag-matched observations and training-only choice. Same-year cross-species associations cannot be advance predictors. Independent outbreak labels/threshold validation follows an adequate, correctly validated forecasting model.
 
-## Cheap verification
+## Reproducible lightweight review
 
-`python tools/audit_imported_lightweight.py --output work/new_audit_directory`
+`python tools/assess_model_readiness_v1.py --output <new directory>` checks hashes, saved metrics, coverage, selections, PPC flags and diagnostic gates without R/models; existing output directories are refused. Versioned outputs and input fingerprints are under `model_diagnostics_v1`. Windows safety and base-R arithmetic tests run in CI; synthetic refusal tests are distinct from real-evidence recomputation.
 
-This standard-library utility parses imports, checks manifest coverage, recalculates saved convergence policy flags and recomputes metrics from existing outer-fold predictions. It does not execute R. Audit_v1 records no failed consistency checks, but missing evidence remains explicitly unresolved.
-
-## Current recovery sequence
-
-1. One read-only local capture → primary/checkpoint verification → full five-fold arithmetic audit → scoped evidence commit/push.
-2. Independently verify captured SHA256 in cloud and review pooled and equal-fold metrics, reporting matched coverage and mixed producer provenance.
-3. Restrict claims to held-out years in the sampled network unless separately validating new sites; do not claim advance forecasting without availability/chronological evidence.
-4. Inspect existing full-data v2 fit diagnostics and frozen configuration before deciding whether any S4 fit is required. No site/S4/S5/population execution is authorized.
-
-Current local verification uses the exact Rscript path supplied by the user; see [verification review v2](five_fold_verification_v2/REPORT.md). Both historical1–4 and r2-fold5 primary observations/matched TEST sets must pass. New local evidence needs its capture and audit SHA256 manifests and independent cloud recomputation before final cloud validation status. No S4/S5 fit is authorized.
+Retain D:\EIFFEL_runtime as active existing-output root; preserve the E: backup, imported snapshots and all scientific results. The concurrent conifer job is protected. No new capture or expensive fitting is the current next step; the remaining evidence review needs read-only local posterior/preparation access.

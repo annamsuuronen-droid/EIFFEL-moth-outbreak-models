@@ -1,0 +1,7 @@
+model_family,samples_per_chain,transient,thin,chains,parallel,max_prediction_draws,evidence,convergence_status
+Reconstructed outer-year fold5 r2,5000,10000,20,4,4,1000,Captured completion/provenance compatibility contract; R4.5.2 Hmsc3.3.7 coda0.19.4.1,NOT_PROVEN_BY_PROFILE_OR_COMPLETION
+Full-data predictive C+D v2 final,5000,10000,20,4,4,1000,Retained producer final settings; saved PPC records1000draws; serialized-fit chain settings not exported,MATCHING_PREDICTIVE_RHAT_ESS_TRACE_EXPORTS_MISSING
+C+D screen,100,100,5,2,2,NOT_FIXED_HERE,Retained source configuration only,SELECTION_MC_UNCERTAINTY_NOT_DIAGNOSED
+C+D confirm,300,300,5,2,2,NOT_FIXED_HERE,Retained source configuration only,SELECTION_MC_UNCERTAINTY_NOT_DIAGNOSED
+Explanatory v4 final,NOT_EXPORTED,NOT_EXPORTED,NOT_EXPORTED,NOT_CERTIFIED_BY_IMPORTED_COMPLETE_MARKER,NOT_EXPORTED,NOT_EXPORTED,R/Hmsc/coda session info and classic PSRF/ESS summaries; exact producer absent,V_FAILS_NONBLOCKING_POLICY
+Historical outer-year folds1-4,NOT_HISTORICALLY_CERTIFIED,NOT_HISTORICALLY_CERTIFIED,NOT_HISTORICALLY_CERTIFIED,NOT_HISTORICALLY_CERTIFIED,NOT_HISTORICALLY_CERTIFIED,NOT_HISTORICALLY_CERTIFIED,Immutable prediction/selection/coverage tables; original v2 producer unavailable,POSTERIOR_DIAGNOSTICS_NOT_IMPORTED

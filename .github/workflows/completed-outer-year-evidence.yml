@@ -4,6 +4,9 @@ on:
     paths:
       - 'imported_fold5_completed_r2_v1/**'
       - 'project_state/outer_year_cv_full_v1/**'
+      - 'tools/assess_model_readiness_v1.py'
+      - 'tools/tests/test_model_readiness_v1.py'
+      - 'project_state/model_diagnostics_v1/**'
       - 'tools/verify_fold5_capture.py'
       - 'tools/tests/test_fold5_capture_hashes.py'
       - 'tools/tests/verify_published_outer_year_cv.R'
@@ -63,3 +66,7 @@ jobs:
       - name: Independently recompute published full-year summaries when evidence arrives
         if: ${{ hashFiles('imported_fold5_completed_r2_v1/artifact_manifest.csv') != '' }}
         run: Rscript --vanilla tools/tests/verify_published_outer_year_cv.R "$RUNNER_TEMP/eiffel_source_bytes"
+      - name: Readiness arithmetic tests
+        run: python tools/tests/test_model_readiness_v1.py
+      - name: Reproduce real-evidence diagnostic checks without models
+        run: python tools/assess_model_readiness_v1.py --output "$RUNNER_TEMP/eiffel_diagnostic_readiness"

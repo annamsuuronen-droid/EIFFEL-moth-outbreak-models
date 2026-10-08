@@ -1,0 +1,21 @@
+{
+  "five_fold_metric_cells_verified": 288,
+  "real_prediction_rows": 7374,
+  "matched_site_years": 1229,
+  "available_years": 32,
+  "evaluated_years": 31,
+  "species_verified": [
+    "Epirrita autumnata",
+    "Operophtera brumata",
+    "Operophtera fagata"
+  ],
+  "six_species_verified": false,
+  "source_byte_hash_checks": 12,
+  "transport_restorations": 12,
+  "PPC_interval_flags_verified": 45,
+  "convergence_policy_rows_verified": 45,
+  "predictive_convergence_available": false,
+  "publication_of_final_ecological_claims_ready": false,
+  "spatial_prediction_ready": false,
+  "model_runs": 0
+}

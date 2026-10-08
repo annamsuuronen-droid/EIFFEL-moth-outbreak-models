@@ -34,3 +34,14 @@ User requested a lightweight local import before scientific auditing. Source ori
 - No new scientific-review issue is needed for this resolved engineering/scope work; existing issue #1 remains open for its genuine diagnostic policy question.
 
 - Existing C+D v2 final offset-corrected PPC tables were reviewed (30 interval flags reproduced; alternate exports are identical aliases). E. autumnata upper-tail and O. fagata zero discrepancies require adequacy/preparation/convergence follow-up before any longer S4 run; no new sampling or diagnostic threshold was chosen.
+
+
+## 2026-10-08 — scientific diagnostics/readiness v1
+
+- Real five-fold evidence is present and independently verified; pending-capture status is superseded. Three species × two models is not six species. Local primary source checks remain attestations, distinct from cloud arithmetic/hash verification.
+- Git normalized12 CRLF text files. Explicit deterministic transport restoration is accepted only when size/SHA256/MD5 exactly reproduce recorded source bytes. Original results/manifests are immutable; default byte verification remains strict.
+- Distinguish reproducibility, completion, classic recorded diagnostic gates, posterior adequacy and deployment validation. Predictive model convergence is not evidenced; explanatory/S5 diagnostics cannot substitute. V failures remain scientifically unresolved in issue#1.
+- Retain frozen8-variable full-data baseline and all outer folds/selections. Small/mixed environmental gains and PPC discrepancies are reported; no outer-test-directed selection/threshold/lag/buffer changes, deletion of extremes or unverified effect directions.
+- Generic expected-count and realized-occurrence exports are not interchangeable. Preserve conflicting originals and document a versioned interpretation correction.
+- Current models are not ready for final spatial/operational prediction or unrestricted ecological inference. Reporting the verified evaluated procedure with limitations/negative findings is possible. New-site and advance claims need separately designed honest validation.
+- Next stage is read-only existing-posterior/count-offset/preparation recovery and adequacy assessment, then deployment design. No fitting/MCMC/S4/S5/siteCV/population run was executed or scheduled; protected conifer job untouched.
