@@ -54,7 +54,7 @@ run_fold5_main <- function(args = commandArgs(trailingOnly = TRUE)) {
   root <- fold5_value(
     args,
     "--output-root",
-    "E:/EIFFEL uusi/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2"
+    "D:/EIFFEL_runtime/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2"
   )
   primary <- fold5_value(
     args,

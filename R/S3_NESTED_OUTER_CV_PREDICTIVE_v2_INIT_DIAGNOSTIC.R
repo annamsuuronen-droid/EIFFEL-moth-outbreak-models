@@ -18,7 +18,7 @@ repository <- normalizePath(value("--repository", getwd()), winslash = "/", must
 source(file.path(repository, "R/S3_NESTED_OUTER_CROSS_VALIDATION_predictive_HMSC_v2_RECONSTRUCTED.R"))
 source(file.path(repository, "R/S3_NESTED_OUTER_CV_PREDICTIVE_v2_FINAL_PROFILE.R"))
 
-root <- value("--output-root", "E:/EIFFEL uusi/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
+root <- value("--output-root", "D:/EIFFEL_runtime/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
 primary <- value(
   "--primary-data",
   file.path(dirname(root),

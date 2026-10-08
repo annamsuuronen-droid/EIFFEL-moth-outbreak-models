@@ -55,7 +55,7 @@ try {
  }
  $f=Fixture 'allow-size';[IO.File]::WriteAllText($f.Allow,([IO.File]::ReadAllText($f.Allow).Replace('2097152','2097153')));Refuse $f 'reviewed'
  $f=Fixture 'allow-action';[IO.File]::WriteAllText($f.Allow,([IO.File]::ReadAllText($f.Allow).Replace('COPY','EXTRACT')));Refuse $f 'reviewed'
- $f=Fixture 'extraction-failure';Refuse $f 'synthetic extraction refusal' { throw 'synthetic extraction refusal' };Refuse $f 'already exists'
+ $f=Fixture 'extraction-failure';Refuse $f 'synthetic extraction refusal' { throw 'synthetic extraction refusal' };Assert (Test-Path -LiteralPath (Join-Path $f.Target 'FAILED_CAPTURE_MANIFEST.csv')) 'Failure manifest absent';Refuse $f 'already exists'
  $f=Fixture 'junction';$outside=Join-Path $workspace 'outside';[void][IO.Directory]::CreateDirectory($outside)
  $hmsc=Join-Path $f.Source 'hmsc_outputs';$original=Join-Path $f.Source 'original'
  [IO.Directory]::Move($hmsc,$original)

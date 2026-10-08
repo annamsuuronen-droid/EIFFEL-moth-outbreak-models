@@ -21,7 +21,7 @@ if (!file.exists(recon_script) || !file.exists(profile_script)) stop("Required r
 source(recon_script, local = .GlobalEnv)
 source(profile_script, local = .GlobalEnv)
 
-root <- value("--output-root", "E:/EIFFEL uusi/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
+root <- value("--output-root", "D:/EIFFEL_runtime/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
 primary <- value(
   "--primary-data",
   file.path(dirname(root),

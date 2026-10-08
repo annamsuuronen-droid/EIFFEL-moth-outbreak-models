@@ -2,6 +2,11 @@ name: Completed outer-year evidence safety
 on:
   push:
     paths:
+      - 'imported_fold5_completed_r2_v1/**'
+      - 'project_state/outer_year_cv_full_v1/**'
+      - 'tools/verify_fold5_capture.py'
+      - 'tools/tests/test_fold5_capture_hashes.py'
+      - 'tools/tests/verify_published_outer_year_cv.R'
       - 'tools/capture_completed_fold5.ps1'
       - 'tools/tests/Test-CompletedFold5Capture.ps1'
       - 'tools/tests/test_completed_outer_year_cv.R'
@@ -42,3 +47,10 @@ jobs:
         with:
           r-version: 'release'
       - run: Rscript --vanilla tools/tests/test_completed_outer_year_cv.R
+      - run: python tools/tests/test_fold5_capture_hashes.py
+      - name: Independently verify captured SHA256 when evidence arrives
+        if: ${{ hashFiles('imported_fold5_completed_r2_v1/artifact_manifest.csv') != '' }}
+        run: python tools/verify_fold5_capture.py imported_fold5_completed_r2_v1
+      - name: Independently recompute published full-year summaries when evidence arrives
+        if: ${{ hashFiles('imported_fold5_completed_r2_v1/artifact_manifest.csv') != '' }}
+        run: Rscript --vanilla tools/tests/verify_published_outer_year_cv.R

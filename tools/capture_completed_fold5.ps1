@@ -89,7 +89,14 @@ function Invoke-Fold5Capture([string]$SourceRoot, [string]$RepositoryRoot, [scri
         }
         Write-Fold5CsvNew $artifacts (Join-Path $target 'artifact_manifest.csv')
         return $target
-    } catch { throw "CAPTURE REFUSED/FAILED: $($_.Exception.Message). Source unchanged. Any partial versioned destination is retained and cannot be reused." }
+    } catch {
+        $message = $_.Exception.Message
+        if ($created.Contains($target)) {
+            try { Write-Fold5CsvNew ($records | Select-Object source_relative_path,action,expected_size,maximum_size,actual_size,sha256,destination_path,status) (Join-Path $target 'FAILED_CAPTURE_MANIFEST.csv') }
+            catch { $message += '; failure-manifest write also refused: '+$_.Exception.Message }
+        }
+        throw "CAPTURE REFUSED/FAILED: $message. Source unchanged. Any partial versioned destination is retained and cannot be reused."
+    }
     finally { foreach ($s in $streams) { $s.Dispose() }; for ($i=$guards.Count-1;$i -ge 0;$i--) { $guards[$i].Dispose() } }
 }
 if ($MyInvocation.InvocationName -ne '.') {

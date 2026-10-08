@@ -677,7 +677,7 @@ recon_main <- function(args = commandArgs(trailingOnly = TRUE)) {
     }
   }
   repository <- normalizePath(value("--repository", getwd()), winslash = "/", mustWork = TRUE)
-  root <- value("--output-root", "E:/EIFFEL uusi/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
+  root <- value("--output-root", "D:/EIFFEL_runtime/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2")
   fold <- as.integer(value("--fold", "5"))
   primary <- value("--primary-data", file.path(dirname(root), "HMSC_ANNUAL_PRIMARY_PREDICTIVE_LOGNORMAL_POISSON_BLOCKED_CV_v1/HMSC_annual_three_species_weather_environment_buffers_results.RData"))
   inputs <- if ("--check-data" %in% args) recon_load_inputs(primary) else NULL
