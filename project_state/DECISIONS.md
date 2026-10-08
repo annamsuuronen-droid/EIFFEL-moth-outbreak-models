@@ -22,3 +22,13 @@ User requested a lightweight local import before scientific auditing. Source ori
 - Expose only read-only dry-run/validation at the command line. A separately defined fold-5 recovery API requires local checkpoint/input validation and evidenced final-profile compatibility. No profile or model result is fabricated; no scientific command is provided or run.
 - Validate existing metric arithmetic and selection flags cheaply. Use only temporary test copies and mock metadata for refusal tests; scientific backends are failing stubs. Keep outer-site CV and pooled/master completion disabled.
 - Missing final-fit configuration is a provenance/compatibility blocker, not an inferred new scientific choice requiring an issue. Existing issue #1 is untouched.
+
+## 2026-10-08 — completed r2 evidence recovery
+
+- Use D:\EIFFEL_runtime as the active evidence root; keep the E: backup and concurrent D:\EIFFEL conifer job untouched.
+- Accept the user report of local r2 completion, distinguish it from pending cloud verification, and never rerun completed folds/selection.
+- Import only two capped held-out CSV2 outputs; extract whitelisted completion/provenance summaries locally, verify primary observations read-only, and never copy binaries or fitted models. Exact new file sizes are unknown until capture; record caps/actual bytes/hash without guessing.
+- Recompute all per-fold and pooled metrics into a new version only after evidence checks pass. Distinguish historical folds1–4 from compatibility r2 fold5; no outer-test tuning.
+- Outer-site CV is conditional on new-site claims; current evidence supports only a temporal/network claim. No expensive site run is justified now.
+- A fixed eight-variable full-data predictive configuration is legitimate independently of outer scores. Existing v2 fitted objects must be inspected before any S4 refit; the corrected preflight is configuration-only and cannot fit.
+- No new scientific-review issue is needed for this resolved engineering/scope work; existing issue #1 remains open for its genuine diagnostic policy question.
