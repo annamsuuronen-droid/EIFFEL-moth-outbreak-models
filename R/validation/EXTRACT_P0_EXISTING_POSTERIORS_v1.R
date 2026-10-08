@@ -1,0 +1,165 @@
+# Read-only existing-posterior arithmetic. No prediction, sampling, CV or producer sourcing.
+p0_species <- c("Epirrita autumnata", "Operophtera brumata", "Operophtera fagata")
+p0_write <- function(x, path) {
+  if (file.exists(path)) stop("Refusing existing output: ", path)
+  con <- file(path, open="wx"); on.exit(close(con))
+  write.csv(x, con, row.names=FALSE, na="NA")
+}
+p0_chains <- function(x) {
+  if (!inherits(x,"mcmc.list") || length(x)<2L) stop("At least two separate saved chains required")
+  z <- lapply(x, as.matrix)
+  if (length(unique(vapply(z,nrow,integer(1))))!=1L ||
+      length(unique(vapply(z,ncol,integer(1))))!=1L || nrow(z[[1]])<8L) stop("Incompatible/short chains")
+  if (!all(vapply(z,function(a) identical(colnames(a),colnames(z[[1]])),logical(1)))) stop("Parameter order differs")
+  if (!all(vapply(z,function(a) all(is.finite(a)),logical(1)))) stop("Nonfinite saved draws")
+  z
+}
+p0_diagnose <- function(x, component, modern=requireNamespace("posterior",quietly=TRUE)) {
+  z<-p0_chains(x); n<-nrow(z[[1]]); p<-ncol(z[[1]]); k<-length(z)
+  if (p>20000L) stop("Component exceeds reviewed parameter cap")
+  nm<-colnames(z[[1]]); if (is.null(nm)) nm<-paste0("parameter_",seq_len(p))
+  ps<-tryCatch(coda::gelman.diag(x,multivariate=FALSE,autoburnin=FALSE)$psrf,error=function(e) NULL)
+  ess<-tryCatch(coda::effectiveSize(x),error=function(e) NULL)
+  rows<-lapply(seq_len(p),function(j) {
+    a<-vapply(z,function(m)m[,j],numeric(n))
+    constant<-all(apply(a,2,sd)==0)
+    scalar<-function(fun) if (constant || !modern) NA_real_ else tryCatch(as.numeric(fun(a)),error=function(e) NA_real_)
+    data.frame(component=component,parameter=nm[j],chains=k,retained_draws_per_chain=n,
+      classic_PSRF_point=if(is.null(ps)) NA_real_ else ps[j,1],
+      classic_PSRF_upper=if(is.null(ps)) NA_real_ else ps[j,2],
+      coda_ESS=if(is.null(ess)) NA_real_ else as.numeric(ess[j]),
+      rank_normalized_split_Rhat=scalar(function(a)posterior::rhat(a)),
+      bulk_ESS=scalar(function(a)posterior::ess_bulk(a)),tail_ESS=scalar(function(a)posterior::ess_tail(a)),
+      mcse_mean=scalar(function(a)posterior::mcse_mean(a)),
+      constant_chains=constant,modern_package_available=modern,
+      interpretation=if(constant) "CONSTANT_DRAWS_REQUIRE_PARAMETER_SEMANTICS_REVIEW" else "DIAGNOSTIC_NOT_SCIENTIFIC_ACCEPTANCE",
+      stringsAsFactors=FALSE)
+  })
+  do.call(rbind,rows)
+}
+p0_model_observations <- function(model) {
+  y<-model$Y; off<-model$Loff
+  if (!is.matrix(y) || !is.matrix(off) || !identical(dim(y),dim(off)) ||
+      !setequal(colnames(y),p0_species)) stop("Unexpected Y/Loff/species schema")
+  if (any(y[is.finite(y)]<0) || any(abs(y[is.finite(y)]-round(y[is.finite(y)]))>1e-8) || any(!is.finite(off))) stop("Invalid count/offset")
+  do.call(rbind,lapply(seq_len(ncol(y)),function(j) {
+    keep<-is.finite(y[,j]); effort<-7*exp(off[keep,j])
+    data.frame(species=colnames(y)[j],rows=nrow(y),finite_observations=sum(keep),missing_observations=sum(!keep),
+      zeros=sum(y[keep,j]==0),zero_fraction=mean(y[keep,j]==0),maximum=max(y[keep,j]),
+      inferred_effort_days_min=min(effort),inferred_effort_days_median=median(effort),inferred_effort_days_max=max(effort),
+      effort_inference="7*exp(Loff); verify against primary preparation metadata",stringsAsFactors=FALSE)
+  }))
+}
+p0_raw_extreme <- function(raw) {
+  need<-c("site","year","species","KokMaara")
+  if (!all(need %in% names(raw))) stop("Raw-source schema differs; no guessed column mapping")
+  s<-trimws(gsub("[[:space:]]+"," ",as.character(raw$species)))
+  g<-raw[as.character(raw$site)=="1308" & as.character(raw$year)=="2004" & s=="Epirrita autumnata",,drop=FALSE]
+  if (!nrow(g)) stop("Extreme source group missing; calendar/flight-year provenance unresolved")
+  d<-unique(g); v<-suppressWarnings(as.numeric(as.character(d$KokMaara)))
+  valid<-all(is.finite(v)) && all(v>=0) && all(abs(v-round(v))<1e-8)
+  total<-if(valid) sum(v) else NA_real_
+  data.frame(site="1308",year=2004,species="Epirrita autumnata",raw_rows=nrow(g),exact_distinct_rows=nrow(d),
+    exact_duplicate_rows=nrow(g)-nrow(d),missing_or_invalid_counts=sum(!is.finite(v)|v<0),
+    original_sum=if(valid)sum(as.numeric(as.character(g$KokMaara))) else NA_real_,
+    exact_distinct_sum=total,model_extreme_reference=379332,sum_matches_reference=isTRUE(total==379332),
+    provenance_status="AGGREGATE_RAW_COMPARISON_NOT_EXECUTED_GIS_JOIN_PROOF",stringsAsFactors=FALSE)
+}
+p0_extract <- function(source, output, allow) {
+  if (!dir.exists(output) || length(list.files(output,all.files=TRUE,no..=TRUE))) stop("Output must be a fresh empty guarded directory")
+  if (!requireNamespace("Hmsc",quietly=TRUE) || !requireNamespace("coda",quietly=TRUE)) stop("Existing Hmsc and coda installations required; no automatic installation")
+  rows<-read.csv(allow,colClasses="character",check.names=FALSE)
+  statuses<-list(); executions<-list()
+  path<-function(r) file.path(source,r$relative_path)
+  for (i in which(rows$action=="MODEL_DIAGNOSTICS")) {
+    r<-rows[i,,drop=FALSE]; id<-r$id
+    m<-readRDS(path(r))
+    if (!identical(class(m),"Hmsc")) stop("Expected direct Hmsc object; nested/other schema refused: ",id)
+    p0_write(p0_model_observations(m),file.path(output,paste0(id,"_observation_summary.csv")))
+    chains<-if(is.list(m$postList))length(m$postList) else 0L
+    lengths<-if(chains)vapply(m$postList,length,integer(1)) else integer()
+    executions[[length(executions)+1L]]<-data.frame(id=id,source=r$relative_path,class="Hmsc",saved_chains=chains,
+      saved_chain_lengths=paste(lengths,collapse="|"),stored_samples=paste(m$samples,collapse="|"),
+      stored_thin=paste(m$thin,collapse="|"),stored_transient=paste(m$transient,collapse="|"),
+      offset_present=!is.null(m$Loff),Hmsc=as.character(packageVersion("Hmsc")),coda=as.character(packageVersion("coda")),
+      posterior=if(requireNamespace("posterior",quietly=TRUE))as.character(packageVersion("posterior")) else "NOT_INSTALLED",
+      stringsAsFactors=FALSE)
+    y<-m$Y; hit<-which(y[,"Epirrita autumnata"]==379332)
+    extreme<-data.frame(id=id,occurrences=length(hit),sample_ids=if(length(hit))paste(rownames(y)[hit],collapse="|") else "NOT_PRESENT",
+      Loff=if(length(hit))paste(m$Loff[hit,"Epirrita autumnata"],collapse="|") else "NOT_PRESENT",stringsAsFactors=FALSE)
+    p0_write(extreme,file.path(output,paste0(id,"_extreme_link.csv")))
+    converter<-getExportedValue("Hmsc","convertToCodaObject")
+    options<-list(Beta=TRUE,Gamma=TRUE,V=TRUE,Sigma=TRUE,rho=TRUE,Eta=FALSE,Lambda=TRUE,alpha=TRUE,Omega=TRUE,Psi=FALSE,Delta=FALSE)
+    unknown<-setdiff(names(options),names(formals(converter)))
+    if(length(unknown)) stop("Hmsc converter API differs; reviewed options unavailable: ",paste(unknown,collapse=","))
+    converted<-tryCatch(do.call(converter,c(list(m),options)),error=function(e)e)
+    pieces<-list()
+    flatten<-function(x,n) {
+      if(inherits(x,"mcmc.list")) {pieces[[n]]<<-x;return(invisible(NULL))}
+      if(is.list(x)) for(j in seq_along(x)) flatten(x[[j]],paste0(n,"/",if(!is.null(names(x)) && nzchar(names(x)[j]))names(x)[j] else j))
+    }
+    if(inherits(converted,"error")) {
+      statuses[[length(statuses)+1L]]<-data.frame(id=id,component="CONVERTER",status="UNRECOVERED",detail=conditionMessage(converted))
+    } else {
+      for(n in names(converted)) flatten(converted[[n]],n)
+      if(!length(pieces)) statuses[[length(statuses)+1L]]<-data.frame(id=id,component="ALL",status="UNRECOVERED",detail="No separate coda chains returned")
+      for(n in names(pieces)) {
+        d<-tryCatch(p0_diagnose(pieces[[n]],n),error=function(e)e)
+        if(inherits(d,"error")) {
+          statuses[[length(statuses)+1L]]<-data.frame(id=id,component=n,status="UNRECOVERED",detail=conditionMessage(d));next
+        }
+        safe<-gsub("[^A-Za-z0-9_-]","_",n)
+        p0_write(d,file.path(output,paste0(id,"_",safe,"_diagnostics.csv")))
+        # Bounded block summaries for every monitored parameter/chain, not chain draws.
+        z<-p0_chains(pieces[[n]]); blocks<-list()
+        for(k in seq_along(z)) for(b in 1:10) {
+          idx<-which(ceiling(seq_len(nrow(z[[k]]))*10/nrow(z[[k]]))==b)
+          if(!length(idx)) next
+          blocks[[length(blocks)+1L]]<-data.frame(chain=k,block=b,parameter=d$parameter,
+            mean=colMeans(z[[k]][idx,,drop=FALSE]),sd=apply(z[[k]][idx,,drop=FALSE],2,sd),stringsAsFactors=FALSE)
+        }
+        p0_write(do.call(rbind,blocks),file.path(output,paste0(id,"_",safe,"_chain_blocks.csv")))
+        # Actual saved-draw trace plots only for the six worst finite modern R-hats (or first6 if unavailable).
+        ix<-head(order(d$rank_normalized_split_Rhat,decreasing=TRUE,na.last=TRUE),6)
+        pdf(file.path(output,paste0(id,"_",safe,"_selected_traces.pdf")),width=10,height=7)
+        tryCatch({for(j in ix) {
+          a<-vapply(z,function(q)q[,j],numeric(nrow(z[[1]])))
+          matplot(a,type="l",lty=1,xlab="Retained draw index (not sampler iteration)",ylab=d$parameter[j],main=paste(id,n,"saved-chain trace"))
+        }},finally=dev.off())
+        statuses[[length(statuses)+1L]]<-data.frame(id=id,component=n,status="RECOVERED_ARITHMETIC",detail="Saved-chain diagnostics; selected actual traces only; no blanket convergence certification")
+      }
+    }
+    rm(m,converted,pieces);gc()
+  }
+  primary<-readRDS(path(rows[rows$action=="PREPARATION_METADATA",,drop=FALSE]))
+  if (!is.list(primary)) stop("Unexpected preparation metadata schema")
+  for(n in c("response_distribution","zero_fill_audit","extreme_count_flags")) {
+    a<-primary[[n]]
+    if(is.data.frame(a) && all(a$species %in% p0_species)) p0_write(a,file.path(output,paste0("primary_",n,".csv")))
+    else statuses[[length(statuses)+1L]]<-data.frame(id="primary",component=n,status="UNRECOVERED",detail="Missing/unexpected three-species aggregate schema")
+  }
+  a<-primary$extreme_count_audit
+  if(is.data.frame(a) && all(c("site","year","species","total_count")%in%names(a))) {
+    a<-a[as.character(a$site)=="1308" & a$year==2004 & a$species=="Epirrita autumnata",,drop=FALSE]
+    keep<-intersect(names(a),c("species","site","year","total_count","total_effort_days","n_intervals","annual_index","log_annual_index"))
+    p0_write(a[,keep,drop=FALSE],file.path(output,"primary_extreme_link.csv"))
+  }
+  interval<-primary$extreme_interval_audit
+  if(is.data.frame(interval) && all(c("site","year","species","count","interval_days")%in%names(interval))) {
+    g<-interval[as.character(interval$site)=="1308" & interval$year==2004 & interval$species=="Epirrita autumnata",,drop=FALSE]
+    if(nrow(g))p0_write(data.frame(n_intervals=nrow(g),missing_counts=sum(!is.finite(g$count)),
+      total_count=if(all(is.finite(g$count)))sum(g$count) else NA_real_,total_effort_days=sum(g$interval_days),
+      maximum_interval_count=max(g$count),nonpositive_effort=sum(g$interval_days<=0)),file.path(output,"primary_extreme_interval_aggregate.csv"))
+  }
+  raw<-read.csv(path(rows[rows$action=="RAW_EXTREME_AGGREGATE",,drop=FALSE]),sep=";",dec=".",check.names=FALSE,stringsAsFactors=FALSE)
+  p0_write(p0_raw_extreme(raw),file.path(output,"raw_extreme_aggregate.csv"))
+  p0_write(do.call(rbind,executions),file.path(output,"execution_metadata.csv"))
+  p0_write(do.call(rbind,statuses),file.path(output,"recovery_status.csv"))
+  p0_write(data.frame(R=R.version.string,Hmsc=as.character(packageVersion("Hmsc")),coda=as.character(packageVersion("coda"))),file.path(output,"runtime.csv"))
+  p0_write(data.frame(status="EXTRACTION_FINISHED_NOT_MODEL_CONVERGENCE",model_fits=0,MCMC_runs=0,CV_runs=0,primary_raw_rows_exported=0),file.path(output,"STATUS.csv"))
+}
+if (sys.nframe()==0L) {
+  a<-commandArgs(trailingOnly=TRUE)
+  if(length(a)!=3L) stop("Run through guarded PowerShell wrapper: source output allowlist")
+  p0_extract(a[1],a[2],a[3])
+}
