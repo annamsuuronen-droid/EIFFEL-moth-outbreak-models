@@ -6,18 +6,19 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'capture_completed_fold5.ps1')
 function Read-P0AllowList([string]$Path) {
     $rows=@(Import-Csv -LiteralPath $Path -Encoding UTF8)
-    if ($rows.Count -ne 4 -or (@($rows[0].PSObject.Properties.Name)-join '|') -cne 'id|relative_path|expected_size|action') { throw 'Unexpected P0 allow-list schema/count.' }
+    if ($rows.Count -ne 36 -or (@($rows[0].PSObject.Properties.Name)-join '|') -cne 'id|relative_path|expected_size|action') { throw 'Unexpected P0 allow-list schema/count.' }
     $canonical=@()
     foreach($r in $rows) {
-        if ($r.id -cnotmatch '^[a-z_]+$' -or $r.relative_path -cnotmatch '^(hmsc_outputs|data)/[A-Za-z0-9_./-]+$' -or $r.expected_size -cnotmatch '^[1-9][0-9]*$') { throw 'Unexpected path/size/id.' }
+        if ($r.id -cnotmatch '^[A-Za-z_]+$' -or $r.relative_path -cnotmatch '^(hmsc_outputs|data)/[A-Za-z0-9_./-]+$' -or $r.expected_size -cnotmatch '^[1-9][0-9]*$') { throw 'Unexpected path/size/id.' }
         foreach($part in $r.relative_path.Split('/')) {
             if($part -in @('','.','..') -or $part.EndsWith('.') -or $part -match '^(?i:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)') { throw 'Unsafe path.' }
         }
-        if($r.action -cnotin @('MODEL_DIAGNOSTICS','PREPARATION_METADATA','RAW_EXTREME_AGGREGATE')) { throw 'Unexpected extraction action.' }
+        if($r.action -cnotin @('MODEL_DIAGNOSTICS','PREPARATION_METADATA','RAW_EXTREME_AGGREGATE','COPY_DIAGNOSTIC')) { throw 'Unexpected extraction action.' }
+        if($r.action -ceq 'COPY_DIAGNOSTIC' -and ([IO.Path]::GetExtension($r.relative_path) -cne '.txt' -or [long]$r.expected_size -gt 8192)) {throw 'Unexpected diagnostic extension/size.'}
         $canonical+=($r.id+'|'+$r.relative_path+'|'+$r.expected_size+'|'+$r.action)
     }
     $s=New-Object IO.MemoryStream (,[Text.Encoding]::UTF8.GetBytes(($canonical-join "`n")))
-    try { if((Get-EiffelHash $s) -cne 'ffeea89043a4f8525dfd6a3b487a28df4b6242ff691d608e62e06c7f3810a930') { throw 'Allow-list differs from the four reviewed exact paths/sizes/actions.' } } finally {$s.Dispose()}
+    try { if((Get-EiffelHash $s) -cne 'ad2c60972d64070b56c2f22f97bc86bb7c3e4ee9eab2c11508d5696ac8ddc4bc') { throw 'Allow-list differs from the 36 reviewed exact paths/sizes/actions.' } } finally {$s.Dispose()}
     return $rows
 }
 function Invoke-P0Extraction([string]$SourceRoot,[string]$RepositoryRoot,[scriptblock]$Extractor) {
@@ -45,30 +46,47 @@ function Invoke-P0Extraction([string]$SourceRoot,[string]$RepositoryRoot,[script
             if(-not $path.StartsWith($source+'\',[StringComparison]::OrdinalIgnoreCase)) {throw 'Source escape.'}
             $s=Open-EiffelSource $path $guards $guarded;$streams.Add($s)
             if($s.Length -ne [long]$r.expected_size) {throw "Exact source size mismatch: $($r.relative_path); recover new metadata instead of editing the allow-list."}
-            $records.Add([pscustomobject]@{id=$r.id;source_relative_path=$r.relative_path;expected_size=[long]$r.expected_size;actual_size=$s.Length;sha256=(Get-EiffelHash $s);action=$r.action;status='READ_ONLY_PREFLIGHT';stream=$s})
+            $records.Add([pscustomobject]@{id=$r.id;source_relative_path=$r.relative_path;expected_size=[long]$r.expected_size;actual_size=$s.Length;sha256=(Get-EiffelHash $s);action=$r.action;destination_path='';status='READ_ONLY_PREFLIGHT';stream=$s})
         }
         New-EiffelDirectory $target $guards $guarded $created
+        foreach($r in $records) {
+            if($r.action -cne 'COPY_DIAGNOSTIC') {continue}
+            $name=$r.id+'.txt';$dest=Join-Path $target $name
+            $d=[IO.File]::Open($dest,[IO.FileMode]::CreateNew,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+            try {
+                if(-not (Get-EiffelPhysicalPath $d.SafeFileHandle).Equals($dest,[StringComparison]::OrdinalIgnoreCase)) {throw 'Diagnostic destination escape.'}
+                $r.stream.Position=0;$r.stream.CopyTo($d);$d.Flush($true)
+                if($d.Length -ne $r.actual_size -or (Get-EiffelHash $d)-cne $r.sha256){throw 'Diagnostic copy hash mismatch.'}
+                $r.destination_path=$name
+            } finally {$d.Dispose()}
+        }
         & $Extractor $source $target $allow
         foreach($r in $records) {
             if($r.stream.Length -ne $r.actual_size -or (Get-EiffelHash $r.stream) -cne $r.sha256) {throw 'Source changed during extraction.'}
-            $r.status='READ_ONLY_SHA256_UNCHANGED_NOT_COPIED'
+            $r.status=if($r.action -ceq 'COPY_DIAGNOSTIC'){'COPIED_DIAGNOSTIC_SHA256_VERIFIED_SOURCE_UNCHANGED'}else{'READ_ONLY_SHA256_UNCHANGED_NOT_COPIED'}
         }
         $files=@(Get-ChildItem -LiteralPath $target -Force)
-        if(-not ($files.Name -ccontains 'STATUS.csv') -or -not ($files.Name -ccontains 'recovery_status.csv') -or $files.Count -gt 100) {throw 'Missing/unexpected extraction outputs.'}
+        $diagnosticNames=@($records|Where-Object action -ceq 'COPY_DIAGNOSTIC'|ForEach-Object {$_.id+'.txt'})
+        if(-not ($files.Name -ccontains 'STATUS.csv') -or -not ($files.Name -ccontains 'recovery_status.csv') -or $files.Count -gt 160) {throw 'Missing/unexpected extraction outputs.'}
         $artifacts=@()
         foreach($f in $files) {
-            if($f.PSIsContainer -or $f.Name -cnotmatch '^[A-Za-z0-9_-]+\.(csv|pdf)$') {throw 'Unexpected output path/extension.'}
+            if($f.PSIsContainer -or $f.Name -cnotmatch '^[A-Za-z0-9_-]+\.(csv|pdf|txt)$') {throw 'Unexpected output path/extension.'}
+            if([IO.Path]::GetExtension($f.Name) -ceq '.txt' -and $diagnosticNames -cnotcontains $f.Name) {throw 'Unexpected diagnostic text output.'}
             $s=Open-EiffelSource $f.FullName $guards $guarded
             try {
                 if($s.Length -le 0 -or $s.Length -gt 4194304) {throw 'Empty/oversized output; do not publish.'}
+                if([IO.Path]::GetExtension($f.Name) -ceq '.txt') {
+                    $original=@($records|Where-Object destination_path -ceq $f.Name)
+                    if($original.Count-ne 1 -or $s.Length-ne $original[0].actual_size -or (Get-EiffelHash $s)-cne $original[0].sha256){throw 'Copied diagnostic changed after extraction.'}
+                }
                 $artifacts+=[pscustomobject]@{relative_path=$f.Name;size=$s.Length;sha256=(Get-EiffelHash $s);md5=(Get-FileHash -LiteralPath $f.FullName -Algorithm MD5).Hash.ToLowerInvariant()}
             } finally {$s.Dispose()}
         }
-        Write-Fold5CsvNew ($records|Select-Object id,source_relative_path,expected_size,actual_size,sha256,action,status) (Join-Path $target 'source_manifest.csv')
+        Write-Fold5CsvNew ($records|Select-Object id,source_relative_path,expected_size,actual_size,sha256,action,destination_path,status) (Join-Path $target 'source_manifest.csv')
         $mf=Join-Path $target 'source_manifest.csv';$s=Open-EiffelSource $mf $guards $guarded
         try {$artifacts+=[pscustomobject]@{relative_path='source_manifest.csv';size=$s.Length;sha256=(Get-EiffelHash $s);md5=(Get-FileHash -LiteralPath $mf -Algorithm MD5).Hash.ToLowerInvariant()}} finally {$s.Dispose()}
         Write-Fold5CsvNew $artifacts (Join-Path $target 'artifact_manifest.csv')
-        Write-Host 'SUCCESS: four source files SHA256 unchanged; existing posterior/aggregate evidence extracted without copying source objects or raw rows.'
+        Write-Host 'SUCCESS: 36 source files SHA256 unchanged; 32 existing diagnostic texts copied and verified; four posterior/preparation/raw sources read only, never copied.'
         Write-Host 'EXTRACTION COMPLETE; convergence and preparation are NOT certified. Review recovery_status.csv and diagnostics; local evidence remains unpublished.'
         Write-Host "Output: $target. No fitting, MCMC, prediction, CV, S4 or S5; source/results/snapshots/conifer job unchanged."
         return $target
@@ -92,12 +110,12 @@ if($MyInvocation.InvocationName -ne '.') {
         $codeGuarded=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
         $codeStreams=@()
         try {
-            foreach($p in @($exe,$code)) {$codeStreams+=(Open-EiffelSource $p $codeGuards $codeGuarded)}
+            foreach($p in @($exe,$code,(Join-Path $repo 'tools\extract_p0_existing_evidence.ps1'),(Join-Path $repo 'tools\capture_completed_fold5.ps1'),(Join-Path $repo 'tools\import_local_evidence.ps1'))) {$codeStreams+=(Open-EiffelSource $p $codeGuards $codeGuarded)}
             $hashes=@($codeStreams|ForEach-Object {Get-EiffelHash $_})
             & $exe --vanilla $code $source $target $allow
             if($LASTEXITCODE -ne 0) {throw 'Read-only R extraction failed; evidence is not publishable.'}
             for($j=0;$j-lt $codeStreams.Count;$j++) {if((Get-EiffelHash $codeStreams[$j])-cne $hashes[$j]) {throw 'Extractor/runtime changed.'}}
-            Write-Fold5CsvNew @([pscustomobject]@{role='Rscript';sha256=$hashes[0]},[pscustomobject]@{role='reviewed_R_extractor';sha256=$hashes[1]}) (Join-Path $target 'tool_manifest.csv')
+            Write-Fold5CsvNew @([pscustomobject]@{role='Rscript';sha256=$hashes[0]},[pscustomobject]@{role='reviewed_R_extractor';sha256=$hashes[1]},[pscustomobject]@{role='P0_PowerShell_wrapper';sha256=$hashes[2]},[pscustomobject]@{role='capture_guard_dependency';sha256=$hashes[3]},[pscustomobject]@{role='native_import_guard_dependency';sha256=$hashes[4]}) (Join-Path $target 'tool_manifest.csv')
         } finally {foreach($s in $codeStreams){$s.Dispose()};for($j=$codeGuards.Count-1;$j-ge 0;$j--){$codeGuards[$j].Dispose()}}
     }.GetNewClosure()
     Invoke-P0Extraction 'D:\EIFFEL_runtime' $repo $extractor

@@ -96,12 +96,34 @@ p0_raw_extreme <- function(raw) {
     raw_distinct_datepair_effort_days=effort,date_provenance_status=date_status,
     provenance_status="AGGREGATE_RAW_COMPARISON_NOT_EXECUTED_GIS_JOIN_PROOF",stringsAsFactors=FALSE)
 }
+p0_existing_diagnostic <- function(path,kind) {
+  x<-read.table(path,sep=";",dec=".",header=TRUE,stringsAsFactors=FALSE,check.names=FALSE)
+  expected<-if(kind=="ESS") c("parameter","effective_sample_size") else c("parameter","point_estimate","upper_CI")
+  if(!identical(names(x),expected) || !nrow(x) || anyDuplicated(x$parameter)) stop("Existing diagnostic schema differs; no guessed parsing")
+  numeric<-lapply(x[setdiff(expected,"parameter")],function(v)suppressWarnings(as.numeric(as.character(v))))
+  finite_min<-function(v) if(any(is.finite(v)))min(v[is.finite(v)]) else NA_real_
+  finite_max<-function(v) if(any(is.finite(v)))max(v[is.finite(v)]) else NA_real_
+  data.frame(parameters=nrow(x),nonfinite_statistics=sum(!is.finite(unlist(numeric))),
+    minimum_existing_coda_ESS=if(kind=="ESS")finite_min(numeric[[1]]) else NA_real_,
+    maximum_existing_classic_PSRF_point=if(kind!="ESS")finite_max(numeric[[1]]) else NA_real_,
+    maximum_existing_classic_PSRF_upper=if(kind!="ESS")finite_max(numeric[[2]]) else NA_real_,
+    interpretation="CLASSIC_EXPORT_NOT_MODERN_RHAT_OR_CONVERGENCE_CERTIFICATION",stringsAsFactors=FALSE)
+}
 p0_extract <- function(source, output, allow) {
-  if (!dir.exists(output) || length(list.files(output,all.files=TRUE,no..=TRUE))) stop("Output must be a fresh empty guarded directory")
-  if (!requireNamespace("Hmsc",quietly=TRUE) || !requireNamespace("coda",quietly=TRUE)) stop("Existing Hmsc and coda installations required; no automatic installation")
   rows<-read.csv(allow,colClasses="character",check.names=FALSE)
+  expected_text<-paste0(rows$id[rows$action=="COPY_DIAGNOSTIC"],".txt")
+  if (!dir.exists(output) || !setequal(list.files(output,all.files=TRUE,no..=TRUE),expected_text)) stop("Output must be a fresh guarded directory containing exactly the reviewed diagnostic copies")
+  if (!requireNamespace("Hmsc",quietly=TRUE) || !requireNamespace("coda",quietly=TRUE)) stop("Existing Hmsc and coda installations required; no automatic installation")
   statuses<-list(); executions<-list();reference<-NULL
   path<-function(r) file.path(source,r$relative_path)
+  existing<-list()
+  for(i in which(rows$action=="COPY_DIAGNOSTIC")) {
+    r<-rows[i,,drop=FALSE];kind<-sub("^.*_","",r$id)
+    d<-tryCatch(p0_existing_diagnostic(file.path(output,paste0(r$id,".txt")),kind),error=function(e)e)
+    if(inherits(d,"error"))statuses[[length(statuses)+1L]]<-data.frame(id=r$id,component=kind,status="EXISTING_EXPORT_PARSE_UNRECOVERED",detail=conditionMessage(d))
+    else existing[[length(existing)+1L]]<-cbind(data.frame(id=r$id,source=r$relative_path,kind=kind),d)
+  }
+  if(length(existing))p0_write(do.call(rbind,existing),file.path(output,"existing_diagnostics_summary.csv"))
   for (i in which(rows$action=="MODEL_DIAGNOSTICS")) {
     r<-rows[i,,drop=FALSE]; id<-r$id
     m<-readRDS(path(r))

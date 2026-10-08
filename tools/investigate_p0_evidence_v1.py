@@ -1,4 +1,4 @@
-import argparse,csv,hashlib,importlib.util,json,math
+import argparse,csv,hashlib,importlib.util,json,math,re
 from pathlib import Path
 r=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description='Read-only P0 inventory/code/evidence investigation; no R/model objects.')
@@ -28,6 +28,16 @@ for x in manifest:
  inventory.append(dict(source_relative_path=p,recorded_bytes=x['size_bytes'],role=role,source_evidence='Phase1 manifest; runtime filesystem not accessible',cloud_object_inspected=False))
 assert len(inventory)==2478
 write('PREDICTIVE_BINARY_INVENTORY.csv',inventory)
+existing=[]
+for x in manifest:
+ p=x['relative_path'].replace(chr(92),'/')
+ if 'PREDICTIVE' not in p:continue
+ m=re.search(r'_(Beta|Gamma|V|Sigma)_(ESS|gelman)\.txt$',p)
+ if not m:continue
+ scope=('current_weather' if 'WEATHER_ONLY_MATCHED_' in p else 'current_environment' if 'WEATHER_PLUS_ENVIRONMENT_MATCHED_' in p else 'legacy_primary' if 'PRIMARY_PREDICTIVE_' in p else 'sensitivity')
+ existing.append(dict(source_relative_path=p,size=x['size_bytes'],scope=scope,type=m[2],status='LOCATED_IN_MANIFEST_NOT_IMPORTED_VALUES_UNKNOWN'))
+assert len(existing)==32
+write('EXISTING_DIAGNOSTICS_INVENTORY.csv',existing)
 fold2='imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_02/outer_test_predictions.csv2'
 ext=[x for x in read(fold2) if x['species']=='Epirrita autumnata' and a.number(x['observed'])==379332]
 assert len(ext)==2 and {x['sample_id'] for x in ext}=={'1308__2004'}
@@ -76,20 +86,21 @@ findings=[
  ('primary',92,'EXTREME_VERIFICATION','extreme_annual_counts_verified=TRUE bypasses confirmation gate; no actual source-check record is supplied','NOT_SOURCE_VERIFICATION'),
  ('final',596,'PPC_OFFSET','predict(...Loff=model$Loff,expected=FALSE) supplies realized PPC/occurrence draws; expected=TRUE count fit evaluated separately','PPC_NOT_DISMISSED_AS_GENERIC_METRIC_BUG'),
  ('final',628,'REALIZED_OCCURRENCE','1-mean(realized==0) supplies presence probability; generic occurrence columns replaced for finalmodels','SEMANTICS_ESTABLISHED_FOR_RETAINED_CD_SOURCE'),
- ('final',1145,'DIAGNOSTIC_EXPORT','Optional undefined save_convergence_diagnostics helper permits no diagnostic export; missingfile impliesneither convergence norfailure','MISSING_EVIDENCE'),
+ ('final',1145,'DIAGNOSTIC_EXPORT','Conditional helper is implemented in primary S1/S2a;32existingESS/Gelman text exports located in originalmanifest butnotimported; actualvalues and executedhelperrevision unverified','VALUES_MISSING_NOT_EXPORT_ABSENCE'),
+ ('primary',1321,'OLD_CLASSIC_DIAGNOSTIC_METHOD','Helper uses convertToCodaObject then gelman.diag(multivariate=FALSE) withdefaultautoburnin and coda effectiveSize; comparewith newlycomputedall-retained-draw PSRF without conflating modernRhat','IMPLEMENTATION_LOCATED_NOT_EXECUTION_PROOF'),
  ('S5',97,'V_POLICY','V has1.10 PSRFupper/200ESS limits but blocks_inference=FALSE; acceptance intentionally differs from diagnostic_pass','GENUINE_UNRESOLVED_POLICY_ISSUE1'),
  ('S5',586,'EXPECTED_COUNT_OCCURRENCE','expected=TRUE predictions go into evaluateModelFit without dedicated realized-occurrence replacement','GENERIC_OCCURRENCE_ESTIMAND_ERROR_NOT_FITTING_ERROR')]
 rows=[]
 for key,line,topic,finding,status in findings:
  p=sources[key];tracked.add(p)
  rows.append(dict(source=p,line=line,topic=topic,finding=finding,status=status))
-write('SOURCE_CODE_FINDINGS.csv',rows)
+write('SOURCE_CODE_FINDINGS_v2.csv',rows)
 write('INPUT_FINGERPRINTS.csv',[dict(path=p,sha256=hashlib.sha256((r/p).read_bytes()).hexdigest(),size=(r/p).stat().st_size) for p in sorted(tracked)])
 status=dict(base_commit='f12268156cd9360dbb8683a75c2d9f96aaf1cbbb',historical_predictive_binary_inventory=2478,
- full_data_current_direct_model_paths=2,other_primary_sensitivity_direct_model_paths=2,cloud_posterior_objects_opened=0,
+ existing_diagnostic_text_paths_located=32,current_full_data_diagnostic_text_paths=16,existing_diagnostic_values_recovered=0,full_data_current_direct_model_paths=2,other_primary_sensitivity_direct_model_paths=2,cloud_posterior_objects_opened=0,
  newly_recovered_actual_predictive_Rhat_ESS_traces=0,predictive_convergence_proven=False,verified_extreme_site='1308',verified_extreme_year=2004,extreme_original_source_verified=False,
  fagata_observed_zero_count=560,fagata_zero_PPC_cause_resolved=False,V_failed_nonblocking_components=9,
  verified_generic_occurrence_constant_comparisons=3,observation_preparation_errors_proven_in_executed_data=False,
  preparation_code_risks_identified=True,model_runs=0,refitting_currently_justified=False,local_extraction_executed=False)
-(out/'CHECK_STATUS.json').write_text(json.dumps(status,indent=2)+'\n')
+(out/'CHECK_STATUS_v2.json').write_text(json.dumps(status,indent=2)+'\n')
 print(json.dumps(status,indent=2))

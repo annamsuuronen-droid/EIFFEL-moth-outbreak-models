@@ -13,7 +13,7 @@ function Assert($ok,$message){if(-not $ok){throw $message}}
 function Reject([scriptblock]$x){$failed=$false;try{&$x}catch{$failed=$true};Assert $failed 'Expected refusal'}
 try {
  $original=Join-Path $repo 'project_state\p0_investigation_v1\LOCAL_EXTRACTION_ALLOWLIST.csv'
- $rows=@(Read-P0AllowList $original);Assert ($rows.Count-eq 4) 'Missing reviewed rows'
+ $rows=@(Read-P0AllowList $original);Assert ($rows.Count-eq 36) 'Missing reviewed rows'
  $allow=Join-Path $workspace 'allow.csv'
  foreach($bad in @('../raw.csv','hmsc_outputs/../raw.csv','hmsc_outputs/x.rds:ads','hmsc_outputs/CON.rds','hmsc_outputs/x./a.rds','hmsc_outputs/conifer_species/x.rds','data/x.csv','D:/raw.csv')) {
   [IO.File]::WriteAllText($allow,([IO.File]::ReadAllText($original).Replace($rows[0].relative_path,$bad)))
@@ -35,7 +35,8 @@ try {
  $after=@(foreach($r in $rows){(Get-FileHash -LiteralPath (Join-Path $source $r.relative_path.Replace('/','\'))).Hash})
  Assert (($before-join '|')-ceq ($after-join '|')) 'Source content changed'
  Assert (@(Get-ChildItem -LiteralPath $target -Filter '*.rds').Count-eq 0) 'Source binary copied'
- Assert (@(Import-Csv -LiteralPath (Join-Path $target 'source_manifest.csv')).Count-eq 4) 'Missing source manifest'
+ Assert (@(Import-Csv -LiteralPath (Join-Path $target 'source_manifest.csv')).Count-eq 36) 'Missing source manifest'
+ Assert (@(Get-ChildItem -LiteralPath $target -Filter '*.txt').Count-eq 32) 'Diagnostic copy count'
  Reject {Invoke-P0Extraction $source $checkout $mock}
  Reject {Invoke-P0Extraction $source $source $mock}
  $outside=Join-Path $workspace 'outside';[void][IO.Directory]::CreateDirectory($outside)

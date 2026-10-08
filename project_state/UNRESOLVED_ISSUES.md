@@ -33,4 +33,6 @@ No new GitHub issue was opened for evidence, engineering or unfinished stages. E
 - U09 remains open: fagata560/1277zeros exceed correctedfull-data predictiveinterval and autumnataextremetails remain mismatched. Preparation/sampling/likelihood causes are not separated withoutlocal evidence.
 - U04 remains open: all9 v4/S5 V failures retained; nonblockingacceptance is notconvergence and largeESS doesnot negatePSRF failure. Existingissue1 unchanged.
 
-See [P0 report](p0_investigation_v1/REPORT.md) and [local extraction](p0_investigation_v1/README.md). No spatialprediction/refit starts before thesegates resolve.
+See [P0 report](p0_investigation_v1/REPORT_v2.md) and [local extraction](p0_investigation_v1/README.md). No spatialprediction/refit starts before thesegates resolve.
+
+P0 export-search addendum:32 existing ESS/Gelman files are now located in the original manifest (16current;8primary;8sensitivity), all excluded from import. The reviewed allowlist now has36paths: four read-onlyobject/raw sources plus32 exact-size diagnostictext copies. Values/convergence remain unverified until local recovery; the helper implementation is located in primaryS1/S2a, with default-autoburnin classicPSRF distinct from the new all-retained-draw/modern diagnostics. Original P0 sourcefindings/status are preserved and superseded by their v2 additions.
