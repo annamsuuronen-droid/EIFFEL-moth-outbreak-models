@@ -1,0 +1,194 @@
+{
+  "assessment_base_commit": "f12268156cd9360dbb8683a75c2d9f96aaf1cbbb",
+  "final_tested_extraction_code_commit": "5c29abb0a22de06cd6b63672e90902c91ac9a2c1",
+  "P0_CI_run": 37778551420,
+  "P0_CI_jobs": [
+    {
+      "id": 113315523783,
+      "name": "arithmetic (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 37778551420,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Real existing-evidence P0 arithmetic and code investigation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run r-lib/actions/setup-r@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run r-lib/actions/setup-r-dependencies@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Base R posterior and observation arithmetic/refusal tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Windows PowerShell 5.1 safety",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Windows PowerShell 7 safety",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Run r-lib/actions/setup-r-dependencies@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ]
+    },
+    {
+      "id": 113315524110,
+      "name": "arithmetic (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 37778551420,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Real existing-evidence P0 arithmetic and code investigation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run r-lib/actions/setup-r@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run r-lib/actions/setup-r-dependencies@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Base R posterior and observation arithmetic/refusal tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Windows PowerShell 5.1 safety",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7
+        },
+        {
+          "name": "Windows PowerShell 7 safety",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8
+        },
+        {
+          "name": "Post Run r-lib/actions/setup-r-dependencies@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ]
+    }
+  ],
+  "prior_full_evidence_CI_runs": [
+    37777662410,
+    37777662463
+  ],
+  "all_required_final_code_steps_passed": true,
+  "checks": {
+    "real_P0_investigation": "PASS on Windows and Linux",
+    "separate_chain_Rhat_ESS_arithmetic": "PASS synthetic tests on Windows and Linux; no actual EIFFEL posterior opened",
+    "existing_ESS_Gelman_semicolon_parsing": "PASS synthetic schema/missing-value tests",
+    "count_duplicate_missing_date_effort_and_offset_arithmetic": "PASS synthetic tests",
+    "model_identity_alignment_and_overwrite_refusals": "PASS synthetic tests",
+    "powershell_51_and_7": "PASS parser/exact36-path digest/traversal/ADS/reserved/conifer/unexpected/missing/size/overwrite/root/junction/source-unchanged/32-copy checks",
+    "explicit_Rscript_path_after_shared_helper_import": "PASS regression check on PowerShell5.1 and7",
+    "actual_existing_CV_evidence": "PASS 12source/audit hash identities,166historical fingerprints,288metric cells,45PPC and45policy rows; base-R full-five-fold summaries recomputed without fitting",
+    "python_integrity_tests": 9,
+    "python_readiness_arithmetic_tests": 4,
+    "R_reconstruction_cases_per_platform": 37,
+    "original_evidence_result_and_readiness_blobs_unchanged": 3298,
+    "P0_v2_generated_artifacts_reproduced_exactly": 9
+  },
+  "operations_executed": [
+    "Read pinned main/readiness/AGENTS and available lightweight scripts/tables/manifests",
+    "Classify2478 predictive-labelled binary entries and locate32excluded ESS/Gelman exports from historicalmanifest",
+    "Verify extreme379332 site1308/year2004/fold2;560/1277fagatazeros;genericoccurrence identity;9failednonblockingV records",
+    "Run real table/hash arithmetic and synthetic safety/diagnostic tests; no scientificmodel execution",
+    "Publish new versioned reports/tables/guarded extraction code and current-state documentation via leased fast-forward commits"
+  ],
+  "local_runtime_source_access": false,
+  "actual_predictive_numeric_diagnostics_recovered": 0,
+  "actual_predictive_convergence_proven": false,
+  "executed_preparation_error_proven": false,
+  "refitting_currently_justified": false,
+  "scientific_model_runs": 0,
+  "protected_conifer_workflow_inspected_or_modified": false,
+  "local_extraction_executed": false
+}
