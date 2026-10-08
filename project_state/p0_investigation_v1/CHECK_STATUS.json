@@ -1,0 +1,21 @@
+{
+  "base_commit": "f12268156cd9360dbb8683a75c2d9f96aaf1cbbb",
+  "historical_predictive_binary_inventory": 2478,
+  "full_data_current_direct_model_paths": 2,
+  "other_primary_sensitivity_direct_model_paths": 2,
+  "cloud_posterior_objects_opened": 0,
+  "newly_recovered_actual_predictive_Rhat_ESS_traces": 0,
+  "predictive_convergence_proven": false,
+  "verified_extreme_site": "1308",
+  "verified_extreme_year": 2004,
+  "extreme_original_source_verified": false,
+  "fagata_observed_zero_count": 560,
+  "fagata_zero_PPC_cause_resolved": false,
+  "V_failed_nonblocking_components": 9,
+  "verified_generic_occurrence_constant_comparisons": 3,
+  "observation_preparation_errors_proven_in_executed_data": false,
+  "preparation_code_risks_identified": true,
+  "model_runs": 0,
+  "refitting_currently_justified": false,
+  "local_extraction_executed": false
+}

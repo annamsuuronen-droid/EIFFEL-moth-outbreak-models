@@ -19,3 +19,12 @@ Updated 2026-10-08. Real completed evidence is pinned to main `145fecf7e94da8be3
 ## Completed lightweight test record
 
 [CI run37765371408](https://github.com/annamsuuronen-droid/EIFFEL-moth-outbreak-models/actions/runs/37765371408) passed all Windows/Linux safety, Python, base-R and actual-evidence diagnostic steps for assessment commit `abac0418422446a97b9a0d9cea6f9bbdc5bcd22b`. Real-source hash and full-summary steps were executed, not skipped. [Machine-readable test/operations report](MODEL_DIAGNOSTICS_TEST_REPORT_v1.json) records counts and limits. All3278 original scientific/evidence/historical-audit blobs remained identical. No scientific model ran.
+
+
+## P0 investigation v1 — available cloud evidence complete, local extraction pending
+
+[P0 report](p0_investigation_v1/REPORT.md) and [safe local procedure](p0_investigation_v1/README.md) supersede the generic next-action instruction above. All2478 predictive-labelled binary inventory entries were classified from the original manifest; none was opened in cloud. No new actual predictive R-hat/ESS/trace is recovered and convergence remains unproven.
+
+The379332 autumnata observation is linked to site1308/year2004/fold2, but original-source/effort verification is pending. Fagata's corrected full-data PPC has560/1277zeros; its cause is unresolved. Source-level risks now identified include upstream NA-sum-to-zero conversion, nonpositive-duration clamping and calendar/flight-year mapping; no executed-data error is established. Generic occurrence semantics are partly reconciled (expected-count positivity versus realized-count occurrence), without dismissing realized PPCs or declaring the missingv4 producer recovered. Nine V policy failures remain unresolved.
+
+Next action is the exact read-only local command in P0 README. It reads four reviewed files underD:\EIFFEL_runtime, creates only fresh ignored lightweight summaries/selected actual trace plots, verifies source SHA256 unchanged, and runs no prediction/fitting/MCMC/CV/S4/S5. OriginalD:\EIFFEL/imports/results and conifer job are untouched. The large-object API/schema and actual diagnostic results remain local evidence dependencies; successful extraction is not convergence. Review/verify resulting manifests and summaries before publishing a new evidence version or planning any remedy. No refit is currently justified or authorized by this investigation.

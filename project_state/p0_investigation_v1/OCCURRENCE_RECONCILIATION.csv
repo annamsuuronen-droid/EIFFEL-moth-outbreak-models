@@ -1,0 +1,4 @@
+branch,species,generic_O_RMSE,sqrt_observed_zero_fraction,generic_O_AUC,dedicated_realized_O_AUC,generic_O_TjurR2,dedicated_realized_O_TjurR2,reconciliation
+explanatory_v4,Epirrita autumnata,0.0734364498908627,0.0734364498908627,0.5,0.894655305964369,0.0,0.111587695031537,Expected-count positivity explains degeneracy; exact v4 producer absent; use dedicated occurrence columns with correct scope
+explanatory_v4,Operophtera fagata,0.643205569968753,0.6432055699687534,0.5,0.91716892161397,0.0,0.492695238304984,Expected-count positivity explains degeneracy; exact v4 producer absent; use dedicated occurrence columns with correct scope
+explanatory_v4,Operophtera brumata,0.352188841346774,0.3521888413467738,0.5,0.863927629099133,0.0,0.223205870302693,Expected-count positivity explains degeneracy; exact v4 producer absent; use dedicated occurrence columns with correct scope

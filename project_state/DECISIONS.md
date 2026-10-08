@@ -45,3 +45,14 @@ User requested a lightweight local import before scientific auditing. Source ori
 - Generic expected-count and realized-occurrence exports are not interchangeable. Preserve conflicting originals and document a versioned interpretation correction.
 - Current models are not ready for final spatial/operational prediction or unrestricted ecological inference. Reporting the verified evaluated procedure with limitations/negative findings is possible. New-site and advance claims need separately designed honest validation.
 - Next stage is read-only existing-posterior/count-offset/preparation recovery and adequacy assessment, then deployment design. No fitting/MCMC/S4/S5/siteCV/population run was executed or scheduled; protected conifer job untouched.
+
+
+## 2026-10-08 — P0 posterior/preparation investigationv1
+
+- Preserve the three-species CV result and all scientific/historical outputs. New actual predictive convergence remains unknown; inventory/configuration are not saved-chain evidence.
+- Link extreme379332 tosite1308/year2004 using immutable held-out evidence, then request count/effort/raw-source-copy aggregates; never remove/winsorize it. Full raw rows/model objects/pooled chains are not imported.
+- Source-code NA-to-zero and date-duration/flight-year risks are distinguished from unproven executed-data errors. Aggregate source/model equality is not proof of intermediate joins or missingness protocols.
+- Reconcile S5 expected-count evaluation and C+D realized-occurrence handling. Genericv4 occurrence constants match always-present arithmetic; exactproducer is still absent. This is an estimand/reporting issue, not automatic justification for fitting.
+- Keep9 failed nonblockingV diagnostics scientifically unresolved in existingissue1. Do not attribute V failure to raw-loading rotations or infer irrelevance without actualmodel/prior evidence.
+- Prepare exactlyfour read-only localsource reads with nativepath/reparse/share guards and source/artifact SHA256 manifests. Separate retainedchains, classic/modern diagnostics and limitedactualtrace/block summaries are computed without sampling. Missingpackages/components/constantdraws areexplicit; existingoutputisrefused and uncheckedlocaloutputignoredbyGit.
+- A refit needs evidence of materialexecuted-data/offseterror, target-relevant mixing failure or persistentobservation inadequacy afterpreparation/MonteCarlo review. MoreMCMC is not a generalPPC repair. No expensiveexecution or resultreplacement is authorized.

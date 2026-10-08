@@ -29,3 +29,10 @@ Locate existing population-growth/forecast workflows before implementing new one
 `python tools/assess_model_readiness_v1.py --output <new directory>` checks hashes, saved metrics, coverage, selections, PPC flags and diagnostic gates without R/models; existing output directories are refused. Versioned outputs and input fingerprints are under `model_diagnostics_v1`. Windows safety and base-R arithmetic tests run in CI; synthetic refusal tests are distinct from real-evidence recomputation.
 
 Retain D:\EIFFEL_runtime as active existing-output root; preserve the E: backup, imported snapshots and all scientific results. The concurrent conifer job is protected. No new capture or expensive fitting is the current next step; the remaining evidence review needs read-only local posterior/preparation access.
+
+
+## Current P0 evidence-recovery procedure
+
+Follow [P0 investigationv1](p0_investigation_v1/REPORT.md). Existing primary/sensitivity/current predictive binary locations are inventoried; the minimal first extraction reads only the two current C+Dv2 direct Hmsc fits plus saved primary aggregate metadata and a raw-source copy. Actual saved separate chains, not completion or sample-count claims, are required for mixing. Classic and optional modern diagnostics and selected actual traces are versioned; unsupported/missing components remain explicit. Model1277-row/frozen5-weather or8-weather+NDVI identity and Y/Loff alignment are checked before interpretation.
+
+Trace source site1308/year2004/379332 through saved modelY/Loff, primary extreme/interval aggregate, and raw exact-distinct count/date aggregate. This cannot replace missing executedGIS/zero-fill/date/trap-operation provenance. Verify absent-species versus missing-count semantics and effort durations; do not clamp/remove extremes. Resolve expected-count versus realized-occurrence reporting separately from corrected fagata-zero/autumnata-tail PPC adequacy and V policy. Read-only local command/output requirements are in [README](p0_investigation_v1/README.md); it does not publish unchecked local artifacts. No expensive stage starts.

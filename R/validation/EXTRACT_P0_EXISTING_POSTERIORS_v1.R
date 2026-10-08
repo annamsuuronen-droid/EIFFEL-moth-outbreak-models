@@ -1,5 +1,13 @@
 # Read-only existing-posterior arithmetic. No prediction, sampling, CV or producer sourcing.
 p0_species <- c("Epirrita autumnata", "Operophtera brumata", "Operophtera fagata")
+p0_weather <- c("lag1_summer_mean_Tmin","lag1_summer_mean_Tmax","lag1_summer_max_Tmax","lag1_growing_sum_precipitation","lag1_autumn_mean_Tmax")
+p0_identity <- function(m,id) {
+  expected<-c(p0_weather,if(id=="environment") c("NDVI_mean__b100m","NDVI_median__b100m","NDVI_max__b100m"))
+  actual<-m$covNames;if(is.null(actual) && is.matrix(m$X))actual<-colnames(m$X)
+  if(!id%in%c("weather","environment") || nrow(m$Y)!=1277L ||
+     is.null(actual) || !setequal(setdiff(actual,"(Intercept)"),expected)) stop("Saved model differs from frozen full-data row/predictor contract")
+  paste(actual,collapse="|")
+}
 p0_write <- function(x, path) {
   if (file.exists(path)) stop("Refusing existing output: ", path)
   con <- file(path, open="wx"); on.exit(close(con))
@@ -39,14 +47,18 @@ p0_diagnose <- function(x, component, modern=requireNamespace("posterior",quietl
 }
 p0_model_observations <- function(model) {
   y<-model$Y; off<-model$Loff
-  if (!is.matrix(y) || !is.matrix(off) || !identical(dim(y),dim(off)) ||
-      !setequal(colnames(y),p0_species)) stop("Unexpected Y/Loff/species schema")
+  if (!is.matrix(y) || !is.matrix(off) || !identical(dim(y),dim(off)) || !identical(dimnames(y),dimnames(off)) ||
+      !setequal(colnames(y),p0_species) || is.null(rownames(y)) || anyDuplicated(rownames(y))) stop("Unexpected Y/Loff/species/row alignment schema")
   if (any(y[is.finite(y)]<0) || any(abs(y[is.finite(y)]-round(y[is.finite(y)]))>1e-8) || any(!is.finite(off))) stop("Invalid count/offset")
   do.call(rbind,lapply(seq_len(ncol(y)),function(j) {
     keep<-is.finite(y[,j]); effort<-7*exp(off[keep,j])
     if(!any(keep) || any(!is.finite(effort)) || any(effort<=0)) stop("Missing observations or invalid inferred effort")
+    reference_zero<-c("Epirrita autumnata"=2,"Operophtera brumata"=150,"Operophtera fagata"=560)[colnames(y)[j]]
+    reference_max<-c("Epirrita autumnata"=379332,"Operophtera brumata"=2051,"Operophtera fagata"=3171)[colnames(y)[j]]
     data.frame(species=colnames(y)[j],rows=nrow(y),finite_observations=sum(keep),missing_observations=sum(!keep),
       zeros=sum(y[keep,j]==0),zero_fraction=mean(y[keep,j]==0),maximum=max(y[keep,j]),
+      saved_PPC_reference_zeros=unname(reference_zero),saved_PPC_reference_maximum=unname(reference_max),
+      matches_saved_PPC_observation_counts=(sum(keep)==1277L && sum(y[keep,j]==0)==reference_zero && max(y[keep,j])==reference_max),
       inferred_effort_days_min=min(effort),inferred_effort_days_median=median(effort),inferred_effort_days_max=max(effort),
       effort_inference="7*exp(Loff); verify against primary preparation metadata",stringsAsFactors=FALSE)
   }))
@@ -88,18 +100,26 @@ p0_extract <- function(source, output, allow) {
   if (!dir.exists(output) || length(list.files(output,all.files=TRUE,no..=TRUE))) stop("Output must be a fresh empty guarded directory")
   if (!requireNamespace("Hmsc",quietly=TRUE) || !requireNamespace("coda",quietly=TRUE)) stop("Existing Hmsc and coda installations required; no automatic installation")
   rows<-read.csv(allow,colClasses="character",check.names=FALSE)
-  statuses<-list(); executions<-list()
+  statuses<-list(); executions<-list();reference<-NULL
   path<-function(r) file.path(source,r$relative_path)
   for (i in which(rows$action=="MODEL_DIAGNOSTICS")) {
     r<-rows[i,,drop=FALSE]; id<-r$id
     m<-readRDS(path(r))
     if (!identical(class(m),"Hmsc")) stop("Expected direct Hmsc object; nested/other schema refused: ",id)
+    covariates<-p0_identity(m,id)
     p0_write(p0_model_observations(m),file.path(output,paste0(id,"_observation_summary.csv")))
+    if(is.null(reference)) reference<-list(Y=m$Y,Loff=m$Loff) else {
+      same<-identical(m$Y,reference$Y) && identical(m$Loff,reference$Loff)
+      p0_write(data.frame(Y_and_Loff_identical_between_models=same,
+        interpretation=if(same) "MATCHED_MODEL_OBSERVATIONS_AND_OFFSETS" else "DISCREPANCY_DO_NOT_DECLARE_COMPARABLE"),file.path(output,"matched_observation_check.csv"))
+    }
     chains<-if(is.list(m$postList))length(m$postList) else 0L
     lengths<-if(chains)vapply(m$postList,length,integer(1)) else integer()
+    stored<-function(x) if(is.null(x) || !length(x)) "MISSING_IN_OBJECT" else paste(as.vector(x),collapse="|")
     executions[[length(executions)+1L]]<-data.frame(id=id,source=r$relative_path,class="Hmsc",saved_chains=chains,
-      saved_chain_lengths=paste(lengths,collapse="|"),stored_samples=paste(m$samples,collapse="|"),
-      stored_thin=paste(m$thin,collapse="|"),stored_transient=paste(m$transient,collapse="|"),
+      saved_chain_lengths=stored(lengths),stored_samples=stored(m$samples),
+      stored_thin=stored(m$thin),stored_transient=stored(m$transient),covariates=covariates,
+      stored_distribution_codes=stored(m$distr),stored_YScale=stored(m$YScale),
       offset_present=!is.null(m$Loff),Hmsc=as.character(packageVersion("Hmsc")),coda=as.character(packageVersion("coda")),
       posterior=if(requireNamespace("posterior",quietly=TRUE))as.character(packageVersion("posterior")) else "NOT_INSTALLED",
       stringsAsFactors=FALSE)

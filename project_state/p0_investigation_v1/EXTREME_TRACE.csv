@@ -1,0 +1,3 @@
+stage,site,year,species,value,model,source,original_raw_source_verified
+VERIFIED_HELD_OUT_OBSERVATION,1308,2004,Epirrita autumnata,379332,WEATHER_ONLY,imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_02/outer_test_predictions.csv2,False
+VERIFIED_HELD_OUT_OBSERVATION,1308,2004,Epirrita autumnata,379332,WEATHER_PLUS_ENVIRONMENT,imported_local/hmsc_outputs/S3_HMSC_NESTED_OUTER_CV_PREDICTIVE_v2/outer_year/fold_02/outer_test_predictions.csv2,False

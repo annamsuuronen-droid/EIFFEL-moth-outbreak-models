@@ -23,3 +23,14 @@ The five-fold numerical/evidence gates are resolved; scientific adequacy and dep
 | U17 | OPEN environmental interpretability | Tiny mixed outer improvements and unstable selected groups/scales do not support strong mechanisms. Predictive coefficient uncertainty is absent; VP is latent in-sample allocation, not causal explained variance. |
 
 No new GitHub issue was opened for evidence, engineering or unfinished stages. Existing issue#1 is the genuine unresolved scientific-policy decision. Numerical CV may be reported transparently with scope/limitations; final prediction/inference readiness remains false.
+
+
+## P0 investigation update
+
+- U10 now includes demonstrated **code risks** (upstream missing-sum-to-zero conversion, clamped durations, yearmapping), not demonstrated active-data errors. Extreme is located atsite1308/year2004; originalsource/effort/GIS/trapoperation proof remains open.
+- U13 remains open: all available predictive-labelled binary paths inventoried but no real savedchains opened; actualR-hat/ESS/trace/mixing are not recovered. A tested exactfour-file local extraction is prepared, notexecuted. Otherprimary/sensitivity/foldposterior availability is local-only.
+- U15 is partly reconciled: genericv4 occurrence constants reproduce always-present arithmetic; retainedS5 usesexpectedcount predictions whileC+D finaloccurrence usesrealizeddraws. Missingv4 producer and anyversioned reportingcorrection remain open; nofit is needed solely tofix semantics.
+- U09 remains open: fagata560/1277zeros exceed correctedfull-data predictiveinterval and autumnataextremetails remain mismatched. Preparation/sampling/likelihood causes are not separated withoutlocal evidence.
+- U04 remains open: all9 v4/S5 V failures retained; nonblockingacceptance is notconvergence and largeESS doesnot negatePSRF failure. Existingissue1 unchanged.
+
+See [P0 report](p0_investigation_v1/REPORT.md) and [local extraction](p0_investigation_v1/README.md). No spatialprediction/refit starts before thesegates resolve.
