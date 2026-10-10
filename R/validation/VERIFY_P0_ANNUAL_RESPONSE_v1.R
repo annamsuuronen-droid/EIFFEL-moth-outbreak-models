@@ -61,10 +61,12 @@ annual_compare <- function(m,r,id) {
  data.frame(model=id,saved_rows=nrow(y),reconstructed_rows=nrow(r$Y),missing_saved_row_ids=sum(is.na(rows)),missingness_mismatches=sum(missing),count_mismatches=sum(count_bad),observed_offset_mismatches=sum(off_valid & delta>1e-10),maximum_observed_offset_difference=if(any(off_valid))max(delta[off_valid])else NA_real_,unobserved_offset_mismatches=sum(!is.finite(y)&is.finite(b)&delta>1e-10),response_and_observed_offset_match=all(!is.na(rows)) && !any(missing) && !any(count_bad) && all(is.finite(b[is.finite(y)])) && !any(delta[is.finite(y)]>1e-10),historical_input_byte_identity='UNVERIFIED: numerical agreement is not historical file identity')
 }
 annual_timing <- function(dat) {
- fields<-intersect(c('flight_year','calendar_year','PvmAlku','PvmLoppu','start_date','end_date'),names(dat));out<-list()
+ norm<-function(x)gsub('[^a-z]','',tolower(trimws(as.character(x))))
+ dat<-dat[norm(dat$species)%in%norm(annual_species),,drop=FALSE]
+ fields<-intersect(c('flight_year','calendar_year','sample_year','PvmAlku','PvmLoppu','start_DateN','end_DateN','start_date','end_date'),names(dat));out<-list()
  for(n in fields) {
   v<-dat[[n]];derived<-rep(NA_integer_,length(v));jan_march<-rep(FALSE,length(v))
-  if(n %in% c('flight_year','calendar_year'))derived<-suppressWarnings(as.integer(as.character(v)))else {
+  if(n %in% c('flight_year','calendar_year','sample_year'))derived<-suppressWarnings(as.integer(as.character(v)))else {
    dates<-as.Date(rep(NA_character_,length(v)));text<-trimws(as.character(v))
    for(fmt in c('%Y-%m-%d','%d.%m.%Y','%d/%m/%Y','%Y/%m/%d')) {
     take<-is.na(dates);parsed<-suppressWarnings(as.Date(text[take],format=fmt));good<-!is.na(parsed) & format(parsed,fmt)==text[take];ix<-which(take)[good];dates[ix]<-parsed[good]
@@ -82,7 +84,7 @@ annual_extract <- function(source,output,allow,helper) {
  rows<-read.csv(allow,stringsAsFactors=FALSE);path<-function(row)file.path(source,row$relative_path)
  input<-rows[rows$action=='ANNUAL_INPUT',,drop=FALSE];if(nrow(input)!=1L)stop('Exactly one scientifically identified final input required')
  header<-names(read.csv(path(input),nrows=0,check.names=FALSE));if(anyDuplicated(header))stop('Duplicated input column names refused')
- classes<-rep('NULL',length(header));classes[header %in% c('sample_id','site','year','species','count','interval_days','buffer_m','flight_year','calendar_year','PvmAlku','PvmLoppu','start_date','end_date')]<-'character'
+ classes<-rep('NULL',length(header));classes[header %in% c('sample_id','site','year','species','count','interval_days','buffer_m','flight_year','calendar_year','sample_year','PvmAlku','PvmLoppu','start_DateN','end_DateN','start_date','end_date')]<-'character'
  dat<-read.csv(path(input),sep=',',dec='.',stringsAsFactors=FALSE,check.names=FALSE,colClasses=classes)
  r<-annual_reconstruct(dat)
  p0_write(annual_timing(dat),file.path(output,'timing_field_audit.csv'))
