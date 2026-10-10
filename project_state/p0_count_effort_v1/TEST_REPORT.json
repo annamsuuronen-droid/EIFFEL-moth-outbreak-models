@@ -1,0 +1,107 @@
+{
+  "reviewed_base_commit": "71a474091533f730438ea7af44fcb3092fff4228",
+  "tested_code_commit": "dd9259c6f35d49a34cf6e681e4dbc807188c6cf1",
+  "date": "2026-10-10",
+  "cloud_runtime": {
+    "R": "4.5.0",
+    "coda": "0.19.4.1",
+    "posterior": "1.6.1",
+    "PowerShell": "7.6.6",
+    "installation": "Isolated /workspace/work test runtime only; no Windows package installation or Hmsc fitting"
+  },
+  "passed": {
+    "annual_response_synthetic_checks": 36,
+    "posterior_diagnostic_arithmetic": "Existing coda/modern Rhat/ESS, shifted/constant/invalid chains, date/effort/schema and exclusive-output test suite executed successfully",
+    "powershell": "Parser, Rscript argument preservation, exact21-path allow-list and11 mutation refusals executed on Linux",
+    "python_regressions": 13,
+    "real_existing_P0_arithmetic": true,
+    "real_CV_hash_checks": "Five captured artifacts plus seven audit artifacts; exact original SHA256/MD5/size using explicit deterministic EOL restoration",
+    "real_CV_R_recomputation": "All five published summary tables recomputed from existing evidence; no fitting",
+    "source_allowlist_static_checks": true,
+    "protected_original_blobs_unchanged": 3314
+  },
+  "not_executed": {
+    "native_Windows_guards": "No Windows environment here; mandatory local self-tests before real extraction",
+    "real_final_GIS_input": "D:\\EIFFEL_runtime inaccessible",
+    "actual_saved_Hmsc_serialization_and_converter": "Real objects and Hmsc package unavailable in cloud",
+    "actual_Y_Loff_correspondence": "Local extraction pending",
+    "actual_predictive_posterior_diagnostics": "Local extraction pending"
+  },
+  "CI": [
+    {
+      "run_id": 38020437838,
+      "name": "Completed outer-year evidence safety",
+      "conclusion": "failure",
+      "status": "completed",
+      "jobs": [
+        {
+          "id": 114120039284,
+          "name": "synthetic-windows-safety",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_id": 38020437838,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 114120039453,
+          "name": "synthetic-linux-arithmetic",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_id": 38020437838,
+          "logs_url": null,
+          "steps": null
+        }
+      ]
+    },
+    {
+      "run_id": 38020437860,
+      "name": "P0 annual count and offset verification safety",
+      "conclusion": "failure",
+      "status": "completed",
+      "jobs": [
+        {
+          "id": 114120039540,
+          "name": "arithmetic (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_id": 38020437860,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 114120039633,
+          "name": "arithmetic (windows-latest)",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "run_id": 38020437860,
+          "logs_url": null,
+          "steps": null
+        }
+      ]
+    }
+  ],
+  "CI_interpretation": "Failed/cancelled jobs expose no steps and no available logs; no CI test pass is claimed; root cause not established",
+  "operations": {
+    "source_model_objects_opened": 0,
+    "current_GIS_file_opened": 0,
+    "new_actual_posterior_diagnostics_recovered": 0,
+    "local_Windows_extraction_runs": 0,
+    "scientific_model_fits": 0,
+    "MCMC_runs": 0,
+    "S4_runs": 0,
+    "S5_runs": 0,
+    "CV_model_runs": 0,
+    "original_scientific_results_modified": 0,
+    "conifer_workflow_operations": 0,
+    "verified_CV_species": 3
+  },
+  "publication": "Only reviewed code, documented source evidence and truthful test/status records; no synthetic fixture outputs or inaccessible scientific diagnostics",
+  "tested_file_sha256": {
+    "R/validation/VERIFY_P0_ANNUAL_RESPONSE_v1.R": "b19c39e28075fe4eebc2a94e67e44710e6bfc29a437120dcba038155c5946ab4",
+    "tools/verify_p0_annual_response.ps1": "2d68e75e7a422cf5b77286cc6a5d408b92150a20ef153b7ac3c69649808754ed",
+    "tools/tests/test_p0_annual_response.R": "8c598d736a4b93c6ce5d9464046a45c0c07c421481c830f48f67dad6cebc8286",
+    "tools/tests/Test-P0AnnualContract.ps1": "863fa5989a35a86269eb5f1f32eb53f6ea82b884d7fa3e8e459af01c75696348",
+    "tools/tests/Test-P0AnnualResponse.ps1": "998dc71210e864e0af6174154b899f976cfa47fd57e8bbe1a5cde26a68e90c29"
+  }
+}
