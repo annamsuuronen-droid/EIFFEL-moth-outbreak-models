@@ -58,3 +58,8 @@ User requested a lightweight local import before scientific auditing. Source ori
 - A refit needs evidence of materialexecuted-data/offseterror, target-relevant mixing failure or persistentobservation inadequacy afterpreparation/MonteCarlo review. MoreMCMC is not a generalPPC repair. No expensiveexecution or resultreplacement is authorized.
 
 P0 recovery refinement:32 existingESS/Gelman texts located, including16currentfits. Expanded exactallowlist to36sources (32smallcopies and fourread-onlyobjects/rawsource). Retained primaryhelper confirms classicGelmanautoburnindefault, so newall-retained-draw diagnostics must be method-labelled. Valuesremainunknown; no convergenceinference. Sourcefindings_v2 and CHECK_STATUS_v2 supersede the incompleteexport-search wording; earlier generatedtables remainimmutable.
+
+
+## 2026-10-10 — researcher-identified annual response contract
+
+Retain integer annual total_count as response and Loff=log(total_effort_days/7), with lognormal Poisson and original coverage/missingness policy. count_per_7d and annual_index are derived quantities, not model responses. The researcher-identified current GIS path replaces the required raw-source candidate for this P0 verification; filename/size matches or Olddata are not authorized substitutions. A current-source SHA256 and Y/Loff agreement do not establish historical file identity. All corrective fitting remains deferred until verified evidence and separate authorization.

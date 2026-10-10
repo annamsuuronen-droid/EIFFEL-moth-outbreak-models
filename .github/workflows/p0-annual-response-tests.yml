@@ -1,0 +1,46 @@
+name: P0 annual count and offset verification safety
+on:
+  push:
+    paths:
+      - 'R/validation/VERIFY_P0_ANNUAL_RESPONSE_v1.R'
+      - 'tools/verify_p0_annual_response.ps1'
+      - 'tools/tests/test_p0_annual_response.R'
+      - 'tools/tests/Test-P0AnnualResponse.ps1'
+      - 'project_state/p0_count_effort_v1/LOCAL_EXTRACTION_ALLOWLIST.csv'
+      - '.github/workflows/p0-annual-response-tests.yml'
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  arithmetic:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Real existing-evidence P0 arithmetic and code investigation
+        shell: bash
+        run: python tools/investigate_p0_evidence_v1.py --output "$RUNNER_TEMP/p0_existing_evidence"
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::coda
+            any::posterior
+          needs: check
+      - name: Base R posterior and observation arithmetic/refusal tests
+        shell: Rscript {0}
+        run: source('tools/tests/test_p0_posterior_extraction.R'); source('tools/tests/test_p0_annual_response.R')
+      - name: Windows PowerShell 5.1 safety
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: '& ./tools/tests/Test-P0AnnualResponse.ps1'
+      - name: Windows PowerShell 7 safety
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& ./tools/tests/Test-P0AnnualResponse.ps1'

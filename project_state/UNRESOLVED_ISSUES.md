@@ -36,3 +36,8 @@ No new GitHub issue was opened for evidence, engineering or unfinished stages. E
 See [P0 report](p0_investigation_v1/REPORT_v2.md) and [local extraction](p0_investigation_v1/README.md). No spatialprediction/refit starts before thesegates resolve.
 
 P0 export-search addendum:32 existing ESS/Gelman files are now located in the original manifest (16current;8primary;8sensitivity), all excluded from import. The reviewed allowlist now has36paths: four read-onlyobject/raw sources plus32 exact-size diagnostictext copies. Values/convergence remain unverified until local recovery; the helper implementation is located in primaryS1/S2a, with default-autoburnin classicPSRF distinct from the new all-retained-draw/modern diagnostics. Original P0 sourcefindings/status are preserved and superseded by their v2 additions.
+
+
+## Annual response verification dependencies (2026-10-10)
+
+Final GIS source bytes, historical execution input identity, saved Y/Loff correspondence, count/effort completeness, original379332 trap-count lineage, active calendar/flight-year mapping and actual posterior diagnostics are local-only/unverified. New read-only extraction is p0_count_effort_v1/README.md. Its primary explanatory object is not v4; existing v4/S5 V failures remain open. The O.fagata zero-frequency discrepancy remains unexplained until actual zero-fill/missingness/effort evidence is inspected. No response substitution, offset correction, outlier alteration or model rerun is inferred.

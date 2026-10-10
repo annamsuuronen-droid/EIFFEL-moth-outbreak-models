@@ -42,3 +42,6 @@ Rplots.pdf
 __pycache__/
 work/
 local_p0_evidence_v1/
+
+# Read-only annual input/posterior extraction; review before versioned evidence publication.
+local_p0_count_effort_v1/
