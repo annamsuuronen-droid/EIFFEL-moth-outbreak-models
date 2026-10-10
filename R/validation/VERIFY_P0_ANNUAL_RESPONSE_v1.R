@@ -54,7 +54,7 @@ annual_reconstruct <- function(dat) {
 annual_compare <- function(m,r,id) {
  y<-m$Y;o<-m$Loff
  if(!is.matrix(y)||!is.matrix(o)||!identical(dimnames(y),dimnames(o))||!identical(dim(y),dim(o))||anyDuplicated(rownames(y))||is.null(rownames(y))||is.null(colnames(y))||anyDuplicated(colnames(y))||!setequal(colnames(y),colnames(r$Y)))stop('Invalid saved Y/Loff identity')
- if(any(!is.finite(o))||any(!is.finite(y)&!is.na(y))||any(y[is.finite(y)]<0))stop('Invalid saved observation/offset')
+ if(any(!is.finite(o))||any(!is.finite(y)&!is.na(y))||any(y[is.finite(y)]<0)||any(abs(y[is.finite(y)]-round(y[is.finite(y)]))>1e-8))stop('Invalid saved observation/offset')
  rows<-match(rownames(y),rownames(r$Y));cols<-match(colnames(y),colnames(r$Y));a<-r$Y[rows,cols,drop=FALSE];b<-r$Loff[rows,cols,drop=FALSE]
  missing<-is.na(y)!=is.na(a);finite<-is.finite(y)&is.finite(a);count_bad<-finite & y!=a
  off_valid<-is.finite(y)&is.finite(b);delta<-abs(o-b)
@@ -81,7 +81,7 @@ annual_extract <- function(source,output,allow,helper) {
  if(!requireNamespace('Hmsc',quietly=TRUE)||!requireNamespace('coda',quietly=TRUE))stop('Existing installed Hmsc/coda required; no installation permitted')
  rows<-read.csv(allow,stringsAsFactors=FALSE);path<-function(row)file.path(source,row$relative_path)
  input<-rows[rows$action=='ANNUAL_INPUT',,drop=FALSE];if(nrow(input)!=1L)stop('Exactly one scientifically identified final input required')
- header<-names(read.csv(path(input),nrows=0,check.names=FALSE))
+ header<-names(read.csv(path(input),nrows=0,check.names=FALSE));if(anyDuplicated(header))stop('Duplicated input column names refused')
  classes<-rep('NULL',length(header));classes[header %in% c('sample_id','site','year','species','count','interval_days','buffer_m','flight_year','calendar_year','PvmAlku','PvmLoppu','start_date','end_date')]<-'character'
  dat<-read.csv(path(input),sep=',',dec='.',stringsAsFactors=FALSE,check.names=FALSE,colClasses=classes)
  r<-annual_reconstruct(dat)
@@ -98,7 +98,7 @@ annual_extract <- function(source,output,allow,helper) {
  }
  for(i in which(rows$action=='MODEL_DIAGNOSTICS')) {
   row<-rows[i,,drop=FALSE];id<-row$id;m<-readRDS(path(row));if(!identical(class(m),'Hmsc'))stop('Expected direct saved Hmsc object')
-  if(id %in% c('weather','environment'))p0_identity(m,id)
+  if(id %in% c('weather','environment')){p0_identity(m,id);p0_write(p0_model_observations(m),file.path(output,paste0(id,'_observation_summary.csv')))}
   comparisons[[id]]<-annual_compare(m,r,id)
   stored<-function(x)if(is.null(x)||!length(x))'MISSING_IN_OBJECT'else paste(as.vector(x),collapse='|')
   execution[[id]]<-data.frame(id=id,source=row$relative_path,saved_chains=length(m$postList),chain_lengths=stored(vapply(m$postList,length,integer(1))),thin=stored(m$thin),samples=stored(m$samples),transient=stored(m$transient),distribution=stored(m$distr),YScale=stored(m$YScale),covariates=stored(m$covNames),input_path=stored(m$data_file),input_sha256=stored(m$input_sha256),interpretation='Stored fields only; absent provenance not inferred')
@@ -126,7 +126,9 @@ annual_extract <- function(source,output,allow,helper) {
  p0_write(do.call(rbind,comparisons),file.path(output,'response_offset_comparison.csv'))
  p0_write(do.call(rbind,execution),file.path(output,'execution_metadata.csv'));p0_write(do.call(rbind,statuses),file.path(output,'recovery_status.csv'))
  primary<-readRDS(path(rows[rows$action=='PREPARATION_METADATA',,drop=FALSE]))
- fields<-c('response_definition','offset_definition','distribution','analysis_version','data_file','input_sha256','primary_rdata_file')
+ if(!is.list(primary))stop('Unexpected primary metadata object')
+ for(n in c('zero_fill_audit','response_distribution','extreme_count_flags')){x<-primary[[n]];if(is.data.frame(x)&&'species'%in%names(x)&&all(x$species %in% annual_species))p0_write(x,file.path(output,paste0('primary_',n,'.csv')))}
+ fields<-c('role','script_revision','n_samples','response_definition','offset_definition','distribution','analysis_version','data_file','input_sha256','primary_rdata_file')
  p0_write(data.frame(field=fields,value=vapply(fields,function(n)if(is.null(primary[[n]]))'NOT_RECORDED'else paste(primary[[n]],collapse='|'),character(1))),file.path(output,'primary_provenance_fields.csv'))
  p0_write(data.frame(status='EXTRACTION_FINISHED_REVIEW_REQUIRED',response_match_all=all(vapply(comparisons,function(x)x$response_and_observed_offset_match,logical(1))),historical_input_byte_identity='UNVERIFIED_UNLESS_EXECUTION_HASH_RECOVERED',model_fits=0,MCMC_runs=0,CV_runs=0,abundance_rows_exported=0),file.path(output,'STATUS.csv'))
 }

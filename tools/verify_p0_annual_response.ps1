@@ -108,18 +108,29 @@ if($MyInvocation.InvocationName -ne '.') {
     $repo=ConvertTo-EiffelFullPath (Split-Path $PSScriptRoot -Parent)
     if(-not $repo.Equals('D:\EIFFEL-control',[StringComparison]::OrdinalIgnoreCase)) {throw 'Production repository must be D:\EIFFEL-control.'}
     $exe=Resolve-Fold5Rscript $RscriptPath
+    # Run native safety fixtures only in an ordinary OS temporary root, never either protected project.
+    foreach($tmp in @([IO.Path]::GetTempPath(),$env:TEMP,$env:TMP)) {
+        if($tmp -and (ConvertTo-EiffelFullPath $tmp) -match '^(?i:D:\\EIFFEL(?:_runtime)?)(\\|$)') {throw 'Test temporary root is inside a protected source project.'}
+    }
+    & (Join-Path $repo 'tools\tests\Test-P0AnnualContract.ps1')
+    & (Join-Path $repo 'tools\tests\Test-P0AnnualResponse.ps1')
+    Push-Location -LiteralPath $repo
+    try {
+        & $exe --vanilla (Join-Path $repo 'tools\tests\test_p0_annual_response.R')
+        if($LASTEXITCODE -ne 0){throw 'Annual reconstruction self-tests failed; real sources will not be opened.'}
+    } finally {Pop-Location}
     $code=Join-Path $repo 'R\validation\VERIFY_P0_ANNUAL_RESPONSE_v1.R'
     $extractor={param($source,$target,$allow)
         $codeGuards=New-Object 'System.Collections.Generic.List[System.IDisposable]'
         $codeGuarded=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
         $codeStreams=@()
         try {
-            foreach($p in @($exe,$code,(Join-Path $repo 'tools\verify_p0_annual_response.ps1'),(Join-Path $repo 'tools\capture_completed_fold5.ps1'),(Join-Path $repo 'tools\import_local_evidence.ps1'),(Join-Path $repo 'R\validation\EXTRACT_P0_EXISTING_POSTERIORS_v1.R'))) {$codeStreams+=(Open-EiffelSource $p $codeGuards $codeGuarded)}
+            foreach($p in @($exe,$code,(Join-Path $repo 'tools\verify_p0_annual_response.ps1'),(Join-Path $repo 'tools\capture_completed_fold5.ps1'),(Join-Path $repo 'tools\import_local_evidence.ps1'),(Join-Path $repo 'R\validation\EXTRACT_P0_EXISTING_POSTERIORS_v1.R'),(Join-Path $repo 'tools\tests\Test-P0AnnualContract.ps1'),(Join-Path $repo 'tools\tests\Test-P0AnnualResponse.ps1'),(Join-Path $repo 'tools\tests\test_p0_annual_response.R'))) {$codeStreams+=(Open-EiffelSource $p $codeGuards $codeGuarded)}
             $hashes=@($codeStreams|ForEach-Object {Get-EiffelHash $_})
             & $exe --vanilla $code $source $target $allow
             if($LASTEXITCODE -ne 0) {throw 'Read-only R extraction failed; evidence is not publishable.'}
             for($j=0;$j-lt $codeStreams.Count;$j++) {if((Get-EiffelHash $codeStreams[$j])-cne $hashes[$j]) {throw 'Extractor/runtime changed.'}}
-            Write-Fold5CsvNew @([pscustomobject]@{role='Rscript';sha256=$hashes[0]},[pscustomobject]@{role='reviewed_R_extractor';sha256=$hashes[1]},[pscustomobject]@{role='P0_PowerShell_wrapper';sha256=$hashes[2]},[pscustomobject]@{role='capture_guard_dependency';sha256=$hashes[3]},[pscustomobject]@{role='native_import_guard_dependency';sha256=$hashes[4]},[pscustomobject]@{role='diagnostic_arithmetic_dependency';sha256=$hashes[5]}) (Join-Path $target 'tool_manifest.csv')
+            Write-Fold5CsvNew @([pscustomobject]@{role='Rscript';sha256=$hashes[0]},[pscustomobject]@{role='reviewed_R_extractor';sha256=$hashes[1]},[pscustomobject]@{role='P0_PowerShell_wrapper';sha256=$hashes[2]},[pscustomobject]@{role='capture_guard_dependency';sha256=$hashes[3]},[pscustomobject]@{role='native_import_guard_dependency';sha256=$hashes[4]},[pscustomobject]@{role='diagnostic_arithmetic_dependency';sha256=$hashes[5]},[pscustomobject]@{role='parser_contract_selftest';sha256=$hashes[6]},[pscustomobject]@{role='native_windows_selftest';sha256=$hashes[7]},[pscustomobject]@{role='annual_arithmetic_selftest';sha256=$hashes[8]}) (Join-Path $target 'tool_manifest.csv')
         } finally {foreach($s in $codeStreams){$s.Dispose()};for($j=$codeGuards.Count-1;$j-ge 0;$j--){$codeGuards[$j].Dispose()}}
     }.GetNewClosure()
     Invoke-AnnualExtraction 'D:\EIFFEL_runtime' $repo $extractor

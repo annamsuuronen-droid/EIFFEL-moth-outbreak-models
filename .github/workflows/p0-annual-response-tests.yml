@@ -6,6 +6,7 @@ on:
       - 'tools/verify_p0_annual_response.ps1'
       - 'tools/tests/test_p0_annual_response.R'
       - 'tools/tests/Test-P0AnnualResponse.ps1'
+      - 'tools/tests/Test-P0AnnualContract.ps1'
       - 'project_state/p0_count_effort_v1/LOCAL_EXTRACTION_ALLOWLIST.csv'
       - '.github/workflows/p0-annual-response-tests.yml'
   pull_request:
@@ -36,6 +37,9 @@ jobs:
       - name: Base R posterior and observation arithmetic/refusal tests
         shell: Rscript {0}
         run: source('tools/tests/test_p0_posterior_extraction.R'); source('tools/tests/test_p0_annual_response.R')
+      - name: Cross-platform PowerShell parser and exact source contract
+        shell: pwsh
+        run: '& ./tools/tests/Test-P0AnnualContract.ps1'
       - name: Windows PowerShell 5.1 safety
         if: runner.os == 'Windows'
         shell: powershell

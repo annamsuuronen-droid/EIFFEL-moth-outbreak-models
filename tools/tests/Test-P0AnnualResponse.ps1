@@ -1,6 +1,7 @@
 #requires -Version 5.1
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+if([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT){throw 'Native Windows guard tests require Windows; no emulation accepted.'}
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $script=Join-Path $repo 'tools\verify_p0_annual_response.ps1'
 $tokens=$null;$errors=$null
