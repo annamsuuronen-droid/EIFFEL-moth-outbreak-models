@@ -139,18 +139,23 @@ weather_window <- function(w, site, start, end, completeness=cfg$min_weather_cov
   required <- c('MeanDailyT','Tmin','Tmax','SumDailyP','MeanSnow')
   cover <- vapply(required,function(z) sum(!is.na(x[[z]]))/n,numeric(1))
   valid <- all(cover >= completeness)
+  # Even 95% coverage biases cumulative rain, degree days and frost-day totals.
+  # Always demand 100% of expected days before publishing a cumulative value.
+  full_daily_coverage <- all(cover == 1)
   mean_ok <- function(z) if(valid) mean(z,na.rm=TRUE) else NA_real_
-  min_ok <- function(z) if(valid) min(z,na.rm=TRUE) else NA_real_
-  max_ok <- function(z) if(valid) max(z,na.rm=TRUE) else NA_real_
-  sum_ok <- function(z) if(valid) sum(z,na.rm=TRUE) else NA_real_
+  min_ok <- function(z) if(full_daily_coverage) min(z,na.rm=TRUE) else NA_real_
+  max_ok <- function(z) if(full_daily_coverage) max(z,na.rm=TRUE) else NA_real_
+  sum_ok <- function(z) if(full_daily_coverage) sum(z,na.rm=TRUE) else NA_real_
   c(n_expected=n,n_complete=min(vapply(required,function(z) sum(!is.na(x[[z]])),numeric(1))),
     min_coverage=min(cover),available=as.integer(valid),
+    cumulative_stats_complete=as.integer(full_daily_coverage),
     mean_temperature=mean_ok(x$MeanDailyT),
     mean_Tmin=mean_ok(x$Tmin),min_Tmin=min_ok(x$Tmin),
     mean_Tmax=mean_ok(x$Tmax),max_Tmax=max_ok(x$Tmax),
     sum_precipitation=sum_ok(x$SumDailyP),mean_snow=mean_ok(x$MeanSnow),
     max_snow=max_ok(x$MeanSnow),
     GDD5=sum_ok(pmax(x$MeanDailyT-5,0)),
+    GDD4_9=sum_ok(pmax(x$MeanDailyT-4.9,0)),
     GDD0=sum_ok(pmax(x$MeanDailyT,0)),
     frost_days=sum_ok(as.numeric(x$Tmin<0)),
     cold_days_minus20=sum_ok(as.numeric(x$Tmin< -20)),
@@ -210,7 +215,9 @@ completed_stages_wide <- function(stage_long, issue_md) {
     c('cold_days_minus37','cold_exposure_minus37'):=list(NA_real_,NA_real_)]
   x[stage!='egg_winter',
     c('cold_days_minus20','cold_exposure_minus20'):=list(NA_real_,NA_real_)]
-  measures <- c('mean_temperature','min_Tmin','sum_precipitation','GDD5',
+  # 4.9 C is an exploratory B. piniaria development base, not a fitted choice.
+  x[species!='Bupalus piniarius',GDD4_9:=NA_real_]
+  measures <- c('mean_temperature','min_Tmin','sum_precipitation','GDD5','GDD4_9',
                 'mean_snow','cold_days_minus20','cold_days_minus29_5',
                 'cold_days_minus37','cold_exposure_minus20',
                 'cold_exposure_minus29_5','cold_exposure_minus37')
@@ -388,6 +395,8 @@ main <- function() {
     'Optional Greenup CSV: site,year,greenup_doy,available_date.',
     'Greenup only enters a forecast after occurrence and source availability.',
     '30/90-day precipitation and API require complete daily weather, not 95 percent.',
+    'All cumulative daily weather and extreme statistics require 100 percent data coverage.',
+    'B. piniarius stage GDD4_9 is exploratory, and not an automatic fitted threshold.',
     'E. autumnata -37 C sensitivity and L. monacha -29.5 C egg freezing median differ.',
     'Soil-pupating moths never receive egg-freezing thresholds as ecological predictors.',
     'Host-tree priority registry is candidate metadata, not an automatically fitted model.',
