@@ -1,3 +1,4 @@
+# No scientific data, model fitting or local storage access; Linux synthetic fixtures only.
 name: Six-species annual data light tests
 on:
   workflow_dispatch:
