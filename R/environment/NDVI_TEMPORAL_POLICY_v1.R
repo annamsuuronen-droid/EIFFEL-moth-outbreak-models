@@ -54,8 +54,10 @@ ndvi_timing_audit <- function(adult,scenes) {
         'POSSIBLE_LARVAL_DAMAGE_RESPONSE_NOT_INDEPENDENT_HABITAT',
     default='UNRESOLVED_OR_DIFFERENT_YEAR')]
   x[,ndvi_timing_qa:='SCENE_LEVEL_AUDIT_ONLY_NO_AUTOMATIC_MODEL_FEATURE']
-  issue <- data.table(issue=c('may01','jun01'),issue_md=c('05-01','06-01'))
-  z <- merge(x,issue,by=NULL,allow.cartesian=TRUE,sort=FALSE)
+  issue <- data.table(issue=c('may01','jun01'),issue_md=c('05-01','06-01'),join_key=1L)
+  x[,join_key:=1L]
+  z <- merge(x,issue,by='join_key',allow.cartesian=TRUE,sort=FALSE)
+  z[,join_key:=NULL]
   z[,forecast_issue_date:=as.Date(sprintf('%04d-%s',year,issue_md))]
   z[,temporal_availability_only:=as.integer(!is.na(acquisition_date) &
       !is.na(available_date) & !is.na(ndvi) &
