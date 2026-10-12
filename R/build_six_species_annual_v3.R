@@ -129,8 +129,13 @@ build_daily <- function(path) {
 weather_window <- function(w, site, start, end, completeness=cfg$min_weather_coverage) {
   dates <- seq.Date(start,end,by='day')
   if (!length(dates)) stopf('Bad weather window')
-  x <- w[data.table(site=rep(site,length(dates)),date=dates), on=.(site,date)]
+  # Restrict directly to the requested site and interval. An earlier
+  # join multiplied every site-day into every expected day on some inputs.
+  site_id <- as.character(site)
+  x <- w[site == site_id & date >= start & date <= end]
   n <- length(dates)
+  if (nrow(x) > n || anyDuplicated(x$date))
+    stopf('Duplicate or multiplied daily weather rows at site %s (%s to %s)',site_id,start,end)
   required <- c('MeanDailyT','Tmin','Tmax','SumDailyP','MeanSnow')
   cover <- vapply(required,function(z) sum(!is.na(x[[z]]))/n,numeric(1))
   valid <- all(cover >= completeness)
