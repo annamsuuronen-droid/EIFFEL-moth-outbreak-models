@@ -4,7 +4,9 @@ param(
   [string]$Script = (Join-Path $PSScriptRoot '..\R\build_six_species_annual_v3.R'),
   [string]$DataRoot = 'D:\EIFFEL\data',
   [string]$RuntimeRoot = 'D:\EIFFEL_runtime',
-  [string]$Rscript = 'D:\ProgramFiles\R\R-4.5.2\bin\x64\Rscript.exe'
+  [string]$Rscript = 'D:\ProgramFiles\R\R-4.5.2\bin\x64\Rscript.exe',
+  [ValidateRange(0, 10000)] [int]$MinFreeGB = 50,
+  [switch]$TempCheckOnly
 )
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $Rscript -PathType Leaf)) { throw "Rscript puuttuu: $Rscript" }
@@ -20,13 +22,23 @@ $env:TMP = $temp
 $env:TMPDIR = $temp
 $env:EIFFEL_DATA = $DataRoot.Replace('\','/')
 $env:EIFFEL_BUILD_OUT = $out.Replace('\','/')
-$vol = Get-PSDrive -Name D -ErrorAction Stop
-if ($vol.Free -lt 50GB) { throw 'D:-asemalla alle 50 GB vapaana, ajo pysäytetty.' }
+$runtimeDrive = [System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath($RuntimeRoot)).Substring(0,1)
+$vol = Get-PSDrive -Name $runtimeDrive -ErrorAction Stop
+if ($MinFreeGB -gt 0 -and $vol.Free -lt ($MinFreeGB * 1GB)) {
+  throw ("Ajolevylla {0}: on alle {1} GB vapaana, ajo pysaytetty." -f $runtimeDrive, $MinFreeGB)
+}
 Write-Host "R temp: $temp"
 Write-Host "Input data: $DataRoot"
 Write-Host "Build outputs: $out"
-& $Rscript --vanilla -e 'cat(tempdir(),"\n"); t <- normalizePath(tempdir(),winslash="/"); p <- normalizePath(Sys.getenv("TMPDIR"),winslash="/"); if(!startsWith(t,paste0(p,"/"))) stop("R temp folder is outside D: runtime root")'
-if ($LASTEXITCODE -ne 0) { throw 'Temp-ympäristön R-tarkistus epäonnistui.' }
+$env:EIFFEL_EXPECTED_TEMP = $temp.Replace('\','/')
+$verify = Join-Path $PSScriptRoot '..\R\validation\VERIFY_LOCAL_TEMP_ROOT_v1.R'
+if (-not (Test-Path -LiteralPath $verify -PathType Leaf)) { throw "R temp guard missing: $verify" }
+& $Rscript --vanilla $verify
+if ($LASTEXITCODE -ne 0) { throw 'Temp-ympariston R-tarkistus epaonnistui.' }
+if ($TempCheckOnly) {
+  Write-Host 'PASS: TempCheckOnly complete; no source data read and no Hmsc run.'
+  return
+}
 Push-Location (Split-Path -Parent $Script)
 try {
   & $Rscript --vanilla $Script "--$Mode"
