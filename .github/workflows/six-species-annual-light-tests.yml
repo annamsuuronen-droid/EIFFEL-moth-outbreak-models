@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'R/ecology/EIFFEL_ECOLOGY_FEATURES_v4.R'
+      - 'tools/tests/test_eiffel_ecology_v4.R'
       - 'R/validation/VERIFY_LOCAL_TEMP_ROOT_v1.R'
       - 'tools/run_eiffel_build.ps1'
       - 'tools/tests/test_six_species_annual_v3.R'
@@ -12,6 +14,8 @@ on:
   pull_request:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'R/ecology/EIFFEL_ECOLOGY_FEATURES_v4.R'
+      - 'tools/tests/test_eiffel_ecology_v4.R'
       - 'R/validation/VERIFY_LOCAL_TEMP_ROOT_v1.R'
       - 'tools/run_eiffel_build.ps1'
       - 'tools/tests/test_six_species_annual_v3.R'
@@ -36,7 +40,9 @@ jobs:
         run: Rscript --vanilla -e 'install.packages("data.table", repos="https://cloud.r-project.org")'
       - name: Test synthetic data only (no Hmsc fitting)
         shell: bash
-        run: Rscript --vanilla tools/tests/test_six_species_annual_v3.R
+        run: |
+          Rscript --vanilla tools/tests/test_six_species_annual_v3.R
+          Rscript --vanilla tools/tests/test_eiffel_ecology_v4.R
   windows-temp-preflight:
     runs-on: windows-latest
     timeout-minutes: 10
