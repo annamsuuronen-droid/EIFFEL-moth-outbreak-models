@@ -32,6 +32,7 @@ w <- data.table(site='1001',DateN=as.character(dates),
 wpath <- file.path(td,'weather.txt');fwrite(w,wpath,sep=';')
 w <- build_daily(wpath)
 x <- weather_window(w,'1001',as.Date('2023-01-01'),as.Date('2023-04-30'))
+cat('DEBUG precipitation and coverage: ', paste(names(x), as.character(x), sep='=', collapse='; '), '\n')
 stopifnot(x['available']==1,x['n_expected']==120,
   x['sum_precipitation']==240,x['GDD5']==0)
 w_bad <- copy(w); w_bad[date>='2023-01-01' & date<='2023-04-30',SumDailyP:=NA_real_]
