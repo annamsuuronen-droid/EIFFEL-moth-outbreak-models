@@ -156,7 +156,9 @@ weather_window <- function(w, site, start, end, completeness=cfg$min_weather_cov
     cold_days_minus20=sum_ok(as.numeric(x$Tmin< -20)),
     cold_days_minus29_5=sum_ok(as.numeric(x$Tmin< -29.5)),
     cold_exposure_minus20=sum_ok(pmax(-20-x$Tmin,0)),
-    cold_exposure_minus29_5=sum_ok(pmax(-29.5-x$Tmin,0)))
+    cold_exposure_minus29_5=sum_ok(pmax(-29.5-x$Tmin,0)),
+    cold_days_minus37=sum_ok(as.numeric(x$Tmin < -37)),
+    cold_exposure_minus37=sum_ok(pmax(-37-x$Tmin,0)))
 }
 # The predictions available by May 1 / June 1 use completed windows only.
 weather_features <- function(w,annual, stages=stage_windows) {
@@ -200,10 +202,18 @@ weather_features <- function(w,annual, stages=stage_windows) {
 # Include stage-weather only when the COMPLETE fixed stage ends before issue day.
 # No future climate or observation-derived flight timing enters these features.
 completed_stages_wide <- function(stage_long, issue_md) {
-  x <- stage_long[end_date <= fmt(year, issue_md) & available == 1L]
+  x <- data.table::copy(stage_long[end_date <= fmt(year, issue_md) & available == 1L])
+  # Species-specific freezing hypotheses; other species get NA, not false thresholds.
+  x[!(species=='Lymantria monacha' & stage=='egg_winter'),
+    c('cold_days_minus29_5','cold_exposure_minus29_5'):=list(NA_real_,NA_real_)]
+  x[!(species=='Epirrita autumnata' & stage=='egg_winter'),
+    c('cold_days_minus37','cold_exposure_minus37'):=list(NA_real_,NA_real_)]
+  x[stage!='egg_winter',
+    c('cold_days_minus20','cold_exposure_minus20'):=list(NA_real_,NA_real_)]
   measures <- c('mean_temperature','min_Tmin','sum_precipitation','GDD5',
                 'mean_snow','cold_days_minus20','cold_days_minus29_5',
-                'cold_exposure_minus20','cold_exposure_minus29_5')
+                'cold_days_minus37','cold_exposure_minus20',
+                'cold_exposure_minus29_5','cold_exposure_minus37')
   if(!nrow(x)) return(unique(stage_long[,.(site,year,species)])[0])
   x <- melt(x,id.vars=c('site','year','species','stage'),measure.vars=measures,
             variable.name='metric', value.name='value')
@@ -288,6 +298,30 @@ main <- function() {
   fwrite(catches$overlapping_events,file.path(out,'overlap_audit.csv'))
   w <- build_daily(weather_file)
   wx <- weather_features(w,catches$annual)
+  # Species-specific metadata and weather-only phenology, plus optional Greenup.
+  ecology_module <- file.path('ecology','EIFFEL_ECOLOGY_FEATURES_v4.R')
+  if(!file.exists(ecology_module))
+    ecology_module <- file.path('R','ecology','EIFFEL_ECOLOGY_FEATURES_v4.R')
+  if(!file.exists(ecology_module)) stopf('Ecology module missing')
+  source(ecology_module,local=TRUE)
+  eco_weather <- ecology_weather_by_issue(w,catches$annual)
+  eco_greenup <- ecology_greenup(Sys.getenv('EIFFEL_GREENUP_FILE',unset=''),
+                 unique(catches$annual[,.(site,year)]))
+  fwrite(ecology_species_registry,file.path(out,'species_ecological_registry_REVIEW.csv'))
+  fwrite(eco_weather,file.path(out,'weather_phenology_asof_AUDIT.csv.gz'))
+  fwrite(eco_greenup,file.path(out,'greenup_source_provenance_AUDIT.csv'))
+  eco_features <- function(issue_name) {
+    z <- ecology_combine_asof(eco_weather,eco_greenup,issue_name)
+    cols <- c('spring_start_0_doy','spring_start_5_doy',
+      'gdd5_50_crossing_doy','gdd5_100_crossing_doy',
+      'first_snowfree7_doy_sofar','last_snow_day_doy_sofar',
+      'rain30_complete_mm','rain90_complete_mm','api90_7d_half_life_mm',
+      'greenup_doy','greenup_minus_gdd5_50_proxy_days')
+    stopifnot(!anyDuplicated(z,by=c('site','year')),all(cols %in% names(z)))
+    z <- z[,c('site','year',cols),with=FALSE]
+    data.table::setnames(z,cols,paste0('eco_',cols))
+    z
+  }
   fwrite(wx$stage_long,file.path(out,'species_stage_weather_PROVISIONAL.csv.gz'))
   fwrite(stage_windows,file.path(out,'stage_definitions_REQUIRE_REVIEW.csv'))
   base <- merge(catches$annual,wx$climate,by=c('site','year'),all.x=TRUE,sort=FALSE)
@@ -303,6 +337,8 @@ main <- function() {
   june_stages <- completed_stages_wide(wx$stage_long,'05-31')
   may_weather <- merge(may_weather,may_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
   june_weather <- merge(june_weather,june_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  may_weather <- merge(may_weather,eco_features('may01'),by=c('site','year'),all.x=TRUE,sort=FALSE)
+  june_weather <- merge(june_weather,eco_features('jun01'),by=c('site','year'),all.x=TRUE,sort=FALSE)
   stopifnot(nrow(may_weather)==nrow(base), nrow(june_weather)==nrow(base))
   forbidden <- c('annual_count','effort_days','annual_count_per_7d',
                  'n_sampling_intervals','n_positive_intervals','first_sample',
@@ -316,6 +352,7 @@ main <- function() {
   # Full historical stages are permitted as explanatory candidates, not advance predictors.
   explanatory_stages <- completed_stages_wide(wx$stage_long,'12-31')
   expl <- merge(base,explanatory_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  expl <- merge(expl,eco_features('explanatory'),by=c('site','year'),all.x=TRUE,sort=FALSE)
   stopifnot(nrow(expl)==nrow(base))
   fwrite(expl,file.path(out,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz'))
   env <- read_environment(env_file)
@@ -346,6 +383,14 @@ main <- function() {
     'Precipitation, temperature, snow units require source audit.',
     'Lag2 weather is not guaranteed by 1.2 original extraction; missing = NA.',
     'Historical environmentally filled data are NOT forecast-cleared.',
+    'New spring DOY/GDD dates are meteorological proxies, not measured insect hatching.',
+    'Greenup is missing unless EIFFEL_GREENUP_FILE supplies as-of metadata.',
+    'Optional Greenup CSV: site,year,greenup_doy,available_date.',
+    'Greenup only enters a forecast after occurrence and source availability.',
+    '30/90-day precipitation and API require complete daily weather, not 95 percent.',
+    'E. autumnata -37 C sensitivity and L. monacha -29.5 C egg freezing median differ.',
+    'Soil-pupating moths never receive egg-freezing thresholds as ecological predictors.',
+    'Host-tree priority registry is candidate metadata, not an automatically fitted model.',
     'Forecast as-of release dates, greenup and phenology require further audits.',
     'Outer CV predictor selection/imputation/selection must be training-only.',
     'Forecast FEATURE files exclude annual outcome and realized future effort; merge for evaluation only.',
