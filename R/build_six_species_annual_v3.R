@@ -319,19 +319,18 @@ main <- function() {
   if(!file.exists(ecology_module)) stopf('Ecology module missing')
   source(ecology_module,local=TRUE)
   eco_weather <- ecology_weather_by_issue(w,catches$annual)
-  # Independent Greenup is vegetation phenology, postponed to phase 2.
-  # Do not read even if EIFFEL_GREENUP_FILE is set in the user's environment.
-  eco_greenup <- ecology_greenup('',unique(catches$annual[,.(site,year)]))
+  # Phase 1 exports only actual weather and meteorological proxies.
+  # Vegetation Greenup and NDVI remain strictly excluded from both data and
+  # exported predictor schemas until a later source-specific stage is audited.
   fwrite(ecology_species_registry,file.path(out,'species_ecological_registry_REVIEW.csv'))
   fwrite(eco_weather,file.path(out,'weather_phenology_asof_AUDIT.csv.gz'))
-  fwrite(eco_greenup,file.path(out,'greenup_source_provenance_AUDIT.csv'))
   eco_features <- function(issue_name) {
-    z <- ecology_combine_asof(eco_weather,eco_greenup,issue_name)
+    requested_issue <- issue_name
+    z <- eco_weather[issue == requested_issue]
     cols <- c('spring_start_0_doy','spring_start_5_doy',
       'gdd5_50_crossing_doy','gdd5_100_crossing_doy',
       'first_snowfree7_doy_sofar','last_snow_day_doy_sofar',
-      'rain30_complete_mm','rain90_complete_mm','api90_7d_half_life_mm',
-      'greenup_doy','greenup_minus_gdd5_50_proxy_days')
+      'rain30_complete_mm','rain90_complete_mm','api90_7d_half_life_mm')
     stopifnot(!anyDuplicated(z,by=c('site','year')),all(cols %in% names(z)))
     z <- z[,c('site','year',cols),with=FALSE]
     data.table::setnames(z,cols,paste0('eco_',cols))
@@ -355,6 +354,13 @@ main <- function() {
   may_weather <- merge(may_weather,eco_features('may01'),by=c('site','year'),all.x=TRUE,sort=FALSE)
   june_weather <- merge(june_weather,eco_features('jun01'),by=c('site','year'),all.x=TRUE,sort=FALSE)
   stopifnot(nrow(may_weather)==nrow(base), nrow(june_weather)==nrow(base))
+  # Explicit ban on phase-2 NDVI/Greenup and all vegetation/soil attributes.
+  blocked_names <- c('greenup','ndvi','corine','clc_','vmi_','havu_','lehti_',
+                     'dtw_','soil_','pine_volume','spruce_volume','birch_volume')
+  for (table in list(may_weather,june_weather)) {
+    if (any(vapply(blocked_names,function(k) any(grepl(k,names(table),fixed=TRUE,ignore.case=TRUE)),logical(1))))
+      stopf('Weather-only phase 1 unexpectedly contains environment/vegetation features')
+  }
   forbidden <- c('annual_count','effort_days','annual_count_per_7d',
                  'n_sampling_intervals','n_positive_intervals','first_sample',
                  'last_sample','current_annual_mean_temperature')
@@ -411,6 +417,9 @@ main <- function() {
     'Outer CV predictor selection/imputation/selection must be training-only.',
     'Forecast FEATURE files exclude annual outcome and realized future effort; merge for evaluation only.',
     'No forecast-time effort offset is established; standardization requires a scientific decision.',
+    'NDVI year t may reflect larval feeding damage, not an independent host vegetation predictor.',
+    'For Bupalus and Panolis adult year t corresponds to larval year t-1.',
+    'No vegetation/NDVI temporal semantics are validated until dated scene audit.',
     'Use annual_site_species_flight_year.csv as response; never sum per-buffer rows.'),
     file.path(out,'REQUIRED_REVIEW.txt'))
   cat('Finished WEATHER-ONLY phase 1. No environment or Greenup sources read. DO NOT fit Hmsc until gates pass.\n')
