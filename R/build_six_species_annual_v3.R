@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# EIFFEL v3: one reproducible, read-only-to-sources, site x flight-year x species build.
+# EIFFEL v3/v4: phase 1 WEATHER ONLY; no environment/Greenup reads or Hmsc fits.
 # IMPORTANT: no Hmsc is fitted. Ecological stage windows are PROVISIONAL.
 # Dependencies: data.table (>=1.14). Outputs are new timestamped directories only.
 suppressPackageStartupMessages(library(data.table))
@@ -279,25 +279,32 @@ main <- function() {
   if (mode=='help') {cat('Usage: Rscript --vanilla build_six_species_annual.R --inspect OR --build\n');return(invisible())}
   catches_file <- file.path(cfg$root,'Eiffel_1993_2024.csv')
   weather_file <- file.path(cfg$root,'Daily_weather_from_NC_needed_trap_years_and_previous_year.txt')
-  env_file <- file.path(cfg$root,'model_data_environment_nearly_constant_years_filled.csv')
+  # Phase 1 never reads any environmental, NDVI or Greenup data.
   if (mode=='inspect') {
-    for (f in c(catches_file,weather_file,env_file)) {
+    cat('STAGE: WEATHER_ONLY_PHASE_1 (no environment or Greenup)\n')
+    for (f in c(catches_file,weather_file)) {
       cat('\n',f,' present=',file.exists(f),'\n',sep='')
-      if(file.exists(f)) cat('columns: ',paste(names(read_file(f,if(grepl('Eiffel_1993|Daily_weather',f)) ';' else ',',header_only=TRUE)),collapse=', '),'\n')
+      if(file.exists(f)) cat('columns: ',paste(names(read_file(f,';',header_only=TRUE)),collapse=', '),'\n')
     }
     return(invisible())
   }
-  for (f in c(catches_file,weather_file,env_file)) if(!file.exists(f)) stopf('Missing: %s',f)
-  if (!grepl('^[A-Za-z]:/',normalizePath(cfg$out_root,winslash='/',mustWork=FALSE))) stopf('Expected local absolute output path')
+  for (f in c(catches_file,weather_file)) if(!file.exists(f)) stopf('Missing: %s',f)
+  normalized_out <- normalizePath(cfg$out_root,winslash='/',mustWork=FALSE)
+  if (!grepl('^([A-Za-z]:/|/)',normalized_out))
+    stopf('Expected absolute output path (D: on Windows, /path on Linux): %s', normalized_out)
   id <- format(Sys.time(),'%Y%m%d_%H%M%S')
   out <- file.path(cfg$out_root,paste0('build_',id))
   if(dir.exists(out)) stopf('Output directory already exists: %s',out)
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
   cat('Output:',out,'\n')
   # Preserve original files and make provenance explicit.
-  manifest <- data.table(source=c(catches_file,weather_file,env_file),
-                         bytes=as.numeric(file.info(c(catches_file,weather_file,env_file))$size),
-                         md5=unname(tools::md5sum(c(catches_file,weather_file,env_file))))
+  manifest_sources <- c(catches_file,weather_file)
+  manifest <- data.table(source=manifest_sources,
+                         bytes=as.numeric(file.info(manifest_sources)$size),
+                         md5=unname(tools::md5sum(manifest_sources)))
+  fwrite(data.table(stage='WEATHER_ONLY_PHASE_1',
+       environment_inputs=0L,greenup_inputs=0L,hmsc_models_fitted=0L),
+       file.path(out,'PHASE_1_SCOPE.csv'))
   fwrite(manifest,file.path(out,'source_manifest.csv'))
   catches <- build_catches(catches_file)
   fwrite(catches$annual,file.path(out,'annual_site_species_flight_year.csv'))
@@ -312,8 +319,9 @@ main <- function() {
   if(!file.exists(ecology_module)) stopf('Ecology module missing')
   source(ecology_module,local=TRUE)
   eco_weather <- ecology_weather_by_issue(w,catches$annual)
-  eco_greenup <- ecology_greenup(Sys.getenv('EIFFEL_GREENUP_FILE',unset=''),
-                 unique(catches$annual[,.(site,year)]))
+  # Independent Greenup is vegetation phenology, postponed to phase 2.
+  # Do not read even if EIFFEL_GREENUP_FILE is set in the user's environment.
+  eco_greenup <- ecology_greenup('',unique(catches$annual[,.(site,year)]))
   fwrite(ecology_species_registry,file.path(out,'species_ecological_registry_REVIEW.csv'))
   fwrite(eco_weather,file.path(out,'weather_phenology_asof_AUDIT.csv.gz'))
   fwrite(eco_greenup,file.path(out,'greenup_source_provenance_AUDIT.csv'))
@@ -362,14 +370,10 @@ main <- function() {
   expl <- merge(expl,eco_features('explanatory'),by=c('site','year'),all.x=TRUE,sort=FALSE)
   stopifnot(nrow(expl)==nrow(base))
   fwrite(expl,file.path(out,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz'))
-  env <- read_environment(env_file)
-  fwrite(env$data,file.path(out,'environment_by_site_year_buffer_REVIEW.csv.gz'))
-  # Only explanatory exploration may JOIN historical current-year environment,
-  # preserving buffer_m as a row dimension (count values repeat but must not be summed).
-  expanded <- merge(expl,env$data,by=c('site','year'),all.x=TRUE,allow.cartesian=TRUE,sort=FALSE)
-  if(anyDuplicated(expanded,by=c('site','year','species','buffer_m')))
-    stopf('Environment join created duplicate site/year/species/buffer_m records')
-  fwrite(expanded,file.path(out,'explanatory_with_environment_PER_BUFFER_PROVISIONAL.csv.gz'))
+  # PHASE 2 (future): environmental sources are coverage-incompatible and
+  # will each need a separate QA/availability audit, then join by site-year-buffer
+  # without restricting the weather-only site-years or multiplying annual counts.
+  # No environmental table is read, joined or exported here.
   coverage <- base[,.(species,site,year,annual_count,effort_days,
                        weather_may_available=may01_available,
                        weather_june_available=jun01_available,
@@ -377,23 +381,26 @@ main <- function() {
                        two_years_back_available=lag2_annual_available)]
   fwrite(coverage,file.path(out,'readiness_by_site_species_year.csv'))
   summary <- data.table(check=c('species_count','annual_rows','raw_exact_duplicate_rows',
-                               'overlapping_trap_intervals','environment_buffer_rows',
-                               'may01_full_weather_rows','jun01_full_weather_rows'),
+                               'overlapping_trap_intervals','environment_inputs_read',
+                               'environment_rows_joined','may01_weather_available_rows',
+                               'jun01_weather_available_rows'),
                         value=c(length(unique(catches$annual$species)),nrow(catches$annual),
                                 catches$duplicate_source_rows,nrow(catches$overlapping_events),
-                                nrow(env$data),sum(base$may01_available==1,na.rm=TRUE),
+                                0L,0L,sum(base$may01_available==1,na.rm=TRUE),
                                 sum(base$jun01_available==1,na.rm=TRUE)))
   fwrite(summary,file.path(out,'QA_SUMMARY.csv'))
-  writeLines(c('NOT SCIENTIFICALLY VALIDATED: NO Hmsc fits run.',
+  writeLines(c('STAGE: WEATHER_ONLY_PHASE_1. Environmental and Greenup sources were NOT read.',
+    'NOT SCIENTIFICALLY VALIDATED: NO Hmsc fits run.',
     'Ecological stage windows require species-specific scientific review.',
     'Potential response/effort duplicate source rows and overlaps require sign-off.',
     'Precipitation, temperature, snow units require source audit.',
     'Lag2 weather is not guaranteed by 1.2 original extraction; missing = NA.',
-    'Historical environmentally filled data are NOT forecast-cleared.',
+    'Historical environmental source data were intentionally excluded from phase 1.',
+    'Environment layers have unequal availability, buffer scales and year coverage.',
+    'Each environment source requires independent coverage and provenance checks in phase 2.',
     'New spring DOY/GDD dates are meteorological proxies, not measured insect hatching.',
-    'Greenup is missing unless EIFFEL_GREENUP_FILE supplies as-of metadata.',
-    'Optional Greenup CSV: site,year,greenup_doy,available_date.',
-    'Greenup only enters a forecast after occurrence and source availability.',
+    'Greenup is EXCLUDED in weather-only phase 1, regardless of EIFFEL_GREENUP_FILE.',
+    'Meteorological spring-start and GDD proxy dates do not establish host Greenup.',
     '30/90-day precipitation and API require complete daily weather, not 95 percent.',
     'All cumulative daily weather and extreme statistics require 100 percent data coverage.',
     'B. piniarius stage GDD4_9 is exploratory, and not an automatic fitted threshold.',
@@ -406,7 +413,7 @@ main <- function() {
     'No forecast-time effort offset is established; standardization requires a scientific decision.',
     'Use annual_site_species_flight_year.csv as response; never sum per-buffer rows.'),
     file.path(out,'REQUIRED_REVIEW.txt'))
-  cat('Finished preliminary construction. DO NOT fit Hmsc until gates pass.\n')
+  cat('Finished WEATHER-ONLY phase 1. No environment or Greenup sources read. DO NOT fit Hmsc until gates pass.\n')
   invisible(out)
 }
 if(sys.nframe()==0L) main()
