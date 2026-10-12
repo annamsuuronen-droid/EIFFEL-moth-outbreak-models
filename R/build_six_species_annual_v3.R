@@ -1,0 +1,353 @@
+#!/usr/bin/env Rscript
+# EIFFEL v3: one reproducible, read-only-to-sources, site x flight-year x species build.
+# IMPORTANT: no Hmsc is fitted. Ecological stage windows are PROVISIONAL.
+# Dependencies: data.table (>=1.14). Outputs are new timestamped directories only.
+suppressPackageStartupMessages(library(data.table))
+
+cfg <- list(
+  root = Sys.getenv('EIFFEL_DATA', 'D:/EIFFEL/data'),
+  out_root = Sys.getenv('EIFFEL_BUILD_OUT', 'D:/EIFFEL_runtime/annual_pipeline_v3'),
+  min_weather_coverage = 0.95,
+  exclude_site_152 = TRUE,
+  species = c('Epirrita autumnata', 'Operophtera brumata', 'Operophtera fagata',
+              'Lymantria monacha', 'Bupalus piniarius', 'Panolis flammea'),
+  winter_flyers = c('Operophtera brumata', 'Operophtera fagata')
+)
+stopf <- function(...) stop(sprintf(...), call. = FALSE)
+require_cols <- function(x, nm, label) {
+  missing <- setdiff(nm, names(x))
+  if (length(missing)) stopf('%s missing columns: %s', label, paste(missing, collapse=', '))
+}
+parse_dates <- function(x) {
+  x <- trimws(as.character(x))
+  z <- as.Date(x, format='%d.%m.%Y')
+  i <- is.na(z) & !is.na(x)
+  z[i] <- as.Date(x[i], format='%Y-%m-%d')
+  z
+}
+canonical_species <- function(x) {
+  x <- gsub(' +', ' ', gsub('_',' ', trimws(x)))
+  x[x == 'Bupalus piniaria'] <- 'Bupalus piniarius'
+  x
+}
+fmt <- function(year, mmdd) as.Date(sprintf('%04d-%s', as.integer(year), mmdd))
+read_file <- function(path, sep, header_only=FALSE, select=NULL) {
+  if (!file.exists(path)) stopf('Source file not found: %s',path)
+  fread(path, sep=sep, nrows=if(header_only) 0L else -1L,
+        select=select, na.strings=c('', 'NA', 'NaN'), encoding='UTF-8', showProgress=FALSE)
+}
+# Larva of pine moths is PREVIOUS season for current-year adult abundance.
+# Fixed windows are testable hypotheses, not exact emergence dates.
+stage_windows <- data.table::data.table(
+  species = c('Epirrita autumnata','Epirrita autumnata','Epirrita autumnata',
+              'Operophtera brumata','Operophtera brumata','Operophtera brumata',
+              'Operophtera fagata','Operophtera fagata','Operophtera fagata',
+              'Lymantria monacha','Lymantria monacha','Lymantria monacha','Lymantria monacha',
+              'Bupalus piniarius','Bupalus piniarius','Bupalus piniarius',
+              'Panolis flammea','Panolis flammea','Panolis flammea'),
+  stage = c('egg_winter','larva','adult','egg_winter','larva','adult',
+            'egg_winter','larva','adult','egg_winter','larva','pupa','adult',
+            'pupa_winter','previous_larva','adult','pupa_winter','previous_larva','adult'),
+  start_md = c('10-01','05-01','08-01','11-01','04-01','10-01','11-01','04-01','10-01',
+               '09-01','05-01','07-01','07-01','10-01','07-01','05-01','09-01','05-01','04-01'),
+  end_md = c('03-31','06-30','10-31','03-31','06-30','12-31','03-31','06-30','12-31',
+             '03-31','07-31','08-31','09-30','04-30','10-31','07-31','03-31','07-31','06-30'),
+  start_shift = c(-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,-1,-1,0,-1,-1,0),
+  end_shift = c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,0,-1,0))
+stage_windows[, review_status := 'PROVISIONAL_REQUIRES_ECOLOGICAL_REVIEW']
+
+# Use raw catches for every observed site/trapping interval. Nothing outside trap operation is zero-filled.
+build_catches <- function(path) {
+  r <- read_file(path, ';')
+  require_cols(r,c('site','year','KokMaara','PvmAlku','PvmLoppu','species'), 'Original catches')
+  r[, site := trimws(as.character(site))]
+  r[, species := canonical_species(as.character(species))]
+  r[, start := parse_dates(PvmAlku)]
+  r[, end := parse_dates(PvmLoppu)]
+  r[, count := suppressWarnings(as.numeric(KokMaara))]
+  if (anyNA(r$site) || any(!nzchar(r$site)) || anyNA(r$start) || anyNA(r$end))
+    stopf('Invalid site/date in original catches')
+  if (anyNA(r$count) || any(!is.finite(r$count)) || any(r$count < 0) ||
+      any(r$count != floor(r$count))) stopf('Counts must be finite nonnegative integers')
+  if (any(r$end <= r$start)) stopf('Nonpositive trap interval; no automatic duration clamping')
+  if (cfg$exclude_site_152) r <- r[site != '152']
+  if (!nrow(r)) stopf('No catches after exclusions')
+  raw_duplicate_n <- nrow(r) - uniqueN(r)
+  if (raw_duplicate_n) warning(raw_duplicate_n,
+    ' EXACT duplicate source rows: retained, not silently dropped. Audit before fitting.')
+  events <- unique(r[,.(site,start,end)])
+  setorder(events, site,start,end)
+  events[, last_end := shift(end),by=site]
+  overlap <- events[!is.na(last_end) & start < last_end]
+  events[,last_end := NULL]
+  events[, interval_days := as.integer(end-start)] # [start,end), as original effort convention
+  events[, mid := start + floor(interval_days/2)]
+  events[, sample_id := paste(site,start,end,sep='_')]
+  event_counts <- r[species %chin% cfg$species,
+                    .(count=sum(count)),by=.(site,start,end,species)]
+  if (!nrow(event_counts)) stopf('No target species observations')
+  grid <- CJ(site_event=seq_len(nrow(events)),species=cfg$species, sorted=FALSE)
+  grid <- cbind(grid,events[grid$site_event,.(site,start,end,mid,sample_id,interval_days)])
+  grid[,site_event:=NULL]
+  grid <- merge(grid,event_counts,by=c('site','start','end','species'),all.x=TRUE,sort=FALSE)
+  grid[is.na(count),count:=0]
+  grid[, calendar_year := as.integer(format(mid,'%Y'))]
+  grid[, month := as.integer(format(mid,'%m'))]
+  grid[, year := calendar_year - as.integer(species %chin% cfg$winter_flyers & month <= 3L)]
+  grid[, count_per_7d := 7*count / interval_days]
+  annual <- grid[, .(annual_count=sum(count),
+                     effort_days=sum(interval_days),
+                     n_sampling_intervals=.N,
+                     n_positive_intervals=sum(count>0),
+                     first_sample=min(start),last_sample=max(end)),
+                 by=.(site,year,species)]
+  annual[, annual_count_per_7d := 7*annual_count/effort_days]
+  annual[, response_checked := raw_duplicate_n==0 && nrow(overlap)==0]
+  stopifnot(!anyDuplicated(annual,by=c('site','year','species')),
+            sum(annual$annual_count) == sum(grid$count))
+  list(annual=annual, weekly=grid,
+       overlapping_events=overlap, duplicate_source_rows=raw_duplicate_n,
+       sites=unique(r$site))
+}
+
+build_daily <- function(path) {
+  w <- read_file(path,';')
+  require_cols(w,c('site','DateN','MeanDailyT','Tmin','Tmax','SumDailyP','MeanSnow'), 'Daily weather')
+  w[,site:=trimws(as.character(site))]
+  w[,date:=as.Date(DateN)]
+  if (anyNA(w$date)) stopf('Unparseable daily weather dates')
+  cols <- c('MeanDailyT','Tmin','Tmax','SumDailyP','MeanSnow')
+  for (z in cols) set(w,j=z,value=suppressWarnings(as.numeric(w[[z]])))
+  if (any(!is.finite(unlist(w[,..cols])),na.rm=TRUE)) stopf('Infinite daily-weather values')
+  if (any(w$SumDailyP < 0 | w$MeanSnow < 0,na.rm=TRUE)) stopf('Negative precipitation/snow')
+  if (any(w$Tmin > w$Tmax,na.rm=TRUE)) stopf('Tmin > Tmax')
+  if (anyDuplicated(w,by=c('site','date'))) stopf('Duplicate site/date daily weather rows')
+  setkey(w,site,date)
+  w
+}
+# Strict presence and coverage: missing weather is never treated as 0.
+weather_window <- function(w, site, start, end, completeness=cfg$min_weather_coverage) {
+  dates <- seq.Date(start,end,by='day')
+  if (!length(dates)) stopf('Bad weather window')
+  x <- w[data.table(site=rep(site,length(dates)),date=dates), on=.(site,date)]
+  n <- length(dates)
+  required <- c('MeanDailyT','Tmin','Tmax','SumDailyP','MeanSnow')
+  cover <- vapply(required,function(z) sum(!is.na(x[[z]]))/n,numeric(1))
+  valid <- all(cover >= completeness)
+  mean_ok <- function(z) if(valid) mean(z,na.rm=TRUE) else NA_real_
+  min_ok <- function(z) if(valid) min(z,na.rm=TRUE) else NA_real_
+  max_ok <- function(z) if(valid) max(z,na.rm=TRUE) else NA_real_
+  sum_ok <- function(z) if(valid) sum(z,na.rm=TRUE) else NA_real_
+  c(n_expected=n,n_complete=min(vapply(required,function(z) sum(!is.na(x[[z]])),numeric(1))),
+    min_coverage=min(cover),available=as.integer(valid),
+    mean_temperature=mean_ok(x$MeanDailyT),
+    mean_Tmin=mean_ok(x$Tmin),min_Tmin=min_ok(x$Tmin),
+    mean_Tmax=mean_ok(x$Tmax),max_Tmax=max_ok(x$Tmax),
+    sum_precipitation=sum_ok(x$SumDailyP),mean_snow=mean_ok(x$MeanSnow),
+    max_snow=max_ok(x$MeanSnow),
+    GDD5=sum_ok(pmax(x$MeanDailyT-5,0)),
+    GDD0=sum_ok(pmax(x$MeanDailyT,0)),
+    frost_days=sum_ok(as.numeric(x$Tmin<0)),
+    cold_days_minus20=sum_ok(as.numeric(x$Tmin< -20)),
+    cold_days_minus29_5=sum_ok(as.numeric(x$Tmin< -29.5)),
+    cold_exposure_minus20=sum_ok(pmax(-20-x$Tmin,0)),
+    cold_exposure_minus29_5=sum_ok(pmax(-29.5-x$Tmin,0)))
+}
+# The predictions available by May 1 / June 1 use completed windows only.
+weather_features <- function(w,annual, stages=stage_windows) {
+  keys <- unique(annual[,.(site,year)])
+  setorder(keys,site,year)
+  feature_list <- vector('list',nrow(keys))
+  for(i in seq_len(nrow(keys))) {
+    s <- keys$site[i];yr <- keys$year[i]
+    row <- list(site=s,year=yr)
+    periods <- list(may01=c(fmt(yr,'01-01'),fmt(yr,'04-30')),
+                    jun01=c(fmt(yr,'01-01'),fmt(yr,'05-31')),
+                    recent_winter=c(fmt(yr-1,'10-01'),fmt(yr,'03-31')),
+                    lag1_annual=c(fmt(yr-1,'01-01'),fmt(yr-1,'12-31')),
+                    lag2_annual=c(fmt(yr-2,'01-01'),fmt(yr-2,'12-31')),
+                    current_annual=c(fmt(yr,'01-01'),fmt(yr,'12-31')))
+    for(label in names(periods)) {
+      p <- periods[[label]]
+      st <- weather_window(w,s,p[1],p[2])
+      row[paste0(label,'_',names(st))] <- as.list(st)
+    }
+    feature_list[[i]] <- as.data.table(row)
+  }
+  climate <- rbindlist(feature_list,fill=TRUE)
+  # Lajikohtaiset stage-ikkunat only as candidate explanatory ecological variables.
+  stagekeys <- merge(annual[,.(site,year,species)], stages, by='species', allow.cartesian=TRUE)
+  stage_records <- vector('list',nrow(stagekeys))
+  for (i in seq_len(nrow(stagekeys))) {
+    q <- stagekeys[i]
+    lo <- fmt(q$year+q$start_shift,q$start_md)
+    hi <- fmt(q$year+q$end_shift,q$end_md)
+    if (lo>hi) stopf('Invalid stage for %s %s',q$species,q$stage)
+    # Adult weather may alter detection; not automatically a causal driver of abundance.
+    measures <- weather_window(w,q$site,lo,hi)
+    stage_records[[i]] <- as.data.table(c(list(site=q$site,year=q$year,
+                           species=q$species,stage=q$stage,start_date=lo,end_date=hi,
+                           review_status=q$review_status),as.list(measures)))
+  }
+  stage_long <- rbindlist(stage_records,fill=TRUE)
+  list(climate=climate,stage_long=stage_long)
+}
+# Include stage-weather only when the COMPLETE fixed stage ends before issue day.
+# No future climate or observation-derived flight timing enters these features.
+completed_stages_wide <- function(stage_long, issue_md) {
+  x <- stage_long[end_date <= fmt(year, issue_md) & available == 1L]
+  measures <- c('mean_temperature','min_Tmin','sum_precipitation','GDD5',
+                'mean_snow','cold_days_minus20','cold_days_minus29_5',
+                'cold_exposure_minus20','cold_exposure_minus29_5')
+  if(!nrow(x)) return(unique(stage_long[,.(site,year,species)])[0])
+  x <- melt(x,id.vars=c('site','year','species','stage'),measure.vars=measures,
+            variable.name='metric', value.name='value')
+  x[,key:=paste0('stage_',stage,'_',metric)]
+  out <- dcast(x,site+year+species~key,value.var='value')
+  stopifnot(!anyDuplicated(out,by=c('site','year','species')))
+  out
+}
+
+# All old-species observation columns and weather/phenology must be EXCLUDED.
+# Environmental data are BUFFER-LEVEL: never merge raw rows to annual responses.
+read_environment <- function(path) {
+  header <- names(read_file(path,',',header_only=TRUE))
+  needed <- c('site','year','buffer_m')
+  if(length(setdiff(needed,header))) stopf('Environment lacks site/year/buffer_m')
+  pattern <- paste0('^(DTW_|HostTree|LocalWet|OverwinteringSoil|Soil|soil_|',
+                    'low_soil_|clc_|NDVI_|havu_|lehti_|age$|mean_diameter$|',
+                    'mean_height$|canopy_cover$|broadleaf_canopy_cover$|',
+                    'basal_area$|volume$|pine_volume$|spruce_volume$|',
+                    'birch_volume$|other_broadleaf_volume$|site_type$|land_class$|',
+                    'main_site_type$|fra_class$|frost_)')
+  variables <- grep(pattern,header,value=TRUE)
+  flags <- intersect(c('corine_temporally_filled','havu_temporally_filled',
+                       'lehti_temporally_filled','vmi_temporally_filled'),header)
+  if(!length(variables)) stopf('No recognized environmental variables: review schema')
+  x <- read_file(path,',',select=c(needed,variables,flags))
+  x[,site:=trimws(as.character(site))]
+  x[,year:=as.integer(year)]
+  x[,buffer_m:=as.numeric(buffer_m)]
+  if(anyNA(x[,..needed])) stopf('Missing environmental join keys')
+  # Multiple old species/sample_id rows are expected. Conflict at same key is not.
+  x <- unique(x)
+  keys <- c('site','year','buffer_m')
+  if(anyDuplicated(x,by=keys)) {
+    # When some fields are NA in one old-species row, merge only if non-NA values agree.
+    conflicts <- x[,lapply(.SD,function(z) uniqueN(z[!is.na(z)])>1L),
+                   by=keys,.SDcols=c(variables,flags)]
+    bad <- conflicts[,rowSums(.SD)>0, .SDcols=c(variables,flags)]
+    if(any(bad)) stopf('Environment inconsistent within site/year/buffer: %d conflicting groups',sum(bad))
+    first_present <- function(z) {
+      v <- z[!is.na(z)]
+      if (length(v)) v[1] else z[NA_integer_][1L]
+    }
+    x <- x[, lapply(.SD, first_present), by=keys, .SDcols=c(variables,flags)]
+  }
+  stopifnot(!anyDuplicated(x,by=keys))
+  # Retrospectively filled environmental years might look into the future.
+  # ALL extracted rows are NOT_FORECAST_CLEARED until temporal-provenance audit.
+  x[,forecast_approval:='NOT_APPROVED_TEMPORAL_PROVENANCE_UNKNOWN']
+  list(data=x, variables=variables, flags=flags)
+}
+
+main <- function() {
+  args <- commandArgs(trailingOnly=TRUE)
+  mode <- if('--inspect' %in% args) 'inspect' else if('--build' %in% args) 'build' else 'help'
+  if (mode=='help') {cat('Usage: Rscript --vanilla build_six_species_annual.R --inspect OR --build\n');return(invisible())}
+  catches_file <- file.path(cfg$root,'Eiffel_1993_2024.csv')
+  weather_file <- file.path(cfg$root,'Daily_weather_from_NC_needed_trap_years_and_previous_year.txt')
+  env_file <- file.path(cfg$root,'model_data_environment_nearly_constant_years_filled.csv')
+  if (mode=='inspect') {
+    for (f in c(catches_file,weather_file,env_file)) {
+      cat('\n',f,' present=',file.exists(f),'\n',sep='')
+      if(file.exists(f)) cat('columns: ',paste(names(read_file(f,if(grepl('Eiffel_1993|Daily_weather',f)) ';' else ',',header_only=TRUE)),collapse=', '),'\n')
+    }
+    return(invisible())
+  }
+  for (f in c(catches_file,weather_file,env_file)) if(!file.exists(f)) stopf('Missing: %s',f)
+  if (!grepl('^[A-Za-z]:/',normalizePath(cfg$out_root,winslash='/',mustWork=FALSE))) stopf('Expected local absolute output path')
+  id <- format(Sys.time(),'%Y%m%d_%H%M%S')
+  out <- file.path(cfg$out_root,paste0('build_',id))
+  if(dir.exists(out)) stopf('Output directory already exists: %s',out)
+  dir.create(out,recursive=TRUE,showWarnings=FALSE)
+  cat('Output:',out,'\n')
+  # Preserve original files and make provenance explicit.
+  manifest <- data.table(source=c(catches_file,weather_file,env_file),
+                         bytes=as.numeric(file.info(c(catches_file,weather_file,env_file))$size),
+                         md5=unname(tools::md5sum(c(catches_file,weather_file,env_file))))
+  fwrite(manifest,file.path(out,'source_manifest.csv'))
+  catches <- build_catches(catches_file)
+  fwrite(catches$annual,file.path(out,'annual_site_species_flight_year.csv'))
+  fwrite(catches$weekly,file.path(out,'sampling_intervals_with_zeros.csv.gz'))
+  fwrite(catches$overlapping_events,file.path(out,'overlap_audit.csv'))
+  w <- build_daily(weather_file)
+  wx <- weather_features(w,catches$annual)
+  fwrite(wx$stage_long,file.path(out,'species_stage_weather_PROVISIONAL.csv.gz'))
+  fwrite(stage_windows,file.path(out,'stage_definitions_REQUIRE_REVIEW.csv'))
+  base <- merge(catches$annual,wx$climate,by=c('site','year'),all.x=TRUE,sort=FALSE)
+  stopifnot(nrow(base)==nrow(catches$annual))
+  # STRICT forecast-only inputs. Observed annual response and realized full-year effort
+  # are unavailable on the issue dates. Keep them ONLY in the response table.
+  # Future forecasts must not infer an offset from later realized trap operations.
+  common <- c('site','year','species')
+  prior <- grep('^(lag1_annual_|lag2_annual_|recent_winter_)',names(base),value=TRUE)
+  may_weather <- base[,c(common,grep('^may01_',names(base),value=TRUE),prior),with=FALSE]
+  june_weather <- base[,c(common,grep('^jun01_',names(base),value=TRUE),prior),with=FALSE]
+  may_stages <- completed_stages_wide(wx$stage_long,'04-30')
+  june_stages <- completed_stages_wide(wx$stage_long,'05-31')
+  may_weather <- merge(may_weather,may_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  june_weather <- merge(june_weather,june_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  stopifnot(nrow(may_weather)==nrow(base), nrow(june_weather)==nrow(base))
+  forbidden <- c('annual_count','effort_days','annual_count_per_7d',
+                 'n_sampling_intervals','n_positive_intervals','first_sample',
+                 'last_sample','current_annual_mean_temperature')
+  if (any(forbidden %in% names(may_weather)) || any(forbidden %in% names(june_weather)))
+    stopf('Forecast table contains post-issuance response/effort features')
+  may_weather[, forecast_issue_date := fmt(year,'05-01')]
+  june_weather[, forecast_issue_date := fmt(year,'06-01')]
+  fwrite(may_weather,file.path(out,'predictive_may01_FEATURES_ONLY_UNVALIDATED.csv.gz'))
+  fwrite(june_weather,file.path(out,'predictive_jun01_FEATURES_ONLY_UNVALIDATED.csv.gz'))
+  # Full historical stages are permitted as explanatory candidates, not advance predictors.
+  explanatory_stages <- completed_stages_wide(wx$stage_long,'12-31')
+  expl <- merge(base,explanatory_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  stopifnot(nrow(expl)==nrow(base))
+  fwrite(expl,file.path(out,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz'))
+  env <- read_environment(env_file)
+  fwrite(env$data,file.path(out,'environment_by_site_year_buffer_REVIEW.csv.gz'))
+  # Only explanatory exploration may JOIN historical current-year environment,
+  # preserving buffer_m as a row dimension (count values repeat but must not be summed).
+  expanded <- merge(expl,env$data,by=c('site','year'),all.x=TRUE,allow.cartesian=TRUE,sort=FALSE)
+  if(anyDuplicated(expanded,by=c('site','year','species','buffer_m')))
+    stopf('Environment join created duplicate site/year/species/buffer_m records')
+  fwrite(expanded,file.path(out,'explanatory_with_environment_PER_BUFFER_PROVISIONAL.csv.gz'))
+  coverage <- base[,.(species,site,year,annual_count,effort_days,
+                       weather_may_available=may01_available,
+                       weather_june_available=jun01_available,
+                       previous_year_available=lag1_annual_available,
+                       two_years_back_available=lag2_annual_available)]
+  fwrite(coverage,file.path(out,'readiness_by_site_species_year.csv'))
+  summary <- data.table(check=c('species_count','annual_rows','raw_exact_duplicate_rows',
+                               'overlapping_trap_intervals','environment_buffer_rows',
+                               'may01_full_weather_rows','jun01_full_weather_rows'),
+                        value=c(length(unique(catches$annual$species)),nrow(catches$annual),
+                                catches$duplicate_source_rows,nrow(catches$overlapping_events),
+                                nrow(env$data),sum(base$may01_available==1,na.rm=TRUE),
+                                sum(base$jun01_available==1,na.rm=TRUE)))
+  fwrite(summary,file.path(out,'QA_SUMMARY.csv'))
+  writeLines(c('NOT SCIENTIFICALLY VALIDATED: NO Hmsc fits run.',
+    'Ecological stage windows require species-specific scientific review.',
+    'Potential response/effort duplicate source rows and overlaps require sign-off.',
+    'Precipitation, temperature, snow units require source audit.',
+    'Lag2 weather is not guaranteed by 1.2 original extraction; missing = NA.',
+    'Historical environmentally filled data are NOT forecast-cleared.',
+    'Forecast as-of release dates, greenup and phenology require further audits.',
+    'Outer CV predictor selection/imputation/selection must be training-only.',
+    'Forecast FEATURE files exclude annual outcome and realized future effort; merge for evaluation only.',
+    'No forecast-time effort offset is established; standardization requires a scientific decision.',
+    'Use annual_site_species_flight_year.csv as response; never sum per-buffer rows.'),
+    file.path(out,'REQUIRED_REVIEW.txt'))
+  cat('Finished preliminary construction. DO NOT fit Hmsc until gates pass.\n')
+  invisible(out)
+}
+if(sys.nframe()==0L) main()
