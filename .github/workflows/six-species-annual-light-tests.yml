@@ -6,6 +6,8 @@ on:
     paths:
       - 'R/build_six_species_annual_v3.R'
       - 'R/ecology/EIFFEL_ECOLOGY_FEATURES_v4.R'
+      - 'R/environment/NDVI_TEMPORAL_POLICY_v1.R'
+      - 'tools/tests/test_ndvi_temporal_policy_v1.R'
       - 'tools/tests/test_eiffel_ecology_v4.R'
       - 'R/validation/VERIFY_LOCAL_TEMP_ROOT_v1.R'
       - 'tools/run_eiffel_build.ps1'
@@ -15,6 +17,8 @@ on:
     paths:
       - 'R/build_six_species_annual_v3.R'
       - 'R/ecology/EIFFEL_ECOLOGY_FEATURES_v4.R'
+      - 'R/environment/NDVI_TEMPORAL_POLICY_v1.R'
+      - 'tools/tests/test_ndvi_temporal_policy_v1.R'
       - 'tools/tests/test_eiffel_ecology_v4.R'
       - 'R/validation/VERIFY_LOCAL_TEMP_ROOT_v1.R'
       - 'tools/run_eiffel_build.ps1'
@@ -43,6 +47,7 @@ jobs:
         run: |
           Rscript --vanilla tools/tests/test_six_species_annual_v3.R
           Rscript --vanilla tools/tests/test_eiffel_ecology_v4.R
+          Rscript --vanilla tools/tests/test_ndvi_temporal_policy_v1.R
   windows-temp-preflight:
     runs-on: windows-latest
     timeout-minutes: 10
