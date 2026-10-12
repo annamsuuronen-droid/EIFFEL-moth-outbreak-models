@@ -1,12 +1,10 @@
-# No scientific data, model fitting or local storage access; Linux synthetic fixtures only.
+# No scientific data or Hmsc fitting. Linux synthetic fixtures and Windows R temp preflight.
 name: Six-species annual data light tests
 on:
   workflow_dispatch:
   push:
     paths:
       - 'R/build_six_species_annual_v3.R'
-      - 'R/validation/VERIFY_LOCAL_TEMP_ROOT_v1.R'
-      - 'tools/run_eiffel_build.ps1'
       - 'R/validation/VERIFY_LOCAL_TEMP_ROOT_v1.R'
       - 'tools/run_eiffel_build.ps1'
       - 'tools/tests/test_six_species_annual_v3.R'
