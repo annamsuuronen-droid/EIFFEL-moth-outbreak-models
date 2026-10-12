@@ -1,5 +1,7 @@
 # EIFFEL ecological variables v4 — implementation and limits
 
+**Current executable pipeline is WEATHER-ONLY PHASE 1.** It loads catches and daily weather only. Vegetation Greenup, annual NDVI, forest, DTW and other environmental sources are not read or joined. The future NDVI temporal policy, including cohort-aware damage/response interpretation, is in [NDVI larval timing policy](NDVI_LARVAL_TIMING_POLICY_v1.md).
+
 This supplements [the six-species pipeline v3](SIX_SPECIES_ANNUAL_PIPELINE_v3.md) and the researcher's Word report (12 October 2026). This is a **candidate-data construction** update, NOT a fitting/selection/validation of Hmsc models. Old predictions and posteriors remain unchanged.
 
 ## Newly implemented
@@ -13,17 +15,17 @@ This supplements [the six-species pipeline v3](SIX_SPECIES_ANNUAL_PIPELINE_v3.md
 - Rain sums, GDD, cold-day totals and temperature extremes are **NA** unless every date has weather observations. This avoids treating 95% coverage as a full-season total.
 - The 1 May forecast only uses weather through 30 April; 1 June through 31 May; explanatory historical ecology is a separate candidate table. Actual post-issue annual catches and realized sampling effort never enter the `*_FEATURES_ONLY_*` files.
 
-## Optional independently observed Greenup
+## Optional independently observed Greenup — deferred to phase 2
 
 The old Greenup file's observation/publication **availability date is not demonstrated** by its filename or greenup day-of-year alone. Therefore no Greenup is fabricated from climate and historical Greenup is not implicitly authorized for forecasting.
 
-If a **source-audited** independent Greenup table is available, set `$env:EIFFEL_GREENUP_FILE` before running. It must contain unique `site,year,greenup_doy,available_date` rows (CSV comma or TXT semicolon). Example header:
+For a **future phase-2 stage**, a source-audited independent Greenup table may be used. Setting `$env:EIFFEL_GREENUP_FILE` has **no effect on the current weather-only phase-1 build**, because that build intentionally excludes all independent vegetation observations. It must contain unique `site,year,greenup_doy,available_date` rows (CSV comma or TXT semicolon). Example header:
 
 ```text
 site,year,greenup_doy,available_date
 ```
 
-Forecast Greenup and `eco_greenup_minus_gdd5_50_proxy_days` become available **only** if both the recorded greenup occurrence and the source's true availability date are on or before the issue cutoff. This latter difference is **not an observed hatch-greenup mismatch**. Without the independent source, those variables stay NA. The `greenup_source_provenance_AUDIT.csv` table explains the missingness.
+Only in the future phase-2 integration would forecast Greenup and `eco_greenup_minus_gdd5_50_proxy_days` become available **only** if both the recorded greenup occurrence and the source's true availability date are on or before the issue cutoff. This latter difference is **not an observed hatch-greenup mismatch**. Without the independent source, those variables stay NA. Phase 1 does not produce a Greenup provenance table or NDVI predictor columns.
 
 ## Important unfinished scientific decisions
 
@@ -44,4 +46,4 @@ git pull --ff-only
 # & .\tools\run_eiffel_build.ps1 -Mode build
 ```
 
-The launcher fixes `TMPDIR`, `TMP`, `TEMP` under `D:\EIFFEL_runtime\temp\R` **before Rscript starts**, performs a Windows temp location check, and writes to a timestamped `D:\EIFFEL_runtime\annual_pipeline_v3\build_*` directory. No Hmsc models run in this stage.
+The weather-only launcher fixes `TMPDIR`, `TMP`, `TEMP` under `D:\EIFFEL_runtime\temp\R` **before Rscript starts**, performs a Windows temp location check, and writes to a timestamped `D:\EIFFEL_runtime\annual_pipeline_v3\build_*` directory. No Hmsc models run in this stage.
