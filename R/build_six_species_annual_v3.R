@@ -196,8 +196,9 @@ build_catches <- function(path) {
        n_sampling_intervals=.N,
        n_positive_intervals=sum(count>0),
        n_observed_zero_intervals=sum(observed_zero),
-       # These two columns only describe the origin of an OBSERVED ZERO.
-       # Both are ecological zeros if the trap operated.
+       # Both categories are equivalent OBSERVED zeros; flags only audit origin.
+       n_explicit_zero_intervals=sum(observed_zero &
+                                     !zero_filled_from_sampled_event),
        n_explicit_zero_source_rows=sum(explicit_zero_source_rows),
        n_zero_filled_from_sampled_events=sum(zero_filled_from_sampled_event),
        first_sample=min(start),last_sample=max(end)),
@@ -216,7 +217,7 @@ build_catches <- function(path) {
             !anyNA(grid$count),all(grid$count>=0),
             all(grid$observed_zero==(grid$count==0)),
             all(annual$n_observed_zero_intervals ==
-                annual$n_explicit_zero_source_rows +
+                annual$n_explicit_zero_intervals +
                 annual$n_zero_filled_from_sampled_events),
             sum(annual$annual_count) == sum(grid$count),
             sum(annual$annual_count) == source_target_sum)
