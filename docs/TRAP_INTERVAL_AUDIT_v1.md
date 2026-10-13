@@ -20,3 +20,5 @@ Rows for the excluded site 152 appear in the audit **but do not block the build*
 **Review protocol:** Establish for each flagged source row whether it is a data-entry mistake, same-day servicing that represents a scientifically valid effort duration, a missing deployment/retrieval date, or a historical cross-year interval. Check the original trap logs/metadata. Document corrections as an explicit versioned, sourced correction table before implementing them. Re-run the audit on the *corrected derived input*, never overwrite the original observations. All species at a given event must share one real interval length.
 
 If \`-Mode build\` fails due to intervals, the timestamped directory still includes both audit CSVs. It does not produce a falsely corrected annual count table.
+
+The `-Mode audit` command **completes normally even when anomalies exist**, prints the number of rows requiring manual review and writes both CSV reports. Only `-Mode build` refuses to continue with blocking intervals; this is intentional.
