@@ -28,7 +28,7 @@ stopifnot('frost_min' %in% feature_cols, !('frost_min_tmin' %in% feature_cols))
 
 stopifnot(nrow(joined)==nrow(annual), !anyDuplicated(joined,by=c('site','year','species')),
  sum(!is.na(joined$frost_cold_sum20))==4L,
- all(is.na(joined[!frost_relevant,frost_min_tmin])),
+ all(is.na(joined[frost_relevant == FALSE,frost_min_tmin])),
  joined[site=='1001'&species=='Bupalus piniarius',frost_cold_sum20]==-45)
 may <- frost_for_annual(annual,frost,'may01')
 june <- frost_for_annual(annual,frost,'jun01')
@@ -46,7 +46,7 @@ stopifnot(nrow(old)==2L,
                                frost_cold_sum20]==-45,
   is.na(frost_for_annual(annual,old,'may01')[
       site=='1001'&species=='Bupalus piniarius',frost_cold_sum20]))
-stopifnot(all(is.na(frost_for_annual(annual,NULL)[frost_relevant,frost_min_tmin])))
+stopifnot(all(is.na(frost_for_annual(annual,NULL)[frost_relevant == TRUE,frost_min_tmin])))
 # Post-cutoff release / post-cutoff period cannot appear in May 1 predictors.
 late <- copy(source_data)
 late[site=='1001',available_date:='2023-05-05']
