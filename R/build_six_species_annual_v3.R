@@ -434,6 +434,7 @@ main <- function() {
   fwrite(catches$weekly,file.path(out,'sampling_intervals_with_zeros.csv.gz'))
   fwrite(catches$weekly[duration_unknown == TRUE,
     .(site,year,species,start,end,interval_status,count,
+      source_rows,explicit_zero_source_rows,zero_filled_from_sampled_event,
       interval_days,count_per_7d)],
     file.path(out,'SAME_DAY_EVENTS_EFFORT_UNKNOWN.csv'))
   fwrite(catches$annual[n_unknown_effort_intervals>0],
