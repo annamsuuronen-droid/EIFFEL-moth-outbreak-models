@@ -6,24 +6,29 @@ objects remain on the researcher's local D: drive.
 
 ## What is built
 
-- Original raw catch observations (`Eiffel_1993_2024.csv`) are expanded to the
-  **six target species for recorded sampling intervals only**. Annual counts
-  are summed at `(site, flight_year, species)`; January–March records for the
-  two *Operophtera* species are assigned to the previous autumn flight year.
-  `annual_count` is the actual sum of captures, not the sum of weekly
-  effort-standardized counts. `effort_days` is also retained.
+- Source-system rule: **the moth registry records positive species catches
+  only**. If a trap was operating and a focal species was absent from the
+  source catch list, its count is a **true observed zero**. The build expands
+  the six species **only within registered trap events**, never outside
+  trapping periods. Annual counts are summed at
+  `(site, flight_year, species)`; January–March *Operophtera* records
+  belong to the preceding autumn flight year. Explicit-source versus
+  reconstructed-zero flags describe provenance, **not imputation**.
+  Same-day catches are retained even if interval duration is unknown.
+  `effort_days` and `annual_count_per_7d` are then NA instead of an
+  invented sampling effort.
 - Weather is reconstructed from the source daily weather file. Features for
   **May 1** use weather through **April 30**, for **June 1** weather through
   **May 31**. Also calculate October–March overwinter weather, lag1/lag2
   calendar-year conditions and provisional species-specific life stages.
   Missing weather never becomes zero; lag2 may be unavailable for some years.
-- Old-species environmental observation/response and weather columns are **not
-  transferred**. Environmental values are deduplicated for each
-  `(site, year, buffer_m)` and written to a separate table. Current-year
-  environmentally filled values are **not cleared for forecast use**, because
-  temporal interpolation can use information from later years.
-- Retrospective weather, species-specific seasonal stages, and environmental data can
-  be examined in an explanatory candidate file, but explanatory/causal claims are not validated.
+- **Phase 1 uses catches, daily weather and an optional separately audited
+  frostmodel source** for soil-pupa species. It does **not** read or combine
+  NDVI, Greenup, CORINE, forest, DTW or other environmental buffers.
+  These require separate later coverage/temporal audits.
+- Retrospective weather, species-specific seasonal stages and frostmodel data
+  are written as explanatory **candidates**, not scientifically validated
+  drivers or a fitted Hmsc model.
 - May/June **FEATURES_ONLY** files never contain response counts or realized future
   effort. Response and effort remain in `annual_site_species_flight_year.csv`.
   No future effort offset has yet been justified, so these are not ready-made Hmsc fits.
@@ -34,12 +39,13 @@ Inside `D:\EIFFEL\data`:
 
 - `Eiffel_1993_2024.csv` (semicolon; `PvmAlku` and `PvmLoppu` Finnish dates)
 - `Daily_weather_from_NC_needed_trap_years_and_previous_year.txt` (semicolon)
-- `model_data_environment_nearly_constant_years_filled.csv` (comma; long buffer table)
+- Optional frostmodel file `cold_sum20_by_trap_year.csv` (comma; site × flight-year aggregates); discoverable under `D:/EIFFEL_runtime/EIFFELgis/buffer_outputs/frostmodel` or passed using `-FrostFile`. The NDVI/other environment tables are **not Phase 1 inputs**.
 
 Run **from Windows PowerShell with R 4.5.2 and the `data.table` package installed**:
 
 ```powershell
 & .\tools\run_eiffel_build.ps1 -Mode inspect
+& .\tools\run_eiffel_build.ps1 -Mode audit
 & .\tools\run_eiffel_build.ps1 -Mode build
 ```
 
