@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'tools/tests/test_trap_interval_audit_v1.R'
       - 'R/frost/FROST_MODEL_TRAP_YEAR_v1.R'
       - 'tools/tests/test_frost_model_trap_year_v1.R'
       - 'tools/tests/test_frost_phase1_build_smoke_v1.R'
@@ -20,6 +21,7 @@ on:
   pull_request:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'tools/tests/test_trap_interval_audit_v1.R'
       - 'R/frost/FROST_MODEL_TRAP_YEAR_v1.R'
       - 'tools/tests/test_frost_model_trap_year_v1.R'
       - 'tools/tests/test_frost_phase1_build_smoke_v1.R'
@@ -59,6 +61,7 @@ jobs:
           Rscript --vanilla tools/tests/test_weather_only_phase1_contract_v1.R
           Rscript --vanilla tools/tests/test_frost_model_trap_year_v1.R
           Rscript --vanilla tools/tests/test_frost_phase1_build_smoke_v1.R
+          Rscript --vanilla tools/tests/test_trap_interval_audit_v1.R
   windows-temp-preflight:
     runs-on: windows-latest
     timeout-minutes: 10
