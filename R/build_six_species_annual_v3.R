@@ -364,13 +364,18 @@ main <- function() {
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
   cat('Output:',out,'\n')
   trap_audit <- audit_trap_intervals(catches_file,out)
+  if(mode=='audit') {
+    if(trap_audit$blocking_count>0L)
+      cat('AUDIT COMPLETE: ',trap_audit$blocking_count,
+          ' blocking intervals REQUIRE MANUAL REVIEW. CSV saved to: ',out,'\n',sep='')
+    else
+      cat('PASS: interval audit completed without any blocking intervals.\n')
+    cat('No original catches changed and no weather/frost/Hmsc work performed.\n')
+    return(invisible(out))
+  }
   if(trap_audit$blocking_count>0L)
     stopf('%d invalid analysed trap interval(s). Audit saved: %s. No counts changed.',
           trap_audit$blocking_count,file.path(out,'TRAP_INTERVAL_AUDIT_ISSUES.csv'))
-  if(mode=='audit') {
-    cat('PASS: interval audit completed without any blocking intervals. No weather/frost/model work.\n')
-    return(invisible(out))
-  }
   # Preserve original files and make provenance explicit.
   frost_path <- frost_source_path(cfg$root,requested_frost)
   manifest_sources <- c(catches_file,weather_file)
