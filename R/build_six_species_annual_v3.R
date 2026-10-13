@@ -153,7 +153,9 @@ build_catches <- function(path) {
   events[duration_unknown == FALSE,mid := start + floor(interval_days/2)]
   events[, sample_id := paste(site,start,end,sep='_')]
   event_counts <- r[species %chin% cfg$species,
-                    .(count=sum(count)),by=.(site,start,end,species)]
+      .(count=sum(count),source_rows=.N,
+        explicit_zero_source_rows=sum(count==0)),
+      by=.(site,start,end,species)]
   if (!nrow(event_counts)) stopf('No target species observations')
   grid <- CJ(site_event=seq_len(nrow(events)),species=cfg$species, sorted=FALSE)
   grid <- cbind(grid,events[grid$site_event,
@@ -161,7 +163,12 @@ build_catches <- function(path) {
                 recorded_interval_days,duration_unknown,interval_status)])
   grid[,site_event:=NULL]
   grid <- merge(grid,event_counts,by=c('site','start','end','species'),all.x=TRUE,sort=FALSE)
+  # A source-verified zero is different from filling in an unlisted species
+  # at a known sampling event. Both remain counts of zero, with provenance.
+  grid[, zero_filled_from_sampled_event := is.na(source_rows)]
   grid[is.na(count),count:=0]
+  grid[is.na(source_rows),source_rows:=0L]
+  grid[is.na(explicit_zero_source_rows),explicit_zero_source_rows:=0L]
   grid[, calendar_year := as.integer(format(mid,'%Y'))]
   grid[, month := as.integer(format(mid,'%m'))]
   grid[, year := calendar_year - as.integer(species %chin% cfg$winter_flyers & month <= 3L)]
@@ -177,6 +184,8 @@ build_catches <- function(path) {
        effort_days=if(any(duration_unknown)) NA_real_ else sum(interval_days),
        n_sampling_intervals=.N,
        n_positive_intervals=sum(count>0),
+       n_explicit_zero_source_rows=sum(explicit_zero_source_rows),
+       n_zero_filled_from_sampled_events=sum(zero_filled_from_sampled_event),
        first_sample=min(start),last_sample=max(end)),
        by=.(site,year,species)]
   annual[, annual_count_per_7d := as.numeric(NA)]
@@ -187,8 +196,10 @@ build_catches <- function(path) {
            'DATED_EFFORT_COMPLETE')]
   # Catch-count provenance differs from effort completeness.
   annual[, response_checked := raw_duplicate_n==0 && nrow(overlap)==0]
+  source_target_sum <- sum(r[species %chin% cfg$species,count])
   stopifnot(!anyDuplicated(annual,by=c('site','year','species')),
-            sum(annual$annual_count) == sum(grid$count))
+            sum(annual$annual_count) == sum(grid$count),
+            sum(annual$annual_count) == source_target_sum)
   list(annual=annual, weekly=grid,
        overlapping_events=overlap, duplicate_source_rows=raw_duplicate_n,
        sites=unique(r$site))
@@ -553,6 +564,8 @@ main <- function() {
     'If any unknown-duration event is present in an annual site/species row, effort_days and annual_count_per_7d are NA.',
     'Known effort_days is QA only until complete effort can be established from source logs.',
     'Zero fill applies only to actual recorded sampling events, never unsampled periods.',
+    'An explicitly recorded zero and a zero-filled unlisted species are flagged separately.',
+    'Zero-fill validity requires source confirmation that all target species were sampled at each event.',
     'Precipitation, temperature, snow units require source audit.',
     'Optional frostmodel is distinct from AIR Tmin; site + adult flight year join, no buffers.',
     'Frost threshold Tmin <= -20 C; frost_cold_sum20 sums ACTUAL NEGATIVE Tmin, not threshold excess.',
