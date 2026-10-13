@@ -24,8 +24,11 @@ stopifnot(b$duplicate_source_rows==0L,nrow(b$overlapping_events)==0L,
 raw2 <- rbind(raw,raw[3]); raw2_path <- file.path(td,'duplicated.csv')
 fwrite(raw2,raw2_path,sep=';')
 b2 <- suppressWarnings(build_catches(raw2_path))
-stopifnot(b2$duplicate_source_rows==1L,!all(b2$annual$response_checked),
-  b2$annual[year==2023 & species=='Lymantria monacha',annual_count]==10)
+stopifnot(b2$duplicate_source_rows==1L,
+  all(is.na(b2$annual$response_checked)),
+  nrow(b2$removed_exact_duplicate_rows)==1L,
+  b2$annual[year==2023 & species=='Lymantria monacha',annual_count]==5,
+  sum(b2$annual$annual_count)==sum(raw$KokMaara))
 dates <- seq(as.Date('2020-01-01'),as.Date('2023-12-31'),by='day')
 w <- data.table(site='1001',DateN=as.character(dates),
   MeanDailyT=4,Tmin=-4,Tmax=12,SumDailyP=2,MeanSnow=1)
