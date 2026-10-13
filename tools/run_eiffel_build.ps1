@@ -5,6 +5,7 @@ param(
   [string]$DataRoot = 'D:\EIFFEL\data',
   [string]$RuntimeRoot = 'D:\EIFFEL_runtime',
   [string]$Rscript = 'D:\ProgramFiles\R\R-4.5.2\bin\x64\Rscript.exe',
+  [string]$FrostFile = '',
   [ValidateRange(0, 10000)] [int]$MinFreeGB = 50,
   [switch]$TempCheckOnly
 )
@@ -22,6 +23,12 @@ $env:TMP = $temp
 $env:TMPDIR = $temp
 $env:EIFFEL_DATA = $DataRoot.Replace('\','/')
 $env:EIFFEL_BUILD_OUT = $out.Replace('\','/')
+if (-not [string]::IsNullOrWhiteSpace($FrostFile)) {
+  if (-not (Test-Path -LiteralPath $FrostFile -PathType Leaf)) {
+    throw "Frost source file missing: $FrostFile"
+  }
+  $env:EIFFEL_FROST_FILE = ([System.IO.Path]::GetFullPath($FrostFile)).Replace('\','/')
+}
 $runtimeDrive = [System.IO.Path]::GetPathRoot([System.IO.Path]::GetFullPath($RuntimeRoot)).Substring(0,1)
 $vol = Get-PSDrive -Name $runtimeDrive -ErrorAction Stop
 if ($MinFreeGB -gt 0 -and $vol.Free -lt ($MinFreeGB * 1GB)) {
