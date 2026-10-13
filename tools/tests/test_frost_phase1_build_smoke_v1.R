@@ -78,5 +78,18 @@ stopifnot(nrow(response)==6L,sum(response$annual_count)==9,
   expl[species=='Bupalus piniarius',frost_cold_sum20]==-45,
   all(is.na(may[!(species %chin% c('Bupalus piniarius','Panolis flammea')),frost_min])))
 stopifnot(!file.exists(file.path(o,'environment_by_site_year_buffer_REVIEW.csv.gz')))
+Sys.setenv(EIFFEL_AUDIT_BUILD_DIR=o)
+v <- suppressWarnings(system2(rExe,
+  c('--vanilla','R/validation/VERIFY_BUILT_ANNUAL_v1.R'),
+  stdout=TRUE,stderr=TRUE))
+if(!is.null(attr(v,'status')) && attr(v,'status')!=0L) {
+  cat(v,sep='\n')
+  stop('Local-source QA verification failed on completed synthetic build')
+}
+checks <- fread(file.path(o,'LOCAL_VALIDATION_REPORT.csv'))
+stopifnot(nrow(checks)>=10L, !any(checks$status=='FAIL'),
+          checks[check=='annual_counts_reconcile_after_exact_dedup',status]=='PASS',
+          checks[check=='apparent_overlaps_audit_only',status]=='PASS',
+          file.exists(file.path(o,'LOCAL_VALIDATION_REPORT.md')))
 unlink(td,recursive=TRUE)
 cat('PASS: full synthetic weather/frost phase-1 build; no environment reads, no Hmsc\n')
