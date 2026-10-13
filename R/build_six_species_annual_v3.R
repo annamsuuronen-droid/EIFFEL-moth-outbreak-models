@@ -420,7 +420,9 @@ main <- function() {
   normalized_out <- normalizePath(cfg$out_root,winslash='/',mustWork=FALSE)
   if (!grepl('^([A-Za-z]:/|/)',normalized_out))
     stopf('Expected absolute output path (D: on Windows, /path on Linux): %s', normalized_out)
-  id <- format(Sys.time(),'%Y%m%d_%H%M%S')
+  # Make output folders unique even for consecutive audit/build runs inside
+  # the same second. Never overwrite an existing results directory.
+  id <- paste(format(Sys.time(),'%Y%m%d_%H%M%S'),Sys.getpid(),sep='_')
   out <- file.path(cfg$out_root,paste0('build_',id))
   if(dir.exists(out)) stopf('Output directory already exists: %s',out)
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
