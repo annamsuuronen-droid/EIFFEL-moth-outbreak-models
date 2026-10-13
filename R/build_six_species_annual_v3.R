@@ -391,7 +391,7 @@ main <- function() {
   fwrite(frost_may[,.(site,year,species,frost_asof_available,frost_source_status)],
       file.path(out,'frost_asof_may01_AUDIT.csv'))
   fwrite(frost_june[,.(site,year,species,frost_asof_available,frost_source_status)],
-      file.path(out,'frost_asof_jun01_AUDIT.csv')
+      file.path(out,'frost_asof_jun01_AUDIT.csv'))
   stopifnot(nrow(may_weather)==nrow(base), nrow(june_weather)==nrow(base))
   # Explicit ban on phase-2 NDVI/Greenup and all vegetation/soil attributes.
   blocked_names <- c('greenup','ndvi','corine','clc_','vmi_','havu_','lehti_',
