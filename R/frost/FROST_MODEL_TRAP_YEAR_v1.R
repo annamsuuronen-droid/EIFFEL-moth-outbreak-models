@@ -100,9 +100,9 @@ frost_for_annual <- function(annual,source=NULL,issue=NULL) {
     stopifnot(nrow(x)==nrow(annual))
     x[is.na(frost_source_status),frost_source_status:='NO_SITE_YEAR_FROST_COVERAGE']
   }
-  for(v in frost_vars) x[!frost_relevant,(v):=NA_real_]
-  x[!frost_relevant,frost_min:=NA_real_]
-  x[!frost_relevant,frost_source_status:='NOT_RELEVANT_EGG_OVERWINTERING']
+  for(v in frost_vars) x[frost_relevant == FALSE,(v):=NA_real_]
+  x[frost_relevant == FALSE,frost_min:=NA_real_]
+  x[frost_relevant == FALSE,frost_source_status:='NOT_RELEVANT_EGG_OVERWINTERING']
   # Historical data are useful for explanatory modelling; however a source
   # produced retrospectively must NOT leak into 1 May/1 June hindcasts.
   if(!is.null(issue)) {
