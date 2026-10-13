@@ -87,6 +87,19 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: 'release'
+      - name: Validate VS Code tasks and Windows PowerShell syntax
+        shell: pwsh
+        run: |
+          $t = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path $pwd 'tools/run_eiffel_local_workflow.ps1'),
+            [ref]$t, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          $tasks = Get-Content '.vscode/tasks.json' -Raw | ConvertFrom-Json
+          if ($tasks.tasks.label -notcontains 'EIFFEL: Paivita + muodosta + validoi (YKSI TEHTAVA)') {
+            throw 'Missing EIFFEL chained VS Code task'
+          }
       - name: Windows PowerShell to Rscript temp preflight (no model or study data)
         shell: pwsh
         run: |
