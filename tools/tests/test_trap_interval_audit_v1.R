@@ -13,7 +13,9 @@ r <- data.table(
   species='Bupalus piniarius')
 fwrite(r,path,sep=';')
 a <- audit_trap_intervals(path,td)
-stopifnot(nrow(a$issues)==3L,a$blocking_count==2L,
+stopifnot(nrow(a$issues)==3L,a$blocking_count==1L,
+  a$unknown_duration_rows==1L,
+  a$summary[metric=='zero_duration_retained',value]==1L,
   a$issues[source_csv_row==3L,interval_status]=='ZERO_DURATION',
   a$issues[source_csv_row==4L,interval_status]=='END_BEFORE_START',
   a$issues[source_csv_row==5L,excluded_site_152],
@@ -60,7 +62,7 @@ stopifnot(is.null(attr(lines_bad,'status')) || attr(lines_bad,'status')==0L,
 new_folders <- setdiff(list.dirs(out,recursive=FALSE,full.names=TRUE),folders)
 stopifnot(length(new_folders)==1L,
   fread(file.path(new_folders[1],'TRAP_INTERVAL_AUDIT_SUMMARY.csv'))[
-     metric=='interval_issues_blocking',value]==2L,
+     metric=='interval_issues_blocking',value]==1L,
   !file.exists(file.path(new_folders[1],'annual_site_species_flight_year.csv')))
 unlink(td,recursive=TRUE)
 cat('PASS: anomalous trap intervals audited with CSV rows, site 152 exclusion, no date clamping or source changes\n')
