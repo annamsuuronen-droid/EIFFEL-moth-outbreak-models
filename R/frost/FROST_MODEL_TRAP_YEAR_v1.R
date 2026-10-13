@@ -74,8 +74,11 @@ frost_read_trap_year <- function(path) {
   # Old source has only site/year and four annual aggregates: actual source
   # availability and season boundaries are UNKNOWN until independently audited.
   setnames(x,needed[3:6],frost_vars)
+  # Requested short label. Exactly identical to legacy frost_min_tmin:
+  # NEVER select both aliases as separate predictors in one model.
+  x[,frost_min:=frost_min_tmin]
   x[,frost_source_status:='ORIGINAL_FROSTMODEL_NOT_INTERPOLATED']
-  x[,c('site','year',frost_vars,'frost_available_date',
+  x[,c('site','year',frost_vars,'frost_min','frost_available_date',
         'frost_winter_end_date','frost_source_status'),with=FALSE]
 }
 frost_for_annual <- function(annual,source=NULL,issue=NULL) {
@@ -88,6 +91,7 @@ frost_for_annual <- function(annual,source=NULL,issue=NULL) {
   x[,frost_relevant:=species %chin% frost_species]
   if(is.null(source)) {
     for(v in frost_vars) x[,(v):=NA_real_]
+    x[,frost_min:=NA_real_]
     x[,frost_available_date:=as.Date(NA)]
     x[,frost_winter_end_date:=as.Date(NA)]
     x[,frost_source_status:='NOT_LOCATED_NO_FROST_VALUES_FABRICATED']
@@ -97,6 +101,7 @@ frost_for_annual <- function(annual,source=NULL,issue=NULL) {
     x[is.na(frost_source_status),frost_source_status:='NO_SITE_YEAR_FROST_COVERAGE']
   }
   for(v in frost_vars) x[!frost_relevant,(v):=NA_real_]
+  x[!frost_relevant,frost_min:=NA_real_]
   x[!frost_relevant,frost_source_status:='NOT_RELEVANT_EGG_OVERWINTERING']
   # Historical data are useful for explanatory modelling; however a source
   # produced retrospectively must NOT leak into 1 May/1 June hindcasts.
@@ -112,6 +117,7 @@ frost_for_annual <- function(annual,source=NULL,issue=NULL) {
       x$frost_available_date < issue_date
     x[,frost_asof_available:=as.integer(valid_asof)]
     for(v in frost_vars) x[!valid_asof,(v):=NA_real_]
+    x[!valid_asof,frost_min:=NA_real_]
     x[frost_relevant & !valid_asof,
       frost_source_status:='NOT_FORECAST_CLEARED_MISSING_RELEASE_OR_SEASON_PROOF']
   }
@@ -119,7 +125,9 @@ frost_for_annual <- function(annual,source=NULL,issue=NULL) {
   x
 }
 frost_keep_features <- function(z,include_audit=FALSE) {
-  cols <- c('site','year','species',frost_vars)
+  # Avoid perfect collinearity in predictor tables: select frost_min and
+  # keep frost_min_tmin solely in legacy/audit outputs.
+  cols <- c('site','year','species',setdiff(frost_vars,'frost_min_tmin'),'frost_min')
   if(include_audit) cols <- c(cols,'frost_asof_available','frost_source_status')
   z[,..cols]
 }
