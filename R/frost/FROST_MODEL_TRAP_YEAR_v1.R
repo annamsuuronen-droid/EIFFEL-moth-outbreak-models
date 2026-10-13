@@ -39,7 +39,8 @@ frost_read_trap_year <- function(path) {
   if(anyDuplicated(x,by=c('site','year')))
     frost_stop('Duplicate frost site/year. Do not duplicate annual moth counts')
   for(k in needed[3:6]) set(x,j=k,value=suppressWarnings(as.numeric(x[[k]])))
-  if(any(!is.finite(unlist(x[,..needed[3:6]])),na.rm=TRUE))
+  numeric_cols <- needed[3:6]
+  if(any(!is.finite(unlist(x[,..numeric_cols])),na.rm=TRUE))
     frost_stop('Non-finite frost values')
   if(any(!is.na(x$n_days20) & (x$n_days20<0|x$n_days20!=floor(x$n_days20))))
     frost_stop('Invalid frost n_days20')
