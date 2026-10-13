@@ -163,12 +163,23 @@ build_catches <- function(path) {
                 recorded_interval_days,duration_unknown,interval_status)])
   grid[,site_event:=NULL]
   grid <- merge(grid,event_counts,by=c('site','start','end','species'),all.x=TRUE,sort=FALSE)
-  # A source-verified zero is different from filling in an unlisted species
-  # at a known sampling event. Both remain counts of zero, with provenance.
+  # Yoperhosjarjestelma records positive catches, not explicit species zeros.
+  # If the trap operated (event is present) and a study species is absent,
+  # its zero is a TRUE OBSERVED ZERO, not missing data or a statistical imputation.
+  # Retain the technical provenance flag for QA, not as a model missingness flag.
   grid[, zero_filled_from_sampled_event := is.na(source_rows)]
   grid[is.na(count),count:=0]
   grid[is.na(source_rows),source_rows:=0L]
   grid[is.na(explicit_zero_source_rows),explicit_zero_source_rows:=0L]
+  grid[, observed_during_trapping := TRUE]
+  grid[, observed_zero := count==0]
+  grid[, observation_origin := fifelse(
+      zero_filled_from_sampled_event,
+      'OBSERVED_ZERO_SPECIES_UNLISTED_DURING_TRAPPING',
+      fifelse(count==0,'OBSERVED_ZERO_EXPLICIT_IN_SOURCE',
+              'OBSERVED_POSITIVE_CATCH'))]
+  # Days without a registered trap event have NO grid row and are never
+  # assigned a species zero; they are outside this observation frame.
   grid[, calendar_year := as.integer(format(mid,'%Y'))]
   grid[, month := as.integer(format(mid,'%m'))]
   grid[, year := calendar_year - as.integer(species %chin% cfg$winter_flyers & month <= 3L)]
@@ -184,6 +195,9 @@ build_catches <- function(path) {
        effort_days=if(any(duration_unknown)) NA_real_ else sum(interval_days),
        n_sampling_intervals=.N,
        n_positive_intervals=sum(count>0),
+       n_observed_zero_intervals=sum(observed_zero),
+       # These two columns only describe the origin of an OBSERVED ZERO.
+       # Both are ecological zeros if the trap operated.
        n_explicit_zero_source_rows=sum(explicit_zero_source_rows),
        n_zero_filled_from_sampled_events=sum(zero_filled_from_sampled_event),
        first_sample=min(start),last_sample=max(end)),
@@ -198,6 +212,12 @@ build_catches <- function(path) {
   annual[, response_checked := raw_duplicate_n==0 && nrow(overlap)==0]
   source_target_sum <- sum(r[species %chin% cfg$species,count])
   stopifnot(!anyDuplicated(annual,by=c('site','year','species')),
+            all(grid$observed_during_trapping),
+            !anyNA(grid$count),all(grid$count>=0),
+            all(grid$observed_zero==(grid$count==0)),
+            all(annual$n_observed_zero_intervals ==
+                annual$n_explicit_zero_source_rows +
+                annual$n_zero_filled_from_sampled_events),
             sum(annual$annual_count) == sum(grid$count),
             sum(annual$annual_count) == source_target_sum)
   list(annual=annual, weekly=grid,
@@ -434,6 +454,7 @@ main <- function() {
   fwrite(catches$weekly,file.path(out,'sampling_intervals_with_zeros.csv.gz'))
   fwrite(catches$weekly[duration_unknown == TRUE,
     .(site,year,species,start,end,interval_status,count,
+      observed_during_trapping,observed_zero,observation_origin,
       source_rows,explicit_zero_source_rows,zero_filled_from_sampled_event,
       interval_days,count_per_7d)],
     file.path(out,'SAME_DAY_EVENTS_EFFORT_UNKNOWN.csv'))
@@ -565,8 +586,11 @@ main <- function() {
     'If any unknown-duration event is present in an annual site/species row, effort_days and annual_count_per_7d are NA.',
     'Known effort_days is QA only until complete effort can be established from source logs.',
     'Zero fill applies only to actual recorded sampling events, never unsampled periods.',
-    'An explicitly recorded zero and a zero-filled unlisted species are flagged separately.',
-    'Zero-fill validity requires source confirmation that all target species were sampled at each event.',
+    'The moth registry records positive catches only; an unlisted species in an ACTIVE trap event has a TRUE OBSERVED ZERO.',
+    'zero_filled_from_sampled_event indicates provenance, NOT an imputed or uncertain ecological zero.',
+    'Observed zero and positive counts have observed_during_trapping=TRUE; no-trap periods never create records.',
+    'The explicit-zero and unlisted-species-zero flags are QA-only; both zeros are equivalent observed counts.',
+    'A same-day catch is an observed count; its actual trap exposure duration can separately be unknown.',
     'Precipitation, temperature, snow units require source audit.',
     'Optional frostmodel is distinct from AIR Tmin; site + adult flight year join, no buffers.',
     'Frost threshold Tmin <= -20 C; frost_cold_sum20 sums ACTUAL NEGATIVE Tmin, not threshold excess.',
