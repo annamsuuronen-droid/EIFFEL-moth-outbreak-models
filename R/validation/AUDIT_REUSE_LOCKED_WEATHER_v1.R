@@ -3,7 +3,11 @@
 # moth species. This is a FAST source/schema/provenance audit, NEVER Hmsc fit.
 # Historical lock sets are repository EVIDENCE, not recalculated selections.
 suppressPackageStartupMessages(library(data.table))
-repo <- normalizePath(file.path(getwd(),'..','..'),winslash='/',mustWork=TRUE)
+filearg <- grep('^--file=',commandArgs(trailingOnly=FALSE),value=TRUE)
+if(length(filearg)!=1L) stop('Cannot resolve audit script path')
+scriptpath <- sub('^--file=','',filearg)
+repo <- normalizePath(file.path(dirname(scriptpath),'..','..'),
+                      winslash='/',mustWork=TRUE)
 root <- Sys.getenv('EIFFEL_DATA',unset='D:/EIFFEL/data')
 outroot <- Sys.getenv('EIFFEL_BUILD_OUT',unset='D:/EIFFEL_runtime/annual_pipeline_v3')
 id <- sprintf('locked_weather_audit_%s_%d',format(Sys.time(),'%Y%m%d_%H%M%S'),Sys.getpid())
@@ -72,8 +76,8 @@ if(nzchar(recent)) {
          predictive_weather=file.path(recent,
                  'predictive_may01_FEATURES_ONLY_UNVALIDATED.csv.gz'))
   coverage <- rbindlist(lapply(names(p),function(b) {
-    h <- if(file.exists(p[[b]])) names(fread(p[[b]],nrows=0L,
-                                       showProgress=FALSE)) else character()
+    h <- if(!file.exists(p[[b]])) character() else
+      names(read.csv(gzfile(p[[b]]),nrows=0L,check.names=FALSE))
     x <- data[branch==b,.(branch,variable)]
     x[,build_file:=p[[b]]]
     x[,build_file_exists:=length(h)>0L]
