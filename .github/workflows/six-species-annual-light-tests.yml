@@ -5,6 +5,10 @@ on:
   push:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'R/validation/VERIFY_BUILT_ANNUAL_v1.R'
+      - 'tools/tests/test_exact_duplicates_keep_overlaps_v1.R'
+      - 'tools/run_eiffel_local_workflow.ps1'
+      - '.vscode/tasks.json'
       - 'R/validation/AUDIT_REUSE_LOCKED_WEATHER_v1.R'
       - 'tools/tests/test_prior_locked_weather_audit_v1.R'
       - 'tools/tests/test_trap_interval_audit_v1.R'
@@ -24,6 +28,10 @@ on:
   pull_request:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'R/validation/VERIFY_BUILT_ANNUAL_v1.R'
+      - 'tools/tests/test_exact_duplicates_keep_overlaps_v1.R'
+      - 'tools/run_eiffel_local_workflow.ps1'
+      - '.vscode/tasks.json'
       - 'R/validation/AUDIT_REUSE_LOCKED_WEATHER_v1.R'
       - 'tools/tests/test_prior_locked_weather_audit_v1.R'
       - 'tools/tests/test_trap_interval_audit_v1.R'
@@ -62,6 +70,7 @@ jobs:
         shell: bash
         run: |
           Rscript --vanilla tools/tests/test_six_species_annual_v3.R
+          Rscript --vanilla tools/tests/test_exact_duplicates_keep_overlaps_v1.R
           Rscript --vanilla tools/tests/test_eiffel_ecology_v4.R
           Rscript --vanilla tools/tests/test_ndvi_temporal_policy_v1.R
           Rscript --vanilla tools/tests/test_weather_only_phase1_contract_v1.R
