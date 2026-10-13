@@ -33,8 +33,8 @@ folders <- list.dirs(out_dir,recursive=FALSE,full.names=TRUE)
 stopifnot(length(folders)==1L)
 o <- folders[1]
 response <- fread(file.path(o,'annual_site_species_flight_year.csv'))
-may <- fread(file.path(o,'predictive_may01_FEATURES_ONLY_UNVALIDATED.csv.gz'))
-expl <- fread(file.path(o,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz'))
+may <- as.data.table(read.csv(gzfile(file.path(o,'predictive_may01_FEATURES_ONLY_UNVALIDATED.csv.gz')),check.names=FALSE))
+expl <- as.data.table(read.csv(gzfile(file.path(o,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz')),check.names=FALSE))
 qa <- fread(file.path(o,'FROST_INPUT_QA.csv'))
 scope <- fread(file.path(o,'PHASE_1_SCOPE.csv'))
 stopifnot(nrow(response)==6L,sum(response$annual_count)==3,
