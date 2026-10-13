@@ -56,11 +56,66 @@ stage_windows <- data.table::data.table(
   end_shift = c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,0,-1,0))
 stage_windows[, review_status := 'PROVISIONAL_REQUIRES_ECOLOGICAL_REVIEW']
 
+# The audit preserves original dates; it never guesses, clamps, or drops a
+# problematic trap interval. Output stays on the local D: runtime filesystem.
+audit_trap_intervals <- function(path, output_dir=NULL) {
+  raw <- read_file(path,';')
+  require_cols(raw,c('site','year','KokMaara','PvmAlku','PvmLoppu','species'),
+               'Original catches interval audit')
+  raw[,source_csv_row:=seq_len(.N)+1L] # Header is CSV row 1.
+  raw[,site_key:=trimws(as.character(site))]
+  raw[,parsed_start:=parse_dates(PvmAlku)]
+  raw[,parsed_end:=parse_dates(PvmLoppu)]
+  raw[,interval_days:=as.integer(parsed_end-parsed_start)]
+  raw[,excluded_site_152:=cfg$exclude_site_152 & site_key=='152']
+  raw[is.na(excluded_site_152),excluded_site_152:=FALSE]
+  status <- rep('OK',nrow(raw))
+  status[is.na(raw$site_key) | !nzchar(raw$site_key)] <- 'MISSING_SITE'
+  status[is.na(raw$parsed_start)] <- 'UNPARSEABLE_START'
+  status[is.na(raw$parsed_end)] <- 'UNPARSEABLE_END'
+  status[!is.na(raw$interval_days) & raw$interval_days==0L] <- 'ZERO_DURATION'
+  status[!is.na(raw$interval_days) & raw$interval_days<0L] <- 'END_BEFORE_START'
+  raw[,interval_status:=status]
+  issues <- raw[interval_status!='OK',.(
+    source_csv_row,site=site_key,year,species,KokMaara,
+    PvmAlku_raw=as.character(PvmAlku),PvmLoppu_raw=as.character(PvmLoppu),
+    parsed_start,parsed_end,interval_days,interval_status,excluded_site_152)]
+  blocking <- issues[excluded_site_152==FALSE]
+  overview <- data.table(metric=c('raw_source_rows','rows_site_152_excluded',
+                                  'interval_issues_all','interval_issues_site_152',
+                                  'interval_issues_blocking','zero_duration_blocking',
+                                  'negative_duration_blocking','unparseable_or_missing_blocking'),
+    value=c(nrow(raw),sum(raw$excluded_site_152),
+            nrow(issues),sum(issues$excluded_site_152),nrow(blocking),
+            sum(blocking$interval_status=='ZERO_DURATION'),
+            sum(blocking$interval_status=='END_BEFORE_START'),
+            sum(blocking$interval_status %chin% c('UNPARSEABLE_START','UNPARSEABLE_END','MISSING_SITE'))))
+  if(!is.null(output_dir)) {
+    dir.create(output_dir,recursive=TRUE,showWarnings=FALSE)
+    fwrite(issues,file.path(output_dir,'TRAP_INTERVAL_AUDIT_ISSUES.csv'))
+    fwrite(overview,file.path(output_dir,'TRAP_INTERVAL_AUDIT_SUMMARY.csv'))
+  }
+  cat('Trap interval audit: source rows=',nrow(raw),
+      '; blocking issues=',nrow(blocking),
+      '; issues at excluded site 152=',sum(issues$excluded_site_152),'\n',sep='')
+  if(nrow(blocking)) {
+    cat('First blocking issues (SOURCE CSV row, site, dates, days, reason):\n')
+    print(blocking[seq_len(min(nrow(blocking),12L)),
+                   .(source_csv_row,site,PvmAlku_raw,PvmLoppu_raw,
+                     interval_days,interval_status)])
+  }
+  list(issues=issues,summary=overview,blocking_count=nrow(blocking))
+}
+
 # Use raw catches for every observed site/trapping interval. Nothing outside trap operation is zero-filled.
 build_catches <- function(path) {
   r <- read_file(path, ';')
   require_cols(r,c('site','year','KokMaara','PvmAlku','PvmLoppu','species'), 'Original catches')
   r[, site := trimws(as.character(site))]
+  # Excluded site 152 may contain malformed legacy dates; it is not part of
+  # the analysed trapping grid, but remains visible in the read-only audit.
+  if(cfg$exclude_site_152) r <- r[!is.na(site) & site!='152']
+  if(!nrow(r)) stopf('No catches after exclusions')
   r[, species := canonical_species(as.character(species))]
   r[, start := parse_dates(PvmAlku)]
   r[, end := parse_dates(PvmLoppu)]
@@ -69,9 +124,8 @@ build_catches <- function(path) {
     stopf('Invalid site/date in original catches')
   if (anyNA(r$count) || any(!is.finite(r$count)) || any(r$count < 0) ||
       any(r$count != floor(r$count))) stopf('Counts must be finite nonnegative integers')
-  if (any(r$end <= r$start)) stopf('Nonpositive trap interval; no automatic duration clamping')
-  if (cfg$exclude_site_152) r <- r[site != '152']
-  if (!nrow(r)) stopf('No catches after exclusions')
+  if (any(r$end <= r$start))
+    stopf('Nonpositive trap interval: run -Mode audit and check TRAP_INTERVAL_AUDIT_ISSUES.csv')
   raw_duplicate_n <- nrow(r) - uniqueN(r)
   if (raw_duplicate_n) warning(raw_duplicate_n,
     ' EXACT duplicate source rows: retained, not silently dropped. Audit before fitting.')
@@ -275,8 +329,8 @@ read_environment <- function(path) {
 
 main <- function() {
   args <- commandArgs(trailingOnly=TRUE)
-  mode <- if('--inspect' %in% args) 'inspect' else if('--build' %in% args) 'build' else 'help'
-  if (mode=='help') {cat('Usage: Rscript --vanilla build_six_species_annual.R --inspect OR --build\n');return(invisible())}
+  mode <- if('--inspect' %in% args) 'inspect' else if('--audit' %in% args) 'audit' else if('--build' %in% args) 'build' else 'help'
+  if (mode=='help') {cat('Usage: Rscript --vanilla build_six_species_annual_v3.R --inspect OR --audit OR --build\n');return(invisible())}
   catches_file <- file.path(cfg$root,'Eiffel_1993_2024.csv')
   weather_file <- file.path(cfg$root,'Daily_weather_from_NC_needed_trap_years_and_previous_year.txt')
   frost_module <- file.path('frost','FROST_MODEL_TRAP_YEAR_v1.R')
@@ -299,7 +353,8 @@ main <- function() {
       cat('frost columns: ',paste(names(read_file(frost_path,',',header_only=TRUE)),collapse=', '),'\n')
     return(invisible())
   }
-  for (f in c(catches_file,weather_file)) if(!file.exists(f)) stopf('Missing: %s',f)
+  requested_sources <- if(mode=='audit') catches_file else c(catches_file,weather_file)
+  for (f in requested_sources) if(!file.exists(f)) stopf('Missing: %s',f)
   normalized_out <- normalizePath(cfg$out_root,winslash='/',mustWork=FALSE)
   if (!grepl('^([A-Za-z]:/|/)',normalized_out))
     stopf('Expected absolute output path (D: on Windows, /path on Linux): %s', normalized_out)
@@ -308,6 +363,14 @@ main <- function() {
   if(dir.exists(out)) stopf('Output directory already exists: %s',out)
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
   cat('Output:',out,'\n')
+  trap_audit <- audit_trap_intervals(catches_file,out)
+  if(trap_audit$blocking_count>0L)
+    stopf('%d invalid analysed trap interval(s). Audit saved: %s. No counts changed.',
+          trap_audit$blocking_count,file.path(out,'TRAP_INTERVAL_AUDIT_ISSUES.csv'))
+  if(mode=='audit') {
+    cat('PASS: interval audit completed without any blocking intervals. No weather/frost/model work.\n')
+    return(invisible(out))
+  }
   # Preserve original files and make provenance explicit.
   frost_path <- frost_source_path(cfg$root,requested_frost)
   manifest_sources <- c(catches_file,weather_file)
