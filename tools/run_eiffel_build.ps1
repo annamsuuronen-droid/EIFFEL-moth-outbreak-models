@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('inspect','build')]
+  [ValidateSet('inspect','audit','build')]
   [string]$Mode = 'inspect',
   [string]$Script = (Join-Path $PSScriptRoot '..\R\build_six_species_annual_v3.R'),
   [string]$DataRoot = 'D:\EIFFEL\data',
