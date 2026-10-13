@@ -413,7 +413,8 @@ main <- function() {
   explanatory_stages <- completed_stages_wide(wx$stage_long,'12-31')
   expl <- merge(base,explanatory_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
   expl <- merge(expl,eco_features('explanatory'),by=c('site','year'),all.x=TRUE,sort=FALSE)
-  expl <- merge(expl,frost_all[,c('site','year','species',frost_vars),with=FALSE],
+  expl <- merge(expl,frost_all[,c('site','year','species',
+                      setdiff(frost_vars,'frost_min_tmin'),'frost_min'),with=FALSE],
                 by=c('site','year','species'),all.x=TRUE,sort=FALSE)
   stopifnot(nrow(expl)==nrow(base))
   fwrite(expl,file.path(out,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz'))
@@ -443,6 +444,7 @@ main <- function() {
     'Precipitation, temperature, snow units require source audit.',
     'Optional frostmodel is distinct from AIR Tmin; site + adult flight year join, no buffers.',
     'Frost threshold Tmin <= -20 C; frost_cold_sum20 sums ACTUAL NEGATIVE Tmin, not threshold excess.',
+    'frost_min is exactly frost_min_tmin from source; use one alias, NOT both, in any model.',
     'Frost_min refers to min_tmin of modeled frost source; check original model units and depth.',
     'Nov(t-1)-Mar(t) frost-year semantics require independent confirmation from source model.',
     'Legacy frost source without winter_end_date and available_date is explanatory ONLY, not May/June predictor.',
