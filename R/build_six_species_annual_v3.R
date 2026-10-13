@@ -118,7 +118,9 @@ audit_trap_intervals <- function(path, output_dir=NULL) {
 # Log the original CSV row numbers removed from constructed data.
 read_catches_deduplicated <- function(path) {
   r <- read_file(path, ';')
-  original_columns <- names(r)
+  # data.table modifies column names by reference; freeze the ORIGINAL
+  # CSV schema before adding unique source row numbers for the audit.
+  original_columns <- data.table::copy(names(r))
   r[, source_csv_row := seq_len(.N)+1L]
   dup <- duplicated(r,by=original_columns)
   duplicates <- r[dup,c('source_csv_row',original_columns),with=FALSE]
