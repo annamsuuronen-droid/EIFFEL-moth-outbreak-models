@@ -2,7 +2,12 @@
 # Fast local verification of an already completed EIFFEL six-species build.
 # Does not create modeling data or refit Hmsc. Uses original catches read-only.
 suppressPackageStartupMessages(library(data.table))
-source(file.path('R','build_six_species_annual_v3.R'),local=TRUE)
+script_arg <- grep('^--file=',commandArgs(trailingOnly=FALSE),value=TRUE)
+if(length(script_arg)!=1L) stop('Cannot resolve validation script location')
+script_path <- sub('^--file=','',script_arg)
+repo_root <- normalizePath(file.path(dirname(script_path),'..','..'),
+                           winslash='/',mustWork=TRUE)
+source(file.path(repo_root,'R','build_six_species_annual_v3.R'),local=TRUE)
 build_dir <- Sys.getenv('EIFFEL_AUDIT_BUILD_DIR',unset='')
 if(!nzchar(build_dir) || !dir.exists(build_dir))
   stop('EIFFEL_AUDIT_BUILD_DIR must point to an existing build_* directory')
