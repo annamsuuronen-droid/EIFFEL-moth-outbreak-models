@@ -35,6 +35,8 @@ Example: two qualifying days with modelled Tmin −24 and −21 degrees give `n_
 | `n_days20` | `frost_n_days20` | Count of qualifying days |
 | `mean_tmin_below20` | `frost_mean_tmin_below20` | Mean of qualifying Tmin, NA if none |
 
+Predictor tables expose **frost_min**, not both perfectly collinear aliases. Audit outputs retain the legacy `frost_min_tmin` for reproducibility.
+
 It rejects nonunique site-year keys, impossible positive threshold sums, and incompatible conditional means; NEVER interpolates missing frost years. It does not modify annual moth counts, create buffers, or fit models.
 
 The frost input is **optional** to phase 1. Auto-discovery tries only known D:-drive locations: `D:/EIFFEL/data/inputs_frost/`, `D:/EIFFEL/data/`, and `D:/EIFFEL_runtime/EIFFELgis/buffer_outputs/frostmodel/` for a file named `cold_sum20_by_trap_year.csv`. If more than one exists, choose explicitly; if none exists, records remain NA and an audit is written. To supply the correct CSV explicitly:
