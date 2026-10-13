@@ -17,10 +17,15 @@ fwrite(source_data,path)
 frost <- frost_read_trap_year(path)
 stopifnot(nrow(frost)==2L, !anyDuplicated(frost,by=c('site','year')),
  frost[site=='1001',frost_min_tmin]==-24,
+ frost[site=='1001',frost_min]==-24,
  frost[site=='1001',frost_cold_sum20]==-45,
  frost[site=='1001',frost_n_days20]==2,
  frost[site=='1002',frost_cold_sum20]==0)
 joined <- frost_for_annual(annual,frost)
+stopifnot(identical(joined$frost_min,joined$frost_min_tmin))
+feature_cols <- names(frost_keep_features(joined))
+stopifnot('frost_min' %in% feature_cols, !('frost_min_tmin' %in% feature_cols))
+
 stopifnot(nrow(joined)==nrow(annual), !anyDuplicated(joined,by=c('site','year','species')),
  sum(!is.na(joined$frost_cold_sum20))==4L,
  all(is.na(joined[!frost_relevant,frost_min_tmin])),
@@ -50,7 +55,9 @@ late_read <- frost_read_trap_year(path)
 stopifnot(is.na(frost_for_annual(annual,late_read,'may01')[
     site=='1001'&species=='Bupalus piniarius',frost_cold_sum20]),
     frost_for_annual(annual,late_read,'jun01')[
-    site=='1001'&species=='Bupalus piniarius',frost_cold_sum20]==-45)
+    site=='1001'&species=='Bupalus piniarius',frost_cold_sum20]==-45,
+    frost_for_annual(annual,late_read,'jun01')[
+    site=='1001'&species=='Bupalus piniarius',frost_min]==-24)
 # Threshold-excess sum -5 rather than negative actual Tmin -45 must fail.
 bad <- copy(legacy);bad[1,cold_sum20:=-5]
 fwrite(bad,path)
