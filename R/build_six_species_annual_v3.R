@@ -113,9 +113,26 @@ audit_trap_intervals <- function(path, output_dir=NULL) {
        unknown_duration_rows=nrow(unknown_duration))
 }
 
-# Use raw catches for every observed site/trapping interval. Nothing outside trap operation is zero-filled.
-build_catches <- function(path) {
+# Exact original-source duplicates are defined by ALL original CSV columns,
+# before species/date normalization. This never rewrites Eiffel_1993_2024.csv.
+# Log the original CSV row numbers removed from constructed data.
+read_catches_deduplicated <- function(path) {
   r <- read_file(path, ';')
+  original_columns <- names(r)
+  r[, source_csv_row := seq_len(.N)+1L]
+  dup <- duplicated(r,by=original_columns)
+  duplicates <- r[dup,c('source_csv_row',original_columns),with=FALSE]
+  if(any(dup)) {
+    cat('Exact raw source duplicate rows excluded FROM DERIVED DATA: ',
+        sum(dup),' (original CSV unchanged)\n',sep='')
+  }
+  list(data=r[!dup],duplicates=duplicates,number_removed=sum(dup))
+}
+
+# All documented active sampling events are retained; overlaps are audit-only.
+build_catches <- function(path) {
+  input <- read_catches_deduplicated(path)
+  r <- input$data
   require_cols(r,c('site','year','KokMaara','PvmAlku','PvmLoppu','species'), 'Original catches')
   r[, site := trimws(as.character(site))]
   # Excluded site 152 may contain malformed legacy dates; it is not part of
@@ -134,9 +151,8 @@ build_catches <- function(path) {
     stopf('End before start; audit invalid interval before data construction')
   # Same-day source entries remain valid CATCH EVENTS, not known-duration
   # trapping periods; even if count=0 their count observation is preserved.
-  raw_duplicate_n <- nrow(r) - uniqueN(r)
-  if (raw_duplicate_n) warning(raw_duplicate_n,
-    ' EXACT duplicate source rows: retained, not silently dropped. Audit before fitting.')
+  raw_duplicate_n <- input$number_removed
+  stopifnot(!anyDuplicated(r,by=setdiff(names(r),'source_csv_row')))
   events <- unique(r[,.(site,start,end)])
   setorder(events, site,start,end)
   events[, last_end := shift(end),by=site]
@@ -210,7 +226,11 @@ build_catches <- function(path) {
            'UNKNOWN_DURATION_RETAIN_ANNUAL_COUNT',
            'DATED_EFFORT_COMPLETE')]
   # Catch-count provenance differs from effort completeness.
-  annual[, response_checked := raw_duplicate_n==0 && nrow(overlap)==0]
+  # Apparent overlaps are known source date-entry artifacts and NOT evidence
+  # of duplicate trap operations; retain all such catch events and counts.
+  # A reconciled count does not certify the recorded exposure dates.
+  annual[, counts_reconciled_after_exact_dedup := TRUE]
+  annual[, response_checked := NA]
   source_target_sum <- sum(r[species %chin% cfg$species,count])
   stopifnot(!anyDuplicated(annual,by=c('site','year','species')),
             all(grid$observed_during_trapping),
@@ -223,6 +243,7 @@ build_catches <- function(path) {
             sum(annual$annual_count) == source_target_sum)
   list(annual=annual, weekly=grid,
        overlapping_events=overlap, duplicate_source_rows=raw_duplicate_n,
+       removed_exact_duplicate_rows=input$duplicates,
        sites=unique(r$site))
 }
 
@@ -464,6 +485,8 @@ main <- function() {
   fwrite(catches$annual[n_unknown_effort_intervals>0],
     file.path(out,'ANNUAL_COUNTS_UNKNOWN_EFFORT_REVIEW.csv'))
   fwrite(catches$overlapping_events,file.path(out,'overlap_audit.csv'))
+  fwrite(catches$removed_exact_duplicate_rows,
+         file.path(out,'EXACT_DUPLICATES_EXCLUDED_FROM_DERIVED_DATA.csv'))
   # Historical frost-model: join ONLY site/year to soil-pupating moths.
   # Preserve annual counts and never fill missing modeled frost years.
   frost_raw <- frost_read_trap_year(frost_path)
@@ -583,12 +606,16 @@ main <- function() {
   writeLines(c('STAGE: WEATHER_ONLY_PHASE_1. Environmental and Greenup sources were NOT read.',
     'NOT SCIENTIFICALLY VALIDATED: NO Hmsc fits run.',
     'Ecological stage windows require species-specific scientific review.',
-    'Potential response/effort duplicate source rows and overlaps require sign-off.',
+    'Exact duplicate ORIGINAL source rows removed only from DERIVED data and exported to audit CSV.',
+    'Recorded overlapping interval dates are retained as-is; they DO NOT block or drop moth counts.',
+    'Overlapping dates may be record-entry artifacts: duration-based effort requires separate validation.',
+    'response_checked remains NA pending scientific validation; counts_reconciled_after_exact_dedup verifies arithmetic only.',
     'SAME-DAY PvmAlku=PvmLoppu catches including positive and zero counts are retained.',
     'Same-day events have UNKNOWN effort; no one-day assumption or count normalization.',
     'If any unknown-duration event is present in an annual site/species row, effort_days and annual_count_per_7d are NA.',
     'Known effort_days is QA only until complete effort can be established from source logs.',
-    'Zero fill applies only to actual recorded sampling events, never unsampled periods.',
+    'True observed zero is added only inside an active documented trapping event.',
+    'No trapping period never creates a species zero or a made-up trap event.',
     'The moth registry records positive catches only; an unlisted species in an ACTIVE trap event has a TRUE OBSERVED ZERO.',
     'zero_filled_from_sampled_event indicates provenance, NOT an imputed or uncertain ecological zero.',
     'Observed zero and positive counts have observed_during_trapping=TRUE; no-trap periods never create records.',
