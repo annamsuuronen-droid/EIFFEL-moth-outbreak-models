@@ -279,13 +279,24 @@ main <- function() {
   if (mode=='help') {cat('Usage: Rscript --vanilla build_six_species_annual.R --inspect OR --build\n');return(invisible())}
   catches_file <- file.path(cfg$root,'Eiffel_1993_2024.csv')
   weather_file <- file.path(cfg$root,'Daily_weather_from_NC_needed_trap_years_and_previous_year.txt')
-  # Phase 1 never reads any environmental, NDVI or Greenup data.
+  frost_module <- file.path('frost','FROST_MODEL_TRAP_YEAR_v1.R')
+  if(!file.exists(frost_module))
+    frost_module <- file.path('R','frost','FROST_MODEL_TRAP_YEAR_v1.R')
+  if(!file.exists(frost_module)) stopf('Frost module missing')
+  source(frost_module,local=TRUE)
+  requested_frost <- Sys.getenv('EIFFEL_FROST_FILE',unset='')
+  # Phase 1: observations + daily weather, plus an OPTIONAL distinct frost model.
+  # No vegetation, buffer environmental variables, NDVI or Greenup are read.
   if (mode=='inspect') {
     cat('STAGE: WEATHER_ONLY_PHASE_1 (no environment or Greenup)\n')
     for (f in c(catches_file,weather_file)) {
       cat('\n',f,' present=',file.exists(f),'\n',sep='')
       if(file.exists(f)) cat('columns: ',paste(names(read_file(f,';',header_only=TRUE)),collapse=', '),'\n')
     }
+    frost_path <- frost_source_path(cfg$root,requested_frost)
+    cat('Optional frostmodel source: ',if(nzchar(frost_path)) frost_path else 'NOT FOUND', '\n',sep='')
+    if(nzchar(frost_path))
+      cat('frost columns: ',paste(names(read_file(frost_path,',',header_only=TRUE)),collapse=', '),'\n')
     return(invisible())
   }
   for (f in c(catches_file,weather_file)) if(!file.exists(f)) stopf('Missing: %s',f)
@@ -298,18 +309,36 @@ main <- function() {
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
   cat('Output:',out,'\n')
   # Preserve original files and make provenance explicit.
+  frost_path <- frost_source_path(cfg$root,requested_frost)
   manifest_sources <- c(catches_file,weather_file)
+  if(nzchar(frost_path)) manifest_sources <- c(manifest_sources,frost_path)
   manifest <- data.table(source=manifest_sources,
                          bytes=as.numeric(file.info(manifest_sources)$size),
                          md5=unname(tools::md5sum(manifest_sources)))
-  fwrite(data.table(stage='WEATHER_ONLY_PHASE_1',
-       environment_inputs=0L,greenup_inputs=0L,hmsc_models_fitted=0L),
+  fwrite(data.table(stage='WEATHER_AND_OPTIONAL_FROST_PHASE_1',
+       environment_inputs=0L,greenup_inputs=0L,
+       frostmodel_inputs=as.integer(nzchar(frost_path)),hmsc_models_fitted=0L),
        file.path(out,'PHASE_1_SCOPE.csv'))
   fwrite(manifest,file.path(out,'source_manifest.csv'))
   catches <- build_catches(catches_file)
   fwrite(catches$annual,file.path(out,'annual_site_species_flight_year.csv'))
   fwrite(catches$weekly,file.path(out,'sampling_intervals_with_zeros.csv.gz'))
   fwrite(catches$overlapping_events,file.path(out,'overlap_audit.csv'))
+  # Historical frost-model: join ONLY site/year to soil-pupating moths.
+  # Preserve annual counts and never fill missing modeled frost years.
+  frost_raw <- frost_read_trap_year(frost_path)
+  frost_all <- frost_for_annual(catches$annual,frost_raw)
+  fwrite(frost_all,file.path(out,'frost_soil_pupae_site_year_EXPLANATORY_CANDIDATES.csv'))
+  frost_qa <- data.table(
+    input_path=if(nzchar(frost_path)) frost_path else NA_character_,
+    frost_sites=if(is.null(frost_raw)) 0L else uniqueN(frost_raw$site),
+    frost_source_rows=if(is.null(frost_raw)) 0L else nrow(frost_raw),
+    n_target_annual_rows=sum(frost_all$frost_relevant),
+    n_target_rows_with_frost_min=sum(frost_all$frost_relevant & !is.na(frost_all$frost_min_tmin)),
+    n_target_rows_with_frost_sum=sum(frost_all$frost_relevant & !is.na(frost_all$frost_cold_sum20)),
+    n_frost_forecast_provenance_rows=if(is.null(frost_raw)) 0L else
+      sum(!is.na(frost_raw$frost_available_date)&!is.na(frost_raw$frost_winter_end_date)))
+  fwrite(frost_qa,file.path(out,'FROST_INPUT_QA.csv'))
   w <- build_daily(weather_file)
   wx <- weather_features(w,catches$annual)
   # Species-specific metadata and weather-only phenology, plus optional Greenup.
@@ -353,6 +382,16 @@ main <- function() {
   june_weather <- merge(june_weather,june_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
   may_weather <- merge(may_weather,eco_features('may01'),by=c('site','year'),all.x=TRUE,sort=FALSE)
   june_weather <- merge(june_weather,eco_features('jun01'),by=c('site','year'),all.x=TRUE,sort=FALSE)
+  frost_may <- frost_for_annual(catches$annual,frost_raw,issue='may01')
+  frost_june <- frost_for_annual(catches$annual,frost_raw,issue='jun01')
+  may_weather <- merge(may_weather,frost_keep_features(frost_may),
+      by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  june_weather <- merge(june_weather,frost_keep_features(frost_june),
+      by=c('site','year','species'),all.x=TRUE,sort=FALSE)
+  fwrite(frost_may[,.(site,year,species,frost_asof_available,frost_source_status)],
+      file.path(out,'frost_asof_may01_AUDIT.csv'))
+  fwrite(frost_june[,.(site,year,species,frost_asof_available,frost_source_status)],
+      file.path(out,'frost_asof_jun01_AUDIT.csv')
   stopifnot(nrow(may_weather)==nrow(base), nrow(june_weather)==nrow(base))
   # Explicit ban on phase-2 NDVI/Greenup and all vegetation/soil attributes.
   blocked_names <- c('greenup','ndvi','corine','clc_','vmi_','havu_','lehti_',
@@ -374,6 +413,8 @@ main <- function() {
   explanatory_stages <- completed_stages_wide(wx$stage_long,'12-31')
   expl <- merge(base,explanatory_stages,by=c('site','year','species'),all.x=TRUE,sort=FALSE)
   expl <- merge(expl,eco_features('explanatory'),by=c('site','year'),all.x=TRUE,sort=FALSE)
+  expl <- merge(expl,frost_all[,c('site','year','species',frost_vars),with=FALSE],
+                by=c('site','year','species'),all.x=TRUE,sort=FALSE)
   stopifnot(nrow(expl)==nrow(base))
   fwrite(expl,file.path(out,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz'))
   # PHASE 2 (future): environmental sources are coverage-incompatible and
@@ -400,6 +441,13 @@ main <- function() {
     'Ecological stage windows require species-specific scientific review.',
     'Potential response/effort duplicate source rows and overlaps require sign-off.',
     'Precipitation, temperature, snow units require source audit.',
+    'Optional frostmodel is distinct from AIR Tmin; site + adult flight year join, no buffers.',
+    'Frost threshold Tmin <= -20 C; frost_cold_sum20 sums ACTUAL NEGATIVE Tmin, not threshold excess.',
+    'Frost_min refers to min_tmin of modeled frost source; check original model units and depth.',
+    'Nov(t-1)-Mar(t) frost-year semantics require independent confirmation from source model.',
+    'Legacy frost source without winter_end_date and available_date is explanatory ONLY, not May/June predictor.',
+    'Missing frost source/year remains NA for Bupalus and Panolis, not zero or filled.',
+    'Other four species receive no frost-model predictor.',
     'Lag2 weather is not guaranteed by 1.2 original extraction; missing = NA.',
     'Historical environmental source data were intentionally excluded from phase 1.',
     'Environment layers have unequal availability, buffer scales and year coverage.',
@@ -422,7 +470,7 @@ main <- function() {
     'No vegetation/NDVI temporal semantics are validated until dated scene audit.',
     'Use annual_site_species_flight_year.csv as response; never sum per-buffer rows.'),
     file.path(out,'REQUIRED_REVIEW.txt'))
-  cat('Finished WEATHER-ONLY phase 1. No environment or Greenup sources read. DO NOT fit Hmsc until gates pass.\n')
+  cat('Finished WEATHER + OPTIONAL FROST phase 1. No environment or Greenup read. DO NOT fit Hmsc until gates pass.\n')
   invisible(out)
 }
 if(sys.nframe()==0L) main()
