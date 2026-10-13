@@ -4,18 +4,20 @@
 
 In the 19,822 source rows of \`D:/EIFFEL/data/Eiffel_1993_2024.csv\`, the user's local audit identified **146 rows with PvmAlku=PvmLoppu** at analysed sites: 143 at site 712 in 2017–2019, two at site 112 in 1996, and one at site 318 in 2019. There were **no** negative-length or unparseable-date rows in that audit. The rows include **positive catches** (examples from site 712 in 2017 contain Epirrita autumnata 1–10 per recorded date), not just zero catches.
 
-**Never treat zero trap duration as zero catch.** A same-date field in the historical source is not evidence that actual trap exposure was zero; nor does it justify automatically setting exposure to one full day. Retain observed counts, including explicit real zero counts. Do not silently drop source lines or change \`KokMaara\`.
+**User-confirmed registry convention:** The Finnish moth observation system records detected moth species and positive counts, **not species-specific zero-catch rows**. A target species that is unlisted at a registered active trap event was nevertheless sampled and has a **genuine observed zero**. No zero is fabricated outside registered trapping activity. A zero added to a species-by-trap-event table is an observed absence, not a statistical imputation or missing value.
+
+**Zero trap duration is separate from zero catch.** Same-date start/end fields do not establish the true exposure duration. Preserve catches and true zeros while leaving uncertain effort as NA, with the source file unchanged.
 
 ## What the v3/v4 phase-1 R build now does
 
 - Reads and preserves the original source CSV, removes excluded site 152 **only for the analysis**, and keeps the original date values in a separate read-only interval audit.
 - Interprets \`PvmAlku=PvmLoppu\` as a **dated sampling/catch event of unknown exposure duration**. It can enter the annual raw count, with the relevant recorded date as the event date. The event has \`duration_unknown=TRUE\`, \`interval_days=NA\`, \`count_per_7d=NA\` and \`recorded_interval_days=0\` for transparency.
-- Generates **species zero counts only within documented sampled events** across the six study species; it never makes up new sampling dates or zeros for absent trap operations. This requires verification of the trap sampling protocol for site 712. Each generated zero has `zero_filled_from_sampled_event=TRUE`, whereas an explicit source zero has `explicit_zero_source_rows>=1`; annual QA tracks both categories separately.
+- Builds an observed count for each of the six species **only within existing trap events**. At each active event, a species absent from the source is a **true observed zero**. Flags `observed_zero` and `observed_during_trapping` express observation status, while `zero_filled_from_sampled_event` and `observation_origin` distinguish registry provenance without casting doubt on the zero. Outside recorded trapping periods, **no row is created**.
 - Aggregates \`annual_count\` by site × flight year × species without losing same-day positive or zero events. \`n_sampling_intervals\` counts dated visits, not confirmed equal exposure intervals.
 - Keeps a separate \`known_effort_days\` (sum of known-duration periods) and \`n_unknown_effort_intervals\`. If **any** of an annual species row's visits has unknown duration, its \`effort_days\` and \`annual_count_per_7d\` are **NA**, NOT zero, 1 or a misleading sum of only known days. No model exposure offset is inferred.
 - Continues to **block** negative intervals, unparseable dates and missing site keys; original date anomalies remain listed in the audit. The \`-Mode audit\` always writes reports and returns without running models.
 
-The zero/positive catch rules are distinct from **missing species observations** and **no trapping**: only confirmed trapping events can be expanded to species zeros. A source count of zero must not be dropped or interpreted as a missing record.
+The model must distinguish **no captured moth during active sampling (observed zero)** from **no trap operation (no observation, not an observed zero)**. This rule is established by the source registry protocol and is not contingent on explicit source zero rows.
 
 ## Audit and provenance files
 
@@ -39,8 +41,8 @@ Each command makes a new timestamped output directory below \`D:/EIFFEL_runtime/
 ## Before fitting models or reporting normalized abundance
 
 1. Confirm that site 712 (2017–2019) date fields represent actual visits, and whether a source exists to reconstruct exposure time. Verify sites 112 and 318 independently.
-2. Confirm all species were actually sampled/eligible on these visits before treating unlisted target species as **observed zeros**.
-3. Keep annual raw counts and explicit zeros, but do not use uncertain annual rows in effort-normalized responses, effort offsets or cross-site raw-count comparisons without a defensible exposure strategy.
+2. Apply the confirmed moth-registry convention: when a trap was operating, absent target species are **observed zeros**. Explicit zero entries are not expected in the source data.
+3. Keep annual raw counts and genuine observed zeros, but do not use annual rows with unknown exposure in effort-normalized responses, effort offsets or cross-site raw-count comparisons without a defensible exposure strategy.
 4. Validate agreement of sum of retained source catches with generated annual sums, without counting same-day repeated species observations twice.
 5. Model runs happen later on CSC, project **Insects of the north**, after data/QA sign-off. No Hmsc fits in GitHub Actions.
 
