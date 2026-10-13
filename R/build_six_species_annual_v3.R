@@ -80,14 +80,18 @@ audit_trap_intervals <- function(path, output_dir=NULL) {
     source_csv_row,site=site_key,year,species,KokMaara,
     PvmAlku_raw=as.character(PvmAlku),PvmLoppu_raw=as.character(PvmLoppu),
     parsed_start,parsed_end,interval_days,interval_status,excluded_site_152)]
-  blocking <- issues[excluded_site_152==FALSE]
+  # A recorded same-day catch is NOT an observed zero catch, and not proof
+  # of zero trapping effort. Preserve its counts; duration stays unknown.
+  target_issues <- issues[excluded_site_152==FALSE]
+  unknown_duration <- target_issues[interval_status=='ZERO_DURATION']
+  blocking <- target_issues[interval_status!='ZERO_DURATION']
   overview <- data.table(metric=c('raw_source_rows','rows_site_152_excluded',
                                   'interval_issues_all','interval_issues_site_152',
-                                  'interval_issues_blocking','zero_duration_blocking',
+                                  'interval_issues_blocking','zero_duration_retained',
                                   'negative_duration_blocking','unparseable_or_missing_blocking'),
     value=c(nrow(raw),sum(raw$excluded_site_152),
             nrow(issues),sum(issues$excluded_site_152),nrow(blocking),
-            sum(blocking$interval_status=='ZERO_DURATION'),
+            nrow(unknown_duration),
             sum(blocking$interval_status=='END_BEFORE_START'),
             sum(blocking$interval_status %chin% c('UNPARSEABLE_START','UNPARSEABLE_END','MISSING_SITE'))))
   if(!is.null(output_dir)) {
@@ -96,15 +100,17 @@ audit_trap_intervals <- function(path, output_dir=NULL) {
     fwrite(overview,file.path(output_dir,'TRAP_INTERVAL_AUDIT_SUMMARY.csv'))
   }
   cat('Trap interval audit: source rows=',nrow(raw),
-      '; blocking issues=',nrow(blocking),
+      '; ZERO_DURATION catch rows preserved=',nrow(unknown_duration),
+      '; invalid intervals that block build=',nrow(blocking),
       '; issues at excluded site 152=',sum(issues$excluded_site_152),'\n',sep='')
-  if(nrow(blocking)) {
-    cat('First blocking issues (SOURCE CSV row, site, dates, days, reason):\n')
-    print(blocking[seq_len(min(nrow(blocking),12L)),
+  if(nrow(target_issues)) {
+    cat('First issues (SOURCE CSV row, site, dates, days, reason):\n')
+    print(target_issues[seq_len(min(nrow(target_issues),12L)),
                    .(source_csv_row,site,PvmAlku_raw,PvmLoppu_raw,
                      interval_days,interval_status)])
   }
-  list(issues=issues,summary=overview,blocking_count=nrow(blocking))
+  list(issues=issues,summary=overview,blocking_count=nrow(blocking),
+       unknown_duration_rows=nrow(unknown_duration))
 }
 
 # Use raw catches for every observed site/trapping interval. Nothing outside trap operation is zero-filled.
@@ -124,8 +130,10 @@ build_catches <- function(path) {
     stopf('Invalid site/date in original catches')
   if (anyNA(r$count) || any(!is.finite(r$count)) || any(r$count < 0) ||
       any(r$count != floor(r$count))) stopf('Counts must be finite nonnegative integers')
-  if (any(r$end <= r$start))
-    stopf('Nonpositive trap interval: run -Mode audit and check TRAP_INTERVAL_AUDIT_ISSUES.csv')
+  if (any(r$end < r$start))
+    stopf('End before start; audit invalid interval before data construction')
+  # Same-day source entries remain valid CATCH EVENTS, not known-duration
+  # trapping periods; even if count=0 their count observation is preserved.
   raw_duplicate_n <- nrow(r) - uniqueN(r)
   if (raw_duplicate_n) warning(raw_duplicate_n,
     ' EXACT duplicate source rows: retained, not silently dropped. Audit before fitting.')
@@ -134,28 +142,50 @@ build_catches <- function(path) {
   events[, last_end := shift(end),by=site]
   overlap <- events[!is.na(last_end) & start < last_end]
   events[,last_end := NULL]
-  events[, interval_days := as.integer(end-start)] # [start,end), as original effort convention
-  events[, mid := start + floor(interval_days/2)]
+  events[, recorded_interval_days := as.integer(end-start)] # original date difference
+  events[, interval_days := as.integer(NA)]
+  events[recorded_interval_days > 0L,interval_days := recorded_interval_days]
+  events[, duration_unknown := is.na(interval_days)]
+  events[, interval_status := fifelse(duration_unknown,
+                                    'SAME_DAY_EFFORT_UNKNOWN','DATED_INTERVAL')]
+  # Same-day event's observation date is known, but its actual exposure is not.
+  events[, mid := start]
+  events[duration_unknown == FALSE,mid := start + floor(interval_days/2)]
   events[, sample_id := paste(site,start,end,sep='_')]
   event_counts <- r[species %chin% cfg$species,
                     .(count=sum(count)),by=.(site,start,end,species)]
   if (!nrow(event_counts)) stopf('No target species observations')
   grid <- CJ(site_event=seq_len(nrow(events)),species=cfg$species, sorted=FALSE)
-  grid <- cbind(grid,events[grid$site_event,.(site,start,end,mid,sample_id,interval_days)])
+  grid <- cbind(grid,events[grid$site_event,
+              .(site,start,end,mid,sample_id,interval_days,
+                recorded_interval_days,duration_unknown,interval_status)])
   grid[,site_event:=NULL]
   grid <- merge(grid,event_counts,by=c('site','start','end','species'),all.x=TRUE,sort=FALSE)
   grid[is.na(count),count:=0]
   grid[, calendar_year := as.integer(format(mid,'%Y'))]
   grid[, month := as.integer(format(mid,'%m'))]
   grid[, year := calendar_year - as.integer(species %chin% cfg$winter_flyers & month <= 3L)]
-  grid[, count_per_7d := 7*count / interval_days]
-  annual <- grid[, .(annual_count=sum(count),
-                     effort_days=sum(interval_days),
-                     n_sampling_intervals=.N,
-                     n_positive_intervals=sum(count>0),
-                     first_sample=min(start),last_sample=max(end)),
-                 by=.(site,year,species)]
-  annual[, annual_count_per_7d := 7*annual_count/effort_days]
+  grid[, count_per_7d := as.numeric(NA)]
+  grid[duration_unknown == FALSE,
+       count_per_7d := 7*count/interval_days]
+  annual <- grid[, .(
+       annual_count=sum(count),
+       # Known-day sum is useful QA, but NEVER the denominator for a
+       # site-year containing unknown-duration visits.
+       known_effort_days=sum(interval_days,na.rm=TRUE),
+       n_unknown_effort_intervals=sum(duration_unknown),
+       effort_days=if(any(duration_unknown)) NA_real_ else sum(interval_days),
+       n_sampling_intervals=.N,
+       n_positive_intervals=sum(count>0),
+       first_sample=min(start),last_sample=max(end)),
+       by=.(site,year,species)]
+  annual[, annual_count_per_7d := as.numeric(NA)]
+  annual[!is.na(effort_days) & effort_days>0,
+         annual_count_per_7d := 7*annual_count/effort_days]
+  annual[, effort_status := fifelse(n_unknown_effort_intervals>0,
+           'UNKNOWN_DURATION_RETAIN_ANNUAL_COUNT',
+           'DATED_EFFORT_COMPLETE')]
+  # Catch-count provenance differs from effort completeness.
   annual[, response_checked := raw_duplicate_n==0 && nrow(overlap)==0]
   stopifnot(!anyDuplicated(annual,by=c('site','year','species')),
             sum(annual$annual_count) == sum(grid$count))
@@ -391,6 +421,12 @@ main <- function() {
   catches <- build_catches(catches_file)
   fwrite(catches$annual,file.path(out,'annual_site_species_flight_year.csv'))
   fwrite(catches$weekly,file.path(out,'sampling_intervals_with_zeros.csv.gz'))
+  fwrite(catches$weekly[duration_unknown == TRUE,
+    .(site,year,species,start,end,interval_status,count,
+      interval_days,count_per_7d)],
+    file.path(out,'SAME_DAY_EVENTS_EFFORT_UNKNOWN.csv'))
+  fwrite(catches$annual[n_unknown_effort_intervals>0],
+    file.path(out,'ANNUAL_COUNTS_UNKNOWN_EFFORT_REVIEW.csv'))
   fwrite(catches$overlapping_events,file.path(out,'overlap_audit.csv'))
   # Historical frost-model: join ONLY site/year to soil-pupating moths.
   # Preserve annual counts and never fill missing modeled frost years.
@@ -497,11 +533,14 @@ main <- function() {
                        two_years_back_available=lag2_annual_available)]
   fwrite(coverage,file.path(out,'readiness_by_site_species_year.csv'))
   summary <- data.table(check=c('species_count','annual_rows','raw_exact_duplicate_rows',
-                               'overlapping_trap_intervals','environment_inputs_read',
+                               'overlapping_trap_intervals','source_rows_same_day_retained',
+                               'annual_rows_effort_unknown','environment_inputs_read',
                                'environment_rows_joined','may01_weather_available_rows',
                                'jun01_weather_available_rows'),
                         value=c(length(unique(catches$annual$species)),nrow(catches$annual),
                                 catches$duplicate_source_rows,nrow(catches$overlapping_events),
+                                trap_audit$unknown_duration_rows,
+                                sum(catches$annual$n_unknown_effort_intervals>0),
                                 0L,0L,sum(base$may01_available==1,na.rm=TRUE),
                                 sum(base$jun01_available==1,na.rm=TRUE)))
   fwrite(summary,file.path(out,'QA_SUMMARY.csv'))
@@ -509,6 +548,11 @@ main <- function() {
     'NOT SCIENTIFICALLY VALIDATED: NO Hmsc fits run.',
     'Ecological stage windows require species-specific scientific review.',
     'Potential response/effort duplicate source rows and overlaps require sign-off.',
+    'SAME-DAY PvmAlku=PvmLoppu catches including positive and zero counts are retained.',
+    'Same-day events have UNKNOWN effort; no one-day assumption or count normalization.',
+    'If any unknown-duration event is present in an annual site/species row, effort_days and annual_count_per_7d are NA.',
+    'Known effort_days is QA only until complete effort can be established from source logs.',
+    'Zero fill applies only to actual recorded sampling events, never unsampled periods.',
     'Precipitation, temperature, snow units require source audit.',
     'Optional frostmodel is distinct from AIR Tmin; site + adult flight year join, no buffers.',
     'Frost threshold Tmin <= -20 C; frost_cold_sum20 sums ACTUAL NEGATIVE Tmin, not threshold excess.',
