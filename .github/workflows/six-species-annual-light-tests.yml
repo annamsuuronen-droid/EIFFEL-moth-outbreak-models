@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'R/frost/FROST_MODEL_TRAP_YEAR_v1.R'
+      - 'tools/tests/test_frost_model_trap_year_v1.R'
       - 'R/ecology/EIFFEL_ECOLOGY_FEATURES_v4.R'
       - 'R/environment/NDVI_TEMPORAL_POLICY_v1.R'
       - 'tools/tests/test_ndvi_temporal_policy_v1.R'
@@ -17,6 +19,8 @@ on:
   pull_request:
     paths:
       - 'R/build_six_species_annual_v3.R'
+      - 'R/frost/FROST_MODEL_TRAP_YEAR_v1.R'
+      - 'tools/tests/test_frost_model_trap_year_v1.R'
       - 'R/ecology/EIFFEL_ECOLOGY_FEATURES_v4.R'
       - 'R/environment/NDVI_TEMPORAL_POLICY_v1.R'
       - 'tools/tests/test_ndvi_temporal_policy_v1.R'
@@ -51,6 +55,7 @@ jobs:
           Rscript --vanilla tools/tests/test_eiffel_ecology_v4.R
           Rscript --vanilla tools/tests/test_ndvi_temporal_policy_v1.R
           Rscript --vanilla tools/tests/test_weather_only_phase1_contract_v1.R
+          Rscript --vanilla tools/tests/test_frost_model_trap_year_v1.R
   windows-temp-preflight:
     runs-on: windows-latest
     timeout-minutes: 10
