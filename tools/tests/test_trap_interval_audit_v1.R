@@ -50,5 +50,17 @@ stopifnot(length(folders)==1L,
   file.exists(file.path(folders[1],'TRAP_INTERVAL_AUDIT_ISSUES.csv')),
   file.exists(file.path(folders[1],'TRAP_INTERVAL_AUDIT_SUMMARY.csv')),
   !file.exists(file.path(folders[1],'annual_site_species_flight_year.csv')))
+# Audit-only mode must still complete when real target sites contain bad dates.
+fwrite(r,file.path(d,'Eiffel_1993_2024.csv'),sep=';')
+lines_bad <- suppressWarnings(system2(rExe,
+  c('--vanilla','R/build_six_species_annual_v3.R','--audit'),
+  stdout=TRUE,stderr=TRUE))
+stopifnot(is.null(attr(lines_bad,'status')) || attr(lines_bad,'status')==0L,
+          any(grepl('blocking intervals REQUIRE MANUAL REVIEW',lines_bad,fixed=TRUE)))
+new_folders <- setdiff(list.dirs(out,recursive=FALSE,full.names=TRUE),folders)
+stopifnot(length(new_folders)==1L,
+  fread(file.path(new_folders[1],'TRAP_INTERVAL_AUDIT_SUMMARY.csv'))[
+     metric=='interval_issues_blocking',value]==2L,
+  !file.exists(file.path(new_folders[1],'annual_site_species_flight_year.csv')))
 unlink(td,recursive=TRUE)
 cat('PASS: anomalous trap intervals audited with CSV rows, site 152 exclusion, no date clamping or source changes\n')
