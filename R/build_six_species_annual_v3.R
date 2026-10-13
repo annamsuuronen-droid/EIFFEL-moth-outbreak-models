@@ -192,7 +192,7 @@ build_catches <- function(path) {
        # site-year containing unknown-duration visits.
        known_effort_days=sum(interval_days,na.rm=TRUE),
        n_unknown_effort_intervals=sum(duration_unknown),
-       effort_days=if(any(duration_unknown)) NA_real_ else sum(interval_days),
+       effort_days=if(any(duration_unknown)) NA_real_ else as.numeric(sum(interval_days)),
        n_sampling_intervals=.N,
        n_positive_intervals=sum(count>0),
        n_observed_zero_intervals=sum(observed_zero),
