@@ -49,7 +49,13 @@ stopifnot(nrow(interval_qa)==12L,
           all(is.na(interval_qa$interval_days)),
           all(is.na(interval_qa$count_per_7d)),
           sum(interval_qa$count)==6,
-          any(interval_qa$count==0))
+          any(interval_qa$count==0),
+          interval_qa[species=='Panolis flammea' &
+            start=='2023-07-12',explicit_zero_source_rows]==1L,
+          interval_qa[species=='Panolis flammea' &
+            start=='2023-07-12',zero_filled_from_sampled_event]==FALSE,
+          interval_qa[species=='Epirrita autumnata' &
+            start=='2023-07-12',zero_filled_from_sampled_event]==TRUE)
 stopifnot(nrow(response)==6L,sum(response$annual_count)==9,
   response[species=='Bupalus piniarius',annual_count]==7,
   response[species=='Panolis flammea',annual_count]==2,
@@ -57,6 +63,8 @@ stopifnot(nrow(response)==6L,sum(response$annual_count)==9,
   all(is.na(response$annual_count_per_7d)),
   all(response$known_effort_days==7),
   all(response$n_unknown_effort_intervals==2L),
+  response[species=='Panolis flammea',n_explicit_zero_source_rows]==1L,
+  response[species=='Epirrita autumnata',n_zero_filled_from_sampled_events]==3L,
   all(response$effort_status=='UNKNOWN_DURATION_RETAIN_ANNUAL_COUNT'),
   nrow(may)==nrow(response),nrow(expl)==nrow(response),
   nrow(qa)==1L,qa$frost_source_rows==1L,
