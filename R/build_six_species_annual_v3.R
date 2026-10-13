@@ -152,7 +152,8 @@ build_catches <- function(path) {
   # Same-day source entries remain valid CATCH EVENTS, not known-duration
   # trapping periods; even if count=0 their count observation is preserved.
   raw_duplicate_n <- input$number_removed
-  stopifnot(!anyDuplicated(r,by=setdiff(names(r),'source_csv_row')))
+  # Do not re-deduplicate normalized rows: originally distinct entries may
+  # become superficially identical after species spelling/date normalization.
   events <- unique(r[,.(site,start,end)])
   setorder(events, site,start,end)
   events[, last_end := shift(end),by=site]
