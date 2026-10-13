@@ -40,7 +40,10 @@ frost_read_trap_year <- function(path) {
     frost_stop('Duplicate frost site/year. Do not duplicate annual moth counts')
   for(k in needed[3:6]) set(x,j=k,value=suppressWarnings(as.numeric(x[[k]])))
   numeric_cols <- needed[3:6]
-  if(any(!is.finite(unlist(x[,..numeric_cols])),na.rm=TRUE))
+  # NA is allowed for winters with no qualifying days or missing source
+  # fields; Inf / -Inf / NaN are not.
+  z <- unlist(x[,..numeric_cols],use.names=FALSE)
+  if(any(is.infinite(z)|is.nan(z)))
     frost_stop('Non-finite frost values')
   if(any(!is.na(x$n_days20) & (x$n_days20<0|x$n_days20!=floor(x$n_days20))))
     frost_stop('Invalid frost n_days20')
