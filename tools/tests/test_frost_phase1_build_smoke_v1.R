@@ -4,9 +4,16 @@ suppressPackageStartupMessages(library(data.table))
 td <- tempfile('eiffel_frost_end_to_end_'); dir.create(td)
 data_dir <- file.path(td,'data');dir.create(data_dir)
 out_dir <- file.path(td,'out');dir.create(out_dir)
-raw <- data.table(site=c('1001','1001'),year=2023L,
-  KokMaara=c(2,1),PvmAlku='1.7.2023',PvmLoppu='8.7.2023',
-  species=c('Bupalus piniarius','Panolis flammea'))
+# Both ordinary 7-day events and positive/zero same-day catches.
+# There are three observed events, each zero-filled ONLY across six species.
+raw <- data.table(site='1001',year=2023L,
+  KokMaara=c(2,1,5,0,1),
+  PvmAlku=c('1.7.2023','1.7.2023',
+            '12.7.2023','12.7.2023','13.7.2023'),
+  PvmLoppu=c('8.7.2023','8.7.2023',
+             '12.7.2023','12.7.2023','13.7.2023'),
+  species=c('Bupalus piniarius','Panolis flammea',
+            'Bupalus piniarius','Panolis flammea','Panolis flammea'))
 fwrite(raw,file.path(data_dir,'Eiffel_1993_2024.csv'),sep=';')
 days <- seq(as.Date('2021-01-01'),as.Date('2023-12-31'),by='day')
 weather <- data.table(site='1001',DateN=as.character(days),
@@ -37,7 +44,20 @@ may <- as.data.table(read.csv(gzfile(file.path(o,'predictive_may01_FEATURES_ONLY
 expl <- as.data.table(read.csv(gzfile(file.path(o,'annual_weather_stages_EXPLANATORY_CANDIDATES.csv.gz')),check.names=FALSE))
 qa <- fread(file.path(o,'FROST_INPUT_QA.csv'))
 scope <- fread(file.path(o,'PHASE_1_SCOPE.csv'))
-stopifnot(nrow(response)==6L,sum(response$annual_count)==3,
+interval_qa <- fread(file.path(o,'SAME_DAY_EVENTS_EFFORT_UNKNOWN.csv'))
+stopifnot(nrow(interval_qa)==12L,
+          all(is.na(interval_qa$interval_days)),
+          all(is.na(interval_qa$count_per_7d)),
+          sum(interval_qa$count)==6,
+          any(interval_qa$count==0))
+stopifnot(nrow(response)==6L,sum(response$annual_count)==9,
+  response[species=='Bupalus piniarius',annual_count]==7,
+  response[species=='Panolis flammea',annual_count]==2,
+  all(is.na(response$effort_days)),
+  all(is.na(response$annual_count_per_7d)),
+  all(response$known_effort_days==7),
+  all(response$n_unknown_effort_intervals==2L),
+  all(response$effort_status=='UNKNOWN_DURATION_RETAIN_ANNUAL_COUNT'),
   nrow(may)==nrow(response),nrow(expl)==nrow(response),
   nrow(qa)==1L,qa$frost_source_rows==1L,
   scope$frostmodel_inputs==1L,scope$environment_inputs==0L,
