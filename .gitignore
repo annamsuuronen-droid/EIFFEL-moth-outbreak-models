@@ -45,3 +45,9 @@ local_p0_evidence_v1/
 
 # Read-only annual input/posterior extraction; review before versioned evidence publication.
 local_p0_count_effort_v1/
+
+# Local-only population history and provenance; never publish site/year outputs.
+population_history_v1/history_*/
+population_history_lag1to3_LOCAL.csv
+population_lag_coverage_LOCAL.csv
+POPULATION_HISTORY_MANIFEST.csv

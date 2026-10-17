@@ -13,7 +13,9 @@ These tasks belong **only** to the `D:\EIFFEL-control` personal EIFFEL clone, no
 | VS Code task | Does it create new annual output? | Purpose |
 | --- | --- | --- |
 | **EIFFEL: Paivita + muodosta + validoi (YKSI TEHTAVA)** | Yes | Sequential Git fast-forward, full six-species weather+optional frost data build, local QA report. |
-| **EIFFEL: Tarkista viimeisin aineisto ilman uudelleenajoa** | No | QA of the latest completed build (also VS Code Ctrl+Shift+B default). |
+| **EIFFEL: Tila (ei uusia laskentoja)** | No writes | **Ctrl+Shift+B default:** filenames and saved QA statuses only; no R or logs. |
+| **EIFFEL: Muodosta vain puuttuva populaatiohistoria** | Derived history only, if missing/changed | Explicit command; reuse verified history or derive from an existing annual build with saved passing QA. No upstream build or QA rerun. |
+| **EIFFEL: Tarkista viimeisin aineisto ilman uudelleenajoa** | No new annual build | Explicit QA: reads original catches and rewrites validation reports. It is not read-only status. |
 | **EIFFEL: Tarkista alkuperaiset pyyntijaksot** | Audit CSVs only | Existing trap intervals, unknown durations and invalid dates. |
 | **EIFFEL: Aiemmin valitut 13+5 saamuuttujaa (ei esikarsintaa)** | Small audit only | Match locked preselected E. autumnata/Operophtera weather variables to historical archive headers; no new selection. |
 
@@ -36,10 +38,27 @@ New builds always write a uniquely named `D:\EIFFEL_runtime\annual_pipeline_v3\b
 - `LOCAL_VALIDATION_REPORT.csv` and `LOCAL_VALIDATION_REPORT.md`: machine-readable PASS/REVIEW/FAIL results for counts, zeros, duplicated source rows, and effort uncertainty.
 - Existing frost-model coverage audit and temporal-availability reviews.
 
-A PowerShell transcript is stored in `D:\EIFFEL_runtime\logs\EIFFEL_*.log` so you can inspect the run directly in VS Code without copying and pasting. If no fully completed build is found, the QA-only task will tell you to run the build task first.
+Except in the read-only status mode, a uniquely named PowerShell transcript is stored in `D:\EIFFEL_runtime\logs\EIFFEL_*.log` so you can inspect the run directly in VS Code without copying and pasting. Missing annual output or saved QA blocks population derivation without starting any upstream task. A build must be requested separately.
 
 ## Scientific model boundary
 
 The first stage does **not** use NDVI or the other incomplete environmental layers, does not launch Hmsc fits, and does not repeat the preselection already completed for *Epirrita autumnata*, *Operophtera brumata* and *Operophtera fagata*. The historical 13 explanatory / 5 predictive variable lists remain locked; compare definitions and source availability before reuse. Old models are not automatically applicable to revised effort/response definitions. Actual resource-intensive fits, once approved, belong to the CSC **Insects of the north** project.
 
 Running VS Code tasks uses local PowerShell and R; it cannot be performed remotely by opening a ChatGPT conversation. Read the generated QA report to check scientific readiness.
+
+## Population history within the existing workflow
+
+From the existing feature-branch checkout, `tools/run_eiffel_local_workflow.ps1`
+without arguments only checks status. After review, use the explicit
+`-Mode PopulationHistory` command or its named VS Code task. Neither task depends
+on Git pull, annual build, source QA, variable selection or model fitting.
+
+Identical completed history is reused after input/code/QA and output hash checks.
+Otherwise only the population stage runs through the existing temp/free-space
+wrapper with `-Script R/population_dynamics/BUILD_POPULATION_HISTORY_v1.R`.
+New local directories are `annual_pipeline_v3/population_history_v1/history_*`;
+existing annual and history directories are not overwritten. Keep local outputs
+and transcripts private. See the [population-stage contract](../project_state/population_dynamics_v1/README.md).
+
+Arithmetic QA permits technical derivation only. Source effort, ecological timing,
+issue-date availability and scientific model reuse remain subject to local review.

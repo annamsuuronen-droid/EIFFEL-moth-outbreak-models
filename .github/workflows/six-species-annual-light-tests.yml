@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - 'R/population_dynamics/*.R'
+      - 'tools/tests/test_population_history_v1.R'
+      - 'tools/tests/Test-Population*.ps1'
+      - 'tools/tests/test_population_integration_static.py'
       - 'R/build_six_species_annual_v3.R'
       - 'R/validation/VERIFY_BUILT_ANNUAL_v1.R'
       - 'tools/tests/test_exact_duplicates_keep_overlaps_v1.R'
@@ -27,6 +31,10 @@ on:
       - '.github/workflows/six-species-annual-light-tests.yml'
   pull_request:
     paths:
+      - 'R/population_dynamics/*.R'
+      - 'tools/tests/test_population_history_v1.R'
+      - 'tools/tests/Test-Population*.ps1'
+      - 'tools/tests/test_population_integration_static.py'
       - 'R/build_six_species_annual_v3.R'
       - 'R/validation/VERIFY_BUILT_ANNUAL_v1.R'
       - 'tools/tests/test_exact_duplicates_keep_overlaps_v1.R'
@@ -79,6 +87,13 @@ jobs:
           Rscript --vanilla tools/tests/test_trap_interval_audit_v1.R
           Rscript --vanilla tools/tests/test_true_zero_active_trap_v1.R
           Rscript --vanilla tools/tests/test_prior_locked_weather_audit_v1.R
+          Rscript --vanilla tools/tests/test_population_history_v1.R
+          python tools/tests/test_population_integration_static.py
+      - name: Synthetic population entrypoint smoke test (mock platform wrapper, real R stage)
+        shell: pwsh
+        run: |
+          ./tools/tests/Test-PopulationLauncherSyntax.ps1
+          ./tools/tests/Test-PopulationWorkflow.ps1 -Rscript (Get-Command Rscript).Source
   windows-temp-preflight:
     runs-on: windows-latest
     timeout-minutes: 10
@@ -108,3 +123,13 @@ jobs:
           $rExe = (Get-Command Rscript.exe -ErrorAction Stop).Source
           & .\tools\run_eiffel_build.ps1 -Mode inspect -TempCheckOnly -Rscript $rExe -RuntimeRoot $scratch -DataRoot $scratch -MinFreeGB 0
           if ($LASTEXITCODE -ne 0) { throw "Windows temp preflight failed" }
+      - name: Population entrypoint with real temp wrapper (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          .\tools\tests\Test-PopulationLauncherSyntax.ps1
+          .\tools\tests\Test-PopulationWorkflow.ps1 -Rscript (Get-Command Rscript.exe).Source -UseRealWrapper
+      - name: Population entrypoint with real temp wrapper (PowerShell 7)
+        shell: pwsh
+        run: |
+          ./tools/tests/Test-PopulationLauncherSyntax.ps1
+          ./tools/tests/Test-PopulationWorkflow.ps1 -Rscript (Get-Command Rscript.exe).Source -UseRealWrapper

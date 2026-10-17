@@ -72,10 +72,6 @@
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -118,6 +114,56 @@
         "${workspaceFolder}\\tools\\run_eiffel_local_workflow.ps1",
         "-Mode",
         "LockedWeather"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "EIFFEL: Tila (ei uusia laskentoja)",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\tools\\run_eiffel_local_workflow.ps1",
+        "-Mode",
+        "PopulationStatus"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "EIFFEL: Muodosta vain puuttuva populaatiohistoria",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\tools\\run_eiffel_local_workflow.ps1",
+        "-Mode",
+        "PopulationHistory"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
