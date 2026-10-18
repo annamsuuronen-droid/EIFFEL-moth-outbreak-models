@@ -27,8 +27,12 @@ function Refuse([scriptblock]$action, [string]$message) {
 function Snapshot([string]$path) {
   if (-not (Test-Path -LiteralPath $path)) { return '' }
   return (@(Get-ChildItem -LiteralPath $path -Recurse -Force | Sort-Object FullName | ForEach-Object {
+    # Directory LastWriteTimeUtc may settle asynchronously on Windows/NTFS after
+    # fixture creation. Compare directory membership, but compare file timestamps
+    # and file bytes to detect any actual content or log writes.
     $hash = if ($_.PSIsContainer) { '' } else { (Get-FileHash -LiteralPath $_.FullName).Hash }
-    '{0}|{1}|{2}' -f $_.FullName,$_.LastWriteTimeUtc.Ticks,$hash
+    $timestamp = if ($_.PSIsContainer) { 'directory' } else { $_.LastWriteTimeUtc.Ticks }
+    '{0}|{1}|{2}' -f $_.FullName,$timestamp,$hash
   }) -join "`n")
 }
 function Histories { return @(Get-ChildItem -LiteralPath $derived -Directory -Filter 'history_*') }
@@ -98,18 +102,7 @@ write.csv(qa, file.path(args[2], 'LOCAL_VALIDATION_REPORT.csv'), row.names=FALSE
   $annualOriginal = [IO.File]::ReadAllText($annual)
   $before = Snapshot $runtime
   & $workflow @options *> $null
-  $afterStatus = Snapshot $runtime
-  if ($afterStatus -cne $before) {
-    # Synthetic fixture only: identify the changed path or timestamp on Windows CI.
-    $originalLines = @($before -split "`n")
-    $currentLines = @($afterStatus -split "`n")
-    Write-Host ("STATUS SNAPSHOT DIAGNOSTIC: before={0} entries; after={1} entries" -f $originalLines.Count,$currentLines.Count)
-    @(Compare-Object -ReferenceObject $originalLines -DifferenceObject $currentLines) |
-      Select-Object -First 20 | ForEach-Object {
-        Write-Host ("STATUS SNAPSHOT DIFF {0}: {1}" -f $_.SideIndicator,$_.InputObject)
-      }
-  }
-  Assert ($afterStatus -ceq $before) 'Status wrote files or logs'
+  Assert ((Snapshot $runtime) -ceq $before) 'Status wrote files or logs'
   # Status must not parse the annual data, even if it is deliberately unreadable as CSV.
   [IO.File]::WriteAllText($annual, 'NOT_AN_ANNUAL_CSV')
   $before = Snapshot $runtime
