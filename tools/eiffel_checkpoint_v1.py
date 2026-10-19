@@ -40,8 +40,15 @@ def digest(value) -> str:
     return hashlib.sha256(canonical(value)).hexdigest()
 
 
+WINDOWS_DEVICE_NAMES = {"CON", "PRN", "AUX", "NUL",
+                        *[f"COM{i}" for i in range(1, 10)],
+                        *[f"LPT{i}" for i in range(1, 10)]}
+
+
 def identifier(value: str) -> str:
-    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,79}", value):
+    if (not isinstance(value, str) or
+            not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,79}", value) or
+            value.upper() in WINDOWS_DEVICE_NAMES):
         raise CheckpointError("Invalid logical identifier")
     return value
 
@@ -49,10 +56,8 @@ def identifier(value: str) -> str:
 def artifact_name(value: str) -> str:
     if (not isinstance(value, str) or PureWindowsPath(value).drive or
             not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,119}", value) or
-            value.endswith(".") or value == "MANIFEST.json" or
-            value.split(".")[0].upper() in
-            {"CON", "PRN", "AUX", "NUL", *[f"COM{i}" for i in range(1, 10)],
-             *[f"LPT{i}" for i in range(1, 10)]}):
+            value.endswith(".") or value.casefold() == "manifest.json" or
+            value.split(".")[0].upper() in WINDOWS_DEVICE_NAMES):
         raise CheckpointError("Artifact must have an ordinary portable leaf filename")
     return value
 
@@ -97,8 +102,15 @@ def read_json(path: Path):
     def invalid(_):
         raise CheckpointError("Nonfinite JSON value")
 
+    def finite_float(value):
+        number = float(value)
+        if not math.isfinite(number):
+            raise CheckpointError("Nonfinite JSON value")
+        return number
+
     with path.open(encoding="utf-8") as stream:
-        return json.load(stream, object_pairs_hook=unique, parse_constant=invalid)
+        return json.load(stream, object_pairs_hook=unique, parse_constant=invalid,
+                         parse_float=finite_float)
 
 
 def _sync_directory(path: Path):
@@ -228,12 +240,12 @@ def validate_spec(spec, tasks):
             raise CheckpointError("Explicit variable/random-level lists required")
     if not isinstance(tasks, list) or not tasks:
         raise CheckpointError("An explicit task graph is required")
-    seen = set()
+    seen, folded_names = set(), set()
     for task in tasks:
         if set(task) != {"task_id", "kind", "requires", "contract"}:
             raise CheckpointError("Invalid task descriptor")
         name = identifier(task["task_id"])
-        if (name in seen or task["kind"] not in KINDS or
+        if (name.casefold() in folded_names or task["kind"] not in KINDS or
                 not isinstance(task["requires"], list) or
                 len(set(task["requires"])) != len(task["requires"]) or
                 not set(task["requires"]) <= seen or not isinstance(task["contract"], dict)):
@@ -242,6 +254,7 @@ def validate_spec(spec, tasks):
             panel = task["contract"].get("panel")
             validate_pair(panel, panel)
         seen.add(name)
+        folded_names.add(name.casefold())
     canonical([spec, tasks])  # Reject non-JSON/nonfinite values before writing.
 
 
@@ -444,6 +457,9 @@ class Writer:
                 manifest["scientific_approval"] is not False or not manifest["artifacts"]):
             raise CheckpointError("Checkpoint manifest incompatible/incomplete")
         artifacts = manifest["artifacts"]
+        names = [artifact_name(name) for name in artifacts]
+        if len({name.casefold() for name in names}) != len(names):
+            raise CheckpointError("Case-insensitive artifact filename collision")
         expected = {"MANIFEST.json", *artifacts}
         if {p.name for p in directory.iterdir()} != expected:
             raise CheckpointError("Checkpoint directory membership differs")
@@ -459,23 +475,42 @@ class Writer:
         return manifest
 
     def verified(self, task_id):
+        # A fresh memo belongs to this call only. Later calls must re-read bytes.
+        return self._verified(task_id, {})
+
+    def _verified(self, task_id, memo):
+        identifier(task_id)
+        if task_id in memo:
+            return memo[task_id]
         self.assert_owner()
         self.run.check_compatibility()
         task, state = self.task(task_id), self.state(task_id)
         if state["state"] != "complete":
+            memo[task_id] = None
             return None
         try:
             manifest = self._manifest(task, state["attempt_id"])
             if digest(manifest) != state["manifest_sha256"]:
                 raise CheckpointError("Manifest identity differs from committed state")
             for dependency in task["requires"]:
-                parent = self.verified(dependency)
+                parent = self._verified(dependency, memo)
                 if parent is None or digest(parent) != manifest["dependency_manifests"][dependency]:
                     raise CheckpointError("Checkpoint dependency unavailable")
+            memo[task_id] = manifest
             return manifest
         except (OSError, ValueError, KeyError, TypeError, CheckpointError) as error:
             self._state(task_id, {**state, "state": "needs_review", "reason": "integrity_or_dependency"})
             raise NeedsReview("Completed checkpoint failed verification") from error
+
+    def _dependency_manifests(self, task):
+        # Share the memo across sibling dependencies, never across operations.
+        memo, manifests = {}, {}
+        for dep in task["requires"]:
+            parent = self._verified(dep, memo)
+            if parent is None:
+                raise CheckpointError("Unfinished dependency")
+            manifests[dep] = digest(parent)
+        return manifests
 
     def begin(self, task_id, resources=Resources(), **observations):
         self.assert_owner()
@@ -489,9 +524,7 @@ class Writer:
             state = self.state(task_id)
             if state["state"] != "pending":
                 raise NeedsReview("Task is not pending; verify or explicitly review it")
-            for dep in task["requires"]:
-                if self.verified(dep) is None:
-                    raise CheckpointError("Unfinished dependency")
+            self._dependency_manifests(task)
             resources.check(self.root, **observations)
             aid = uuid.uuid4().hex
             stage = self.root / "tasks" / task_id / (aid + ".stage")
@@ -539,6 +572,9 @@ class Writer:
             raise CheckpointError("Attempt is not owned by this active writer")
         evidence = {} if evidence is None else evidence
         self._evidence(task, evidence)
+        names = [artifact_name(name) for name in artifacts]
+        if len({name.casefold() for name in names}) != len(names):
+            raise CheckpointError("Case-insensitive artifact filename collision")
         if not artifacts or {p.name for p in attempt.workdir.iterdir()} != set(artifacts):
             raise CheckpointError("Explicit exact artifact inventory required")
         records = {}
@@ -551,12 +587,7 @@ class Writer:
             with p.open("r+b") as stream:
                 os.fsync(stream.fileno())
             records[name] = {"kind": kind, "bytes": p.stat().st_size, "sha256": sha256_file(p)}
-        dependency_manifests = {}
-        for dep in task["requires"]:
-            parent = self.verified(dep)
-            if parent is None:
-                raise CheckpointError("Dependency changed during task")
-            dependency_manifests[dep] = digest(parent)
+        dependency_manifests = self._dependency_manifests(task)
         manifest = {"task_sha256": digest(task), "run_sha256": self.run.contract_sha256,
                     "attempt_id": attempt.attempt_id, "artifacts": records, "evidence": evidence,
                     "dependency_manifests": dependency_manifests,
@@ -587,16 +618,16 @@ class Writer:
 
     def adopt_after_review(self, task_id, attempt_id, manifest_sha256):
         self.assert_owner()
+        self.run.check_compatibility()  # Root tasks have no parent to perform this check.
         state = self.state(task_id)
         if state["state"] != "needs_review" or state["attempt_id"] != attempt_id:
             raise CheckpointError("Explicit matching review required")
         manifest = self._manifest(self.task(task_id), attempt_id)
         if digest(manifest) != manifest_sha256:
             raise CheckpointError("Reviewed manifest hash differs")
-        for dep in self.task(task_id)["requires"]:
-            parent = self.verified(dep)
-            if parent is None or digest(parent) != manifest["dependency_manifests"][dep]:
-                raise CheckpointError("Unfinished dependency")
+        if self._dependency_manifests(self.task(task_id)) != manifest["dependency_manifests"]:
+            raise CheckpointError("Checkpoint dependency unavailable")
+        self.run.check_compatibility()
         write_json(self.root / "tasks" / task_id / (uuid.uuid4().hex + ".review.json"),
                    {"reviewed_attempt": attempt_id, "manifest_sha256": manifest_sha256,
                     "action": "adopt_published_checkpoint", "at": time.time()})

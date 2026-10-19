@@ -44,6 +44,37 @@ Implemented:
   and offset hash, checked against the declared panel. Rejected confirmation is a
   complete reusable result. Every checkpoint has `scientific_approval=false`.
 
+### Technical review corrections, 2026-10-19
+
+The follow-up on commit `185898fc84ecd8ddb7b9cb8274b0dd925ff3eecb`
+addresses the four reviewed defects only:
+
+- JSON floating-point conversion rejects overflow such as `1e999`/`-1e999`,
+  including nested values, as well as the already forbidden NaN/Infinity tokens.
+  Ordinary finite JSON values keep their existing structure.
+- Explicit adoption checks current input/code/engine compatibility directly,
+  including dependency-free root tasks, and rechecks before recording adoption.
+  A refused adoption leaves the attempt and review-required state intact.
+- Dependency verification uses a fresh memo for each public verification or
+  dependency batch in admission, completion or adoption. Each reachable node's
+  manifest is checked at most once within that operation. No memo survives to
+  another operation: later corruption and changed sources must be checked again.
+  SHA checks, attempt identities and dependency-manifest bindings remain required.
+- Logical identifiers reject Windows device names on every OS. Task names must
+  also be unique ignoring case, while dependency references remain exact. The
+  original ASCII/length/path restrictions remain. Artifact inventories reject
+  case collisions and all case variants of the reserved `MANIFEST.json` name.
+
+**Format and version compatibility:** JSON schema remains `1`; no stored fields
+or publication layout change. The corrected engine's source SHA-256 necessarily
+differs from the original engine, so the existing strict guard **refuses runs
+created by the old engine**. There is no automatic migration or compatibility
+bypass. Keep old checkpoints unchanged with their recorded producer version;
+any cross-engine migration requires separate review. The tests include a
+synthetic old-engine fingerprint refusal without rewriting its run metadata.
+Restoring changed inputs/code permits review-based adoption only within the same
+compatible engine contract. It does not upgrade an old-engine checkpoint.
+
 Not implemented or certified:
 
 - Integration with the local historical controller or generated monacha S1a.

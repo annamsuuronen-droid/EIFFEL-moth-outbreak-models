@@ -71,6 +71,19 @@ def producer(counter, *, pause_run=None):
     return produce
 
 
+def reconvergent_graph(levels):
+    tasks = [{"task_id": "root", "kind": "fit", "requires": [], "contract": {}}]
+    previous = ["root"]
+    for level in range(levels):
+        names = [f"left_{level}", f"right_{level}"]
+        tasks.extend({"task_id": name, "kind": "fit", "requires": previous.copy(),
+                      "contract": {}} for name in names)
+        previous = names
+    tasks.append({"task_id": "sink", "kind": "evaluation", "requires": previous,
+                  "contract": {}})
+    return tasks
+
+
 class Checkpoints(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="eiffel_checkpoint_synthetic_")
@@ -378,6 +391,177 @@ sys.exit(5)
             (a.workdir / "x.json").write_bytes(b"")
             with self.assertRaises(cp.CheckpointError):
                 w.complete(a, {"x.json": "json"})
+
+    def test_json_nonfinite_forms_rejected_at_any_depth(self):
+        p = self.parent / "nonfinite.json"
+        for number in ("1e999", "-1e999", "NaN", "Infinity", "-Infinity"):
+            for text in (number, '{"x":' + number + '}',
+                         '{"outer":[{"values":[0,' + number + ']}]}'):
+                with self.subTest(text=text):
+                    p.write_bytes(text.encode("ascii"))
+                    with self.assertRaises(cp.CheckpointError):
+                        cp.read_json(p)
+
+    def test_json_finite_values_preserve_structure(self):
+        values = {"values": [0, -17, 1.25, -2.5e10, 1.2e-10, 1e300,
+                             True, None, {"nested": [3.5]}]}
+        p = self.parent / "finite.json"
+        p.write_bytes(cp.canonical(values))
+        self.assertEqual(cp.read_json(p), values)
+        with self.run.writer() as w:
+            def finite(attempt):
+                (attempt.workdir / "finite.json").write_bytes(cp.canonical(values))
+                return {"finite.json": "json"}, {}
+            self.assertEqual(w.run_task("fit_ref", finite), "COMPLETE")
+            self.assertIsNotNone(w.verified("fit_ref"))
+
+    def test_nonfinite_json_artifact_never_completes(self):
+        def nonfinite(attempt):
+            (attempt.workdir / "metric.json").write_bytes(b'{"nested":[{"metric":1e999}]}')
+            return {"metric.json": "json"}, {}
+        with self.run.writer() as w:
+            with self.assertRaises(cp.CheckpointError):
+                w.run_task("fit_ref", nonfinite)
+            state = w.state("fit_ref")
+            self.assertEqual(state["state"], "needs_review")
+            task_root = self.run.root / "tasks" / "fit_ref"
+            self.assertFalse((task_root / state["attempt_id"]).exists())
+            self.assertTrue((task_root / (state["attempt_id"] + ".stage") / "metric.json").exists())
+
+    def test_root_adoption_requires_compatible_sources_and_explicit_review(self):
+        for kind in ("inputs", "code"):
+            with self.subTest(source=kind):
+                r = cp.Run.create(self.parent / ("adopt_" + kind), self.spec, self.tasks, self.bindings)
+                with r.writer() as w:
+                    a = w.begin("fit_ref")  # Deliberately no dependency-based guard.
+                    (a.workdir / "x.json").write_bytes(b'{}')
+                    with patch.object(w, "_state", side_effect=OSError("synthetic state interruption")):
+                        with self.assertRaises(OSError):
+                            w.complete(a, {"x.json": "json"})
+                final = a.workdir.parent / a.attempt_id
+                manifest_bytes = (final / "MANIFEST.json").read_bytes()
+                manifest_hash = cp.digest(cp.read_json(final / "MANIFEST.json"))
+                source = next(iter(self.bindings[kind].values()))
+                original = source.read_bytes()
+                with r.writer() as w:
+                    source.write_bytes(b"changed synthetic source before adoption")
+                    try:
+                        with self.assertRaises(cp.CheckpointError):
+                            w.adopt_after_review("fit_ref", a.attempt_id, manifest_hash)
+                        self.assertEqual(w.state("fit_ref")["state"], "needs_review")
+                        self.assertEqual(list(final.parent.glob("*.review.json")), [])
+                    finally:
+                        source.write_bytes(original)
+                    with self.assertRaises(cp.NeedsReview):
+                        w.run_task("fit_ref", producer([]))
+                    with self.assertRaises(cp.CheckpointError):
+                        w.adopt_after_review("fit_ref", a.attempt_id, "0" * 64)
+                    w.adopt_after_review("fit_ref", a.attempt_id, manifest_hash)
+                    self.assertIsNotNone(w.verified("fit_ref"))
+                    self.assertEqual(w.state("fit_ref")["attempt_id"], a.attempt_id)
+                    self.assertEqual(len(list(final.parent.glob("*.review.json"))), 1)
+                    self.assertEqual((final / "MANIFEST.json").read_bytes(), manifest_bytes)
+
+    def test_diamond_verifies_each_node_once_per_operation(self):
+        tasks = reconvergent_graph(1)
+        r = cp.Run.create(self.parent / "diamond", self.spec, tasks, self.bindings)
+        with r.writer() as w:
+            for task in tasks:
+                w.run_task(task["task_id"], producer([]))
+            with patch.object(w, "_manifest", wraps=w._manifest) as checked:
+                w.verified("sink")
+                self.assertEqual(checked.call_count, len(tasks))
+                w.verified("sink")
+                self.assertEqual(checked.call_count, 2 * len(tasks))
+
+    def test_large_reconvergent_graph_verification_is_linear(self):
+        tasks = reconvergent_graph(8)  # 18 nodes, repeatedly shared ancestors.
+        r = cp.Run.create(self.parent / "larger_graph", self.spec, tasks, self.bindings)
+        with r.writer() as w:
+            for task in tasks:
+                w.run_task(task["task_id"], producer([]))
+            with patch.object(w, "_manifest", wraps=w._manifest) as checked:
+                self.assertIsNotNone(w.verified("sink"))
+                self.assertEqual(checked.call_count, len(tasks))
+                self.assertEqual({call.args[0]["task_id"] for call in checked.call_args_list},
+                                 {task["task_id"] for task in tasks})
+
+    def test_dependency_batch_shares_one_operation_memo(self):
+        tasks = reconvergent_graph(3)
+        r = cp.Run.create(self.parent / "batch_graph", self.spec, tasks, self.bindings)
+        with r.writer() as w:
+            for task in tasks[:-1]:
+                w.run_task(task["task_id"], producer([]))
+            with patch.object(w, "_manifest", wraps=w._manifest) as checked:
+                a = w.begin("sink")
+                self.assertEqual(checked.call_count, len(tasks) - 1)
+            (a.workdir / "result.json").write_bytes(b'{}')
+            with patch.object(w, "_manifest", wraps=w._manifest) as checked:
+                w.complete(a, {"result.json": "json"})
+                # One dependency operation and then one fresh final verification.
+                self.assertEqual(checked.call_count, 2 * len(tasks) - 1)
+
+    def test_changed_dependency_detected_in_next_operation(self):
+        tasks = reconvergent_graph(2)
+        r = cp.Run.create(self.parent / "corrupt_shared", self.spec, tasks, self.bindings)
+        with r.writer() as w:
+            for task in tasks:
+                w.run_task(task["task_id"], producer([]))
+            self.assertIsNotNone(w.verified("sink"))
+            state = w.state("root")
+            artifact = r.root / "tasks" / "root" / state["attempt_id"] / "result.json"
+            artifact.write_bytes(b'{"corrupt_shared_ancestor":true}')
+            with self.assertRaises(cp.NeedsReview):
+                w.verified("sink")
+            self.assertEqual(w.state("root")["state"], "needs_review")
+            self.assertEqual(w.state("sink")["state"], "needs_review")
+
+    def test_windows_identifiers_reject_reserved_and_nonportable_names(self):
+        reserved = ["CON", "PRN", "AUX", "NUL"] + [f"COM{i}" for i in range(1, 10)] + [
+            f"LPT{i}" for i in range(1, 10)]
+        invalid = reserved + [name.lower() for name in reserved] + [
+            "CoN", "a.", "a ", "../x", "a/b", "a\\b", "C:\\x", "\\\\host\\x",
+            "a:stream", ".", "..", "a" * 81]
+        for name in invalid:
+            with self.subTest(name=name), self.assertRaises(cp.CheckpointError):
+                cp.identifier(name)
+        for name in ("a", "S1a", "run-1", "x_y", "NUL_safe", "COM10", "COM1_extra", "a" * 80):
+            self.assertEqual(cp.identifier(name), name)
+
+    def test_task_names_refuse_case_collisions_before_creation(self):
+        for names in (["Case", "case"], ["A", "a"], ["CON"]):
+            tasks = [{"task_id": name, "kind": "fit", "requires": [], "contract": {}}
+                     for name in names]
+            root = self.parent / ("invalid_" + str(len(names)) + names[0])
+            with self.subTest(names=names), self.assertRaises(cp.CheckpointError):
+                cp.Run.create(root, self.spec, tasks, self.bindings)
+            self.assertFalse(root.exists())
+        tasks = [{"task_id": "Parent", "kind": "fit", "requires": [], "contract": {}},
+                 {"task_id": "child", "kind": "fit", "requires": ["parent"], "contract": {}}]
+        with self.assertRaises(cp.CheckpointError):
+            cp.validate_spec(self.spec, tasks)  # Do not silently rewrite dependency identities.
+
+    def test_artifact_names_refuse_windows_case_collisions(self):
+        for name in ("manifest.json", "Manifest.JSON", "con.txt", "Lpt9.bin", "x.", "x ", "x:y"):
+            with self.subTest(name=name), self.assertRaises(cp.CheckpointError):
+                cp.artifact_name(name)
+        def collision(attempt):
+            (attempt.workdir / "Result.json").write_bytes(b'{}')
+            return {"Result.json": "json", "result.json": "json"}, {}
+        with self.run.writer() as w:
+            with self.assertRaisesRegex(cp.CheckpointError, "Case-insensitive"):
+                w.run_task("fit_ref", collision)
+            self.assertEqual(w.state("fit_ref")["state"], "needs_review")
+
+    def test_old_engine_fingerprint_is_not_silently_migrated(self):
+        p = self.run.root / "RUN.json"
+        saved = cp.read_json(p)
+        saved["engine_sha256"] = "0" * 64  # Synthetic previous engine, same schema.
+        saved["contract_sha256"] = cp.digest([self.spec, self.tasks, saved["engine_sha256"]])
+        p.write_bytes(cp.canonical(saved))
+        with self.assertRaises(cp.CheckpointError):
+            cp.Run(self.run.root, self.spec, self.tasks, self.bindings)
+        self.assertEqual(cp.read_json(p), saved)  # Refusal never migrates or rewrites.
 
 
 if __name__ == "__main__":

@@ -10,7 +10,9 @@ No historical scientific producer or result is edited.
 python -B tools/tests/test_checkpoint_resume_v1.py
 ```
 
-Linux, Python standard library: **22 test methods PASS**, including subcases.
+Linux, Python standard library: **34 test methods PASS**, including subcases:
+all original **22** methods plus **12** targeted regression methods. Also ran
+`git diff --check`, which passed. No original test method was removed or weakened.
 These are synthetic software checks; no actual research result is generated.
 
 Covered behavior:
@@ -41,6 +43,41 @@ to test OS lock contention and abrupt process exit. No R/Hmsc process is invoked
 All writable test sources/checkpoints are inside a new tempfile tree. Cleanup is
 limited to each test's own synthetic tree, never a historical directory.
 
+## Four-defect correction regressions
+
+1. `test_json_nonfinite_forms_rejected_at_any_depth`: positive/negative exponent
+   overflow, NaN and positive/negative Infinity, both scalar and nested JSON.
+2. `test_json_finite_values_preserve_structure`: ordinary finite values, booleans,
+   null and nested structures survive parsing and complete-artifact verification.
+3. `test_nonfinite_json_artifact_never_completes`: an overflow in a staged JSON
+   artifact is refused, with partial output preserved and `needs_review` retained.
+4. `test_root_adoption_requires_compatible_sources_and_explicit_review`: publication
+   before state interruption, then changed input/code bytes. Correct manifest SHA
+   cannot complete adoption; restoring bytes still requires explicit review.
+   Original attempt bytes remain unchanged and the review event is preserved.
+5. `test_diamond_verifies_each_node_once_per_operation`: each of four nodes is
+   verified once per operation; a second operation performs all checks afresh.
+6. `test_large_reconvergent_graph_verification_is_linear`: 18 nodes across eight
+   shared-ancestor layers produce exactly 18 manifest validations for the sink.
+   This is a validation-call bound, not a walltime benchmark for real models.
+7. `test_dependency_batch_shares_one_operation_memo`: admission/completion share
+   checks across sibling dependencies; final publication verification is fresh.
+8. `test_changed_dependency_detected_in_next_operation`: corruption of a previously
+   checked shared ancestor is detected, invalidating dependent completion.
+9. `test_windows_identifiers_reject_reserved_and_nonportable_names`: all specified
+   Windows device names, case variants, path/ADS/trailing-dot/space/length limits;
+   valid existing identifier forms remain accepted on every OS.
+10. `test_task_names_refuse_case_collisions_before_creation`: collisions and device
+    names fail before any run tree is created; dependency spelling stays exact.
+11. `test_artifact_names_refuse_windows_case_collisions`: case variants of the
+    manifest name, reserved components and colliding artifact names are refused.
+12. `test_old_engine_fingerprint_is_not_silently_migrated`: same schema with a
+    synthetic previous-engine fingerprint is refused without modifying metadata.
+
+Storage schema and layout do not change. Strict source fingerprinting means old
+engine checkpoints are **not automatically compatible with this corrected engine**.
+No historical checkpoint is opened, altered or migrated by these tests.
+
 ## Not executed or certified
 
 - Native Windows, Windows PowerShell, Slurm and CSC/shared filesystem behavior:
@@ -57,16 +94,20 @@ limited to each test's own synthetic tree, never a historical directory.
 - No package installation, fitting, MCMC, prediction, CV, annual build, population
   build, protected-job inspection or CSC submission occurred.
 
-## Publication check
+## Publication and existing CI evidence
 
-The read-only `gh api user` query returned Forbidden. A Git push **dry run only**
-to the new work branch returned HTTP 403: permission denied to `annasuuronen`.
-The intended account is `annamsuuronen-droid`. `GH_TOKEN` is present, so an
-environment token can take precedence over a stored CLI login; its identity
-could not be established through the blocked API. No credential value was
-printed, and no connection was disconnected or changed.
+The initial HTTP 403 was subsequently resolved by the researcher. Original commit
+`185898fc84ecd8ddb7b9cb8274b0dd925ff3eecb` is published on the same work branch.
+PR #4 exists as Draft against `feature/six-species-annual-forecast-pipeline`.
+Do not create another PR or change its base.
 
-No actual push or Draft PR creation was attempted after this refusal. Native
-Windows CI therefore remains unexecuted. Publish this same reviewed work branch
-from an authorized connection, preferably opening a Draft PR against the existing
-six-species feature branch to isolate these five additions. No PR is merged.
+Original-commit CI run `39242023971` was verified from GitHub: Linux and Windows
+jobs, including the synthetic test step, succeeded. That evidence predates these
+corrections. **It does not certify the new 34-test correction on Windows.**
+This record is written before the correction commit is published; its eventual
+CI results must be checked against that new commit and reported separately.
+
+GitHub API requests currently return Forbidden and `api.github.com` is absent from
+the enforced cloud allowlist; ordinary public GitHub pages and HTTPS Git access
+work. No authentication setting is changed and no credential value is printed.
+No PR is merged. S1a integration and CSC use remain separately approval-gated.
