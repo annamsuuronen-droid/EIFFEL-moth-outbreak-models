@@ -1,0 +1,29 @@
+name: S1a checkpoint resume (synthetic no-fit only)
+on:
+  push:
+    paths:
+      - 'tools/eiffel_checkpoint_v1.py'
+      - 'tools/tests/test_checkpoint_resume_v1.py'
+      - '.github/workflows/checkpoint-resume-no-fit.yml'
+  pull_request:
+    paths:
+      - 'tools/eiffel_checkpoint_v1.py'
+      - 'tools/tests/test_checkpoint_resume_v1.py'
+      - '.github/workflows/checkpoint-resume-no-fit.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Standard-library tests; no R or Hmsc installation or invocation
+        run: python -B tools/tests/test_checkpoint_resume_v1.py
