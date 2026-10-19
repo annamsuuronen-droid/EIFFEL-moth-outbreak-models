@@ -5,6 +5,10 @@ Base: `695307f6695d3ec57f332d3c6ea057d3ca31c01f`, checkpoint branch
 `feature/s1a-adaptive-state-machine-v1`. This implements the approved design B
 boundary only. The checkpoint engine and historical R scripts are unchanged.
 
+Review correction base: `db8833169f69a790ca151c5b1966041893611497`.
+Correction branch: `feature/s1a-state-machine-review-fixes-v1`, targeting the
+original state-machine branch. PR #4 and PR #5 remain separate Drafts.
+
 ## Implemented boundary
 
 `tools/eiffel_s1a_selection_state_v1.py` uses Python 3.10+ standard library only.
@@ -17,7 +21,7 @@ The public sequence is:
 
 ```text
 selection = Selection.start(explicit_contract)
-batch = plan(selection.base, selection.state)
+batch = plan(selection)             # Replays and verifies the entire history.
 source = result(batch.data['source_id'], status, explicit_payload,
                 rng_before_reference, rng_after_reference)
 event = decision(selection.base, selection.state, source)
@@ -25,6 +29,7 @@ selection = selection.apply(event, source)
 snapshot = selection.export()       # In-memory record; nothing is written.
 restored = Selection.restore(snapshot)
 certificate = restored.completion() # Only after full validated termination.
+groups = restored.group_summary()   # Derived history/representation view.
 ```
 
 The complete synthetic contract and payload examples live in the test file.
@@ -45,6 +50,14 @@ checkpoint DAG. It binds the exact parent-state SHA, base SHA, slot, candidate
 order, current variables/groups, profile and RNG-before reference. Its source ID
 is derived from those bytes. Later plans do not mutate earlier ones. No workers,
 task scheduling or checkpoint-engine integration are implemented.
+
+The public `plan(selection)` accepts a `Selection` history and calls `verify()`
+before constructing a descriptor. Passing a raw state, a forged history or the old
+two-argument signature is refused. `_plan_for_state()` is a private replay/event
+helper, not a dispatch API. `decision(base, state, source)` only builds an event;
+it does not validate a history or authorize execution. `Selection.apply()` performs
+the history check before accepting that event. Planning does not replace future
+single-writer locking, fresh-HEAD checks or atomic publication.
 
 ## States, supplied decisions and transitions
 
@@ -77,6 +90,50 @@ An accepted group alone is removed from `remaining`. Screening/confirmation
 rejections are local to the current forward context, so the same group can be
 reconsidered after another group is accepted. The original state remains intact.
 Backward removes individual variables and never automatically removes group IDs.
+
+## Group history and current representation
+
+The serialized `selected_groups` field means **accepted_groups_history**: unique
+groups accepted in forward order. It does not assert continued representation.
+`Selection.group_summary()` verifies the complete history and returns a detached,
+derived record with:
+
+- `accepted_groups_history`: the unchanged `selected_groups` acceptance history;
+- `represented_groups`: contract groups with at least one declared variable in
+  the current selection, in contract order.
+
+Neither view adds fields to serialized states or certificates. If declared groups
+overlap, an unaccepted group may be represented through a shared variable; this
+does not accept that group or remove it from the remaining candidate universe.
+
+At each accepted forward confirmation, the resolved variable list must contain
+at least one variable of the candidate group. An empty list, or a list consisting
+only of unrelated previously selected variables, cannot accept that group. No
+exception rule is supplied. Rejected confirmations do not acquire this acceptance
+requirement. Existing scientific acceptance flags and ranks are unchanged.
+
+A later accepted forward result may remove every variable of an earlier group,
+for example as an adapter-supplied correlation-filtering result. Its historical
+acceptance remains recorded, while its current representation disappears. The
+previous states and exact screened/confirmed variable lists remain in the hashed
+chain. This is a traceable state change, not silent removal from the history.
+Every current variable must have an accepted-group origin; a nonempty acceptance
+history cannot have an entirely empty current variable set.
+
+`minimum_variables_per_group` is specifically a **backward-removal guard**, not a
+minimum for forward acceptance or final group sizes. A backward removal affecting
+an accepted, represented group must leave at least this many of its variables.
+With the required positive minimum, backward cannot eliminate its representation.
+Already unrepresented historical groups do not block other removals. Forward
+filtering may leave fewer variables than this removal minimum; the engine does
+not invent replacement variables or change scientific addition decisions. Whether
+the local scientific rule uses this same distinction remains unverified.
+
+Completion replays all confirmations and removals and checks the group-state
+invariant. Thus it refuses inconsistent histories, while allowing a legitimate
+historical group to be unrepresented later. Certificate `selected_groups` retains
+the history meaning; obtain current representation from `group_summary()` and
+the bound contract, not from this certificate field alone.
 
 `technical_error` and `incomplete` results record a distinct unresolved issue and
 require explicit review before retry. They are not scientific rejections. A full
@@ -133,6 +190,28 @@ A summary flag, two accepted groups, missing CAND, unprocessed backward or forge
 terminal state cannot substitute for those checks. The backward shape (individual
 variable removal, minimum guard, no additional confirmation) is an explicit
 synthetic contract inspired by repository references, not proof of the local S1a.
+
+## Schema and compatibility after review corrections
+
+Serialized contract schema `1`, state/plan/event/export/certificate fields and
+canonical serialization are unchanged. No migration is performed. The public
+Python planning signature intentionally changes from `plan(base, state)` to
+`plan(selection)`; callers must update, rather than use an unsafe compatibility
+overload. The original 27 test methods retain their assertions; only their seven
+planning call sites (including the shared helper) use the new signature.
+
+Golden export/certificate SHA-256 tests captured from `db883316` cover four old
+valid histories: initial, three accepted groups, loss of an earlier group's
+representation, and a forward size below the backward-removal minimum. They
+retain exact bytes/hashes and restore successfully. A separately captured old
+history that accepted an empty group is refused by the corrected replay. This is
+stricter validation, not an automatic rewrite of that old history. No claim is
+made that arbitrary legacy histories will pass, or that old invalid certificates
+become valid. Keep old snapshots intact for review.
+
+These compatibility tests hold declared contract metadata fixed. A future real
+coordinator must bind the actual corrected code SHA; that changes the contract
+identity and downstream hashes. Never silently rebind old results to new code.
 
 ## Unimplemented responsibilities and scientific gates
 

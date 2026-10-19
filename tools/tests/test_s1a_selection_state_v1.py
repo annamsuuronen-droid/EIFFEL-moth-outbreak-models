@@ -29,7 +29,7 @@ def specification():
 
 
 def prepared(h, payload, status="complete"):
-    p = sm.plan(h.base, h.state).data
+    p = sm.plan(h).data
     before = h.state.data["rng"]
     after = before
     if status != "complete":
@@ -120,7 +120,7 @@ class SelectionStates(unittest.TestCase):
         screened = emit(self.h, screening(self.h, ["B"]))
         self.assertIn("A", [r["item"] for r in screened.state.data["rejections"]])
         h = confirm(screened)
-        self.assertIn("A", sm.plan(h.base, h.state).data["items"])
+        self.assertIn("A", sm.plan(h).data["items"])
         h = choose(h, "A")
         self.assertEqual(h.state.data["selected_groups"], ["B", "A"])
         self.assertEqual(screened.state.data["selected_groups"], [])
@@ -166,7 +166,7 @@ class SelectionStates(unittest.TestCase):
         spec = specification(); spec["groups"] = []
         h = sm.Selection.start(spec)
         self.assertEqual(h.state.data["next"], "forward_end")
-        self.assertEqual(sm.plan(h.base, h.state).data["items"], [])
+        self.assertEqual(sm.plan(h).data["items"], [])
         h = emit(backward_start(forward_end(h)), {"reason": "fewer_than_two_variables"})
         self.assertEqual(h.completion().data["selected_groups"], [])
         self.assertEqual(h.completion().data["forward_reason"], "no_candidates")
@@ -341,7 +341,7 @@ class SelectionStates(unittest.TestCase):
         self.assertIs(certificate["scientific_approval"], False)
         self.assertIs(certificate["model_artifacts_verified"], False)
         with self.assertRaises(sm.SelectionError):
-            sm.plan(h.base, h.state)
+            sm.plan(h)
 
     def test_interrupted_and_uninterrupted_sequences_are_identical(self):
         continuous, resumed = self.h, self.h
@@ -358,13 +358,13 @@ class SelectionStates(unittest.TestCase):
 
     def test_contract_and_previous_states_remain_immutable(self):
         original = self.h.state.raw
-        original_plan = sm.plan(self.h.base, self.h.state)
+        original_plan = sm.plan(self.h)
         self.spec["groups"][0]["variables"].append("caller_mutation")
         detached = self.h.state.data; detached["remaining"].clear()
         self.assertEqual(self.h.state.raw, original)
         h = choose(self.h, "A")
         self.assertEqual(h.states[0].raw, original)
-        next_plan = sm.plan(h.base, h.state)
+        next_plan = sm.plan(h)
         self.assertEqual(original_plan.data["variables"], [])
         self.assertEqual(next_plan.data["variables"], ["a1", "a2"])
         self.assertEqual(original_plan.data["contract_sha256"], next_plan.data["contract_sha256"])
@@ -394,7 +394,7 @@ class SelectionStates(unittest.TestCase):
         self.assertTrue(h.completion().data["technical_complete"])
         with self.assertRaises(sm.SelectionError):
             self.h.apply(h.decisions[0], h.sources[0])
-        self.assertNotIn("SR2", sm.plan(self.h.base, self.h.state).data)
+        self.assertNotIn("SR2", sm.plan(self.h).data)
 
     def test_json_records_reject_nonfinite_and_noncanonical_content(self):
         for raw in (b'{"x":1e999}', b'{"x":NaN}', b'{"x":1,"x":2}', b'{ "x":1}'):
@@ -405,6 +405,171 @@ class SelectionStates(unittest.TestCase):
         spec = specification(); spec["inputs"]["fixture"] = "not-a-hash"
         with self.assertRaises(sm.SelectionError):
             sm.Selection.start(spec)
+
+    def test_review_empty_forward_confirmation_is_refused(self):
+        payload = screening(self.h, ["A"])
+        payload["rows"][0]["variables"] = []
+        h = emit(self.h, payload)
+        with self.assertRaisesRegex(sm.SelectionError, "must be represented"):
+            confirm(h)
+        self.assertEqual(h.state.data["selected_groups"], [])
+        with self.assertRaises(sm.SelectionError):
+            h.completion()
+
+    def test_review_existing_variables_cannot_stand_in_for_added_group(self):
+        h = choose(self.h, "A")
+        payload = screening(h, ["B"])
+        next(row for row in payload["rows"] if row["group"] == "B")["variables"] = ["a1"]
+        h = emit(h, payload)
+        with self.assertRaisesRegex(sm.SelectionError, "must be represented"):
+            confirm(h)
+        # A completed scientific rejection may still advance past this candidate.
+        rejected = confirm(h, False)
+        self.assertEqual(rejected.state.data["selected_groups"], ["A"])
+
+    def test_review_forward_may_remove_earlier_group_representation(self):
+        before = choose(self.h, "A")
+        payload = screening(before, ["B"])
+        next(row for row in payload["rows"] if row["group"] == "B")["variables"] = ["b1", "b2"]
+        after = confirm(emit(before, payload))
+        self.assertEqual(before.group_summary().data["represented_groups"], ["A"])
+        self.assertEqual(after.group_summary().data,
+                         {"accepted_groups_history": ["A", "B"], "represented_groups": ["B"]})
+        self.assertEqual(after.states[len(before.states) - 1], before.state)
+        self.assertEqual(after.sources[-1].data["payload"]["variables"], ["b1", "b2"])
+        done = finish(after)
+        self.assertEqual(done.completion().data["selected_groups"], ["A", "B"])
+        self.assertEqual(done.completion().data["variables"], ["b1", "b2"])
+        self.assertEqual(done.group_summary(), sm.Selection.restore(done.export()).group_summary())
+
+    def test_review_group_views_have_explicit_order_and_are_detached(self):
+        h = choose(choose(self.h, "B"), "A")
+        summary = h.group_summary()
+        self.assertEqual(summary.data,
+                         {"accepted_groups_history": ["B", "A"], "represented_groups": ["A", "B"]})
+        summary.data["represented_groups"].clear()
+        self.assertEqual(h.group_summary(), summary)
+        self.assertNotIn("represented_groups", h.state.data)
+        self.assertNotIn("accepted_groups_history", h.state.data)
+
+    def test_review_overlapping_membership_is_not_forward_acceptance(self):
+        spec = specification()
+        spec["groups"] = [{"id": "A", "variables": ["shared"]},
+                          {"id": "B", "variables": ["shared", "b"]}]
+        h = choose(sm.Selection.start(spec), "A")
+        self.assertEqual(h.group_summary().data,
+                         {"accepted_groups_history": ["A"], "represented_groups": ["A", "B"]})
+        self.assertIn("B", h.state.data["remaining"])
+
+    def test_review_minimum_is_a_backward_removal_guard(self):
+        spec = specification(); spec["groups"] = spec["groups"][:1]
+        spec["rules"]["minimum_variables_per_group"] = 2
+        h = sm.Selection.start(spec)
+        payload = screening(h, ["A"]); payload["rows"][0]["variables"] = ["a1"]
+        h = confirm(emit(h, payload))
+        h = emit(backward_start(forward_end(h)), {"reason": "fewer_than_two_variables"})
+        self.assertEqual(h.completion().data["variables"], ["a1"])
+        self.assertEqual(h.group_summary().data["represented_groups"], ["A"])
+
+    def test_review_backward_minimum_preserves_representation(self):
+        spec = specification()
+        spec["groups"] = [{"id": "A", "variables": ["a1", "a2", "a3"]}]
+        spec["rules"]["minimum_variables_per_group"] = 2
+        h = backward_start(forward_end(choose(sm.Selection.start(spec), "A")))
+        h = emit(h, removal_rows(h, accepted=["a1"]))
+        self.assertEqual(h.state.data["variables"], ["a2", "a3"])
+        with self.assertRaisesRegex(sm.SelectionError, "Group guard"):
+            emit(h, removal_rows(h, accepted=["a2"]))
+        h = emit(h, removal_rows(h, blocked=["a2", "a3"]))
+        h = emit(h, {"reason": "no_permitted_removal"})
+        self.assertEqual(h.group_summary().data,
+                         {"accepted_groups_history": ["A"], "represented_groups": ["A"]})
+        self.assertEqual(h.completion().data["variables"], ["a2", "a3"])
+
+    def test_review_backward_cannot_erase_last_representation(self):
+        spec = specification()
+        spec["groups"] = [{"id": "A", "variables": ["a"]},
+                          {"id": "B", "variables": ["b1", "b2"]}]
+        h = backward_start(forward_end(choose(choose(sm.Selection.start(spec), "A"), "B")))
+        with self.assertRaisesRegex(sm.SelectionError, "Group guard"):
+            emit(h, removal_rows(h, accepted=["a"]))
+        h = emit(h, removal_rows(h, accepted=["b1"], blocked=["a"]))
+        self.assertEqual(h.group_summary().data["represented_groups"], ["A", "B"])
+        self.assertEqual(h.state.data["variables"], ["a", "b2"])
+
+    def test_review_contradictory_terminal_state_has_no_certificate(self):
+        done = finish(choose(self.h, "A"))
+        for changes in ({"variables": []}, {"variables": ["b1"]}, {"selected_groups": ["B"]}):
+            bad = replace(done, states=done.states[:-1] + (rewritten(done.state, **changes),))
+            with self.subTest(changes=changes), self.assertRaises(sm.SelectionError):
+                bad.completion()
+            with self.assertRaises(sm.SelectionError):
+                bad.group_summary()
+
+    def test_review_public_plan_refuses_records_and_legacy_signature(self):
+        for value in (self.h.state, self.h.base, self.h.state.data, None):
+            with self.subTest(value=value), self.assertRaises(sm.SelectionError):
+                sm.plan(value)
+        with self.assertRaises(TypeError):
+            sm.plan(self.h.base, self.h.state)
+
+    def test_review_public_plan_checks_full_history_not_just_contract(self):
+        fake = rewritten(self.h.state, phase="backward", next="backward_round", variables=["invented"])
+        self.assertEqual(fake.data["contract_sha256"], self.h.base.sha256)
+        forged = replace(self.h, states=(fake,))
+        with self.assertRaises(sm.SelectionError):
+            sm.plan(forged)
+        h = choose(self.h, "A")
+        bad_state = rewritten(h.states[1], version=999)
+        forged = replace(h, states=(h.states[0], bad_state) + h.states[2:])
+        with self.assertRaises(sm.SelectionError):
+            sm.plan(forged)
+        with self.assertRaises(sm.SelectionError):
+            sm.plan(replace(h, sources=h.sources[:-1]))
+
+    def test_review_representation_change_survives_pause_restore(self):
+        def run(restore):
+            h = choose(self.h, "A")
+            if restore:
+                h = sm.Selection.restore(h.export())
+            payload = screening(h, ["B"])
+            next(row for row in payload["rows"] if row["group"] == "B")["variables"] = ["b1", "b2"]
+            h = emit(h, payload)
+            if restore:
+                h = sm.Selection.restore(h.export())
+            return finish(confirm(h))
+        continuous, resumed = run(False), run(True)
+        self.assertEqual(continuous.export(), resumed.export())
+        self.assertEqual(continuous.completion(), resumed.completion())
+        self.assertEqual(continuous.group_summary(), resumed.group_summary())
+
+    def test_review_legacy_valid_histories_keep_exact_hashes(self):
+        # Golden hashes captured from db883316 before editing; no old source is
+        # executed by this test. Same canonical bytes imply the same state hashes.
+        cases = [(self.h, "36de8a2ae3a7dcf790553ce992989fbc5240771da4cf0902f6f6b97a2b6fd5ab", None)]
+        h = finish(choose(choose(choose(self.h, "A"), "B"), "C"))
+        cases.append((h, "4443e732d2c572a6001c052edd8f880025616abecc2deaf72edfabf5dea7202c",
+                      "514510c7c473971e1eef4467faa4f54911123d3f3a58ff7e83ecc965f84878da"))
+        h = choose(self.h, "A"); payload = screening(h, ["B"])
+        next(row for row in payload["rows"] if row["group"] == "B")["variables"] = ["b1", "b2"]
+        h = finish(confirm(emit(h, payload)))
+        cases.append((h, "636f18bbef2031d2c3b42c372a8eb0f8ec63a3497a83c6e005782ea7763f90ae",
+                      "6e174c85aa28892d7193df76b34d97719a4670b54ae64b1a853d89b18fc36b99"))
+        spec = specification(); spec["groups"] = spec["groups"][:1]
+        spec["rules"]["minimum_variables_per_group"] = 2
+        h = sm.Selection.start(spec); payload = screening(h, ["A"])
+        payload["rows"][0]["variables"] = ["a1"]
+        h = confirm(emit(h, payload))
+        h = emit(backward_start(forward_end(h)), {"reason": "fewer_than_two_variables"})
+        cases.append((h, "45c588402f75e47de1a7e828f0ec6ecf99b887fd4a81234cd54b3f27188aada7",
+                      "d8445e566a07a426dd057aa0bff5708669e64a97ca730393ec36edb1f4b90de2"))
+        for h, export_hash, certificate_hash in cases:
+            with self.subTest(export_hash=export_hash):
+                self.assertEqual(h.export().sha256, export_hash)
+                restored = sm.Selection.restore(h.export())
+                self.assertEqual(restored.export(), h.export())
+                if certificate_hash:
+                    self.assertEqual(restored.completion().sha256, certificate_hash)
 
 
 if __name__ == "__main__":

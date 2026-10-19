@@ -49,3 +49,52 @@ The completion certificate covers only supplied synthetic records. It does not
 verify actual artifacts, source-file hashes, installed package versions, real RNG
 states, convergence or ecological validity. There is no filesystem coordinator,
 process lock, atomic publication or real checkpoint/S1a adapter in this layer.
+
+## Review corrections — task 11, 2026-10-19
+
+Correction base: `db8833169f69a790ca151c5b1966041893611497`.
+Branch: `feature/s1a-state-machine-review-fixes-v1`.
+Target: `feature/s1a-adaptive-state-machine-v1`, not main or the checkpoint branch.
+
+The state suite now has **40/40 passing methods on local Linux**: the original
+27 plus 13 review regressions. Original assertions are retained. Seven calls to
+the intentionally changed public planning API use `plan(selection)` instead of
+`plan(base, state)`; no historical scientific rule or expected result was relaxed.
+
+New coverage:
+
+- Empty-variable forward acceptance and acceptance without candidate-group
+  representation are refused; an explicit rejection remains possible.
+- A later forward result may remove an earlier group's entire representation,
+  with historical acceptance and source/state provenance preserved.
+- Detached derived group views distinguish acceptance order from contract-order
+  representation, including overlapping definitions without implicit acceptance.
+- The declared minimum is a backward-removal guard; forward need not create that
+  many variables. Backward cannot erase an accepted group's last representation.
+- Contradictory final variables/history refuse both completion and group views.
+- Raw records, the old planning signature, forged states with the correct base SHA,
+  corrupted intermediate states and missing source history refuse public planning.
+- Pause/export/restore through a representation change gives exactly the same
+  export, RNG references and certificate as uninterrupted execution.
+- Four pre-correction valid-history golden export hashes are unchanged. Complete
+  cases also retain their old certificate hashes and restore successfully.
+
+Additional compatibility check, outside the committed test file: five canonical
+synthetic history exports were captured under the original implementation before
+editing, in a task-specific temporary directory. The corrected implementation
+restored all four valid exports byte-for-byte. It refused the old empty-accepted-
+group history with `Accepted forward group must be represented at confirmation`.
+No old snapshot was changed. This does not imply universal legacy compatibility.
+
+The unchanged checkpoint suite passed **34/34** on local Linux. `git diff --check`
+passed. Only the module, its state tests, README and this report are changed. The
+existing Linux/Windows workflow already covers module/test changes and needs no
+edit. New-commit GitHub Actions results must be reported separately after push;
+the earlier commit's successful Windows run does not certify these corrections.
+
+Serialized schema and fields remain unchanged; valid unchanged-contract histories
+retain their hashes. Invalid old histories are not migrated or certified. The
+Python planning call signature changes intentionally. Actual code SHA bindings
+must change in a future real coordinator rather than reuse old source identities.
+There is still no real checkpoint coordinator, RNG restoration, R/Hmsc integration,
+scientific validation, local Windows evidence or CSC execution in this layer.

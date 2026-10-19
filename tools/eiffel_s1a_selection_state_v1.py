@@ -1,6 +1,9 @@
 """Pure synthetic S1a decision states. No IO, RNG draws, fitting or checkpoint imports.
 
 Acceptance and ranking are explicit adapter inputs, never inferred from metrics.
+selected_groups records forward acceptance history, not current representation.
+Use Selection.group_summary() for the derived representation and plan(selection)
+for history-verified planning. Serialized schema 1 remains unchanged.
 See project_state/s1a_selection_state_v1/README.md for the unimplemented boundary.
 """
 from __future__ import annotations
@@ -168,8 +171,18 @@ def initial(base):
                       "rng": c["rng"]["initial"]})
 
 
-def plan(base, state):
-    """Fixed decision-input batch, NOT an executable scientific task graph."""
+def plan(selection):
+    """Verify the complete history before returning a fixed input descriptor.
+
+    This does not provide coordinator locking or atomic task publication.
+    """
+    require(type(selection) is Selection, "Planning requires a Selection history")
+    state = selection.verify()
+    return _plan_for_state(selection.base, state)
+
+
+def _plan_for_state(base, state):
+    """Private replay/event helper; callers must use plan(selection)."""
     s = state.data
     require(s["contract_sha256"] == base.sha256, "Wrong base contract")
     require(s["next"] is not None, "Terminal state has no next task")
@@ -193,7 +206,8 @@ def result(source_id, status, payload, rng_before, rng_after):
 
 
 def decision(base, state, source):
-    p = plan(base, state).data
+    """Build an event only; apply() still verifies history before accepting it."""
+    p = _plan_for_state(base, state).data
     e = source.data
     d = {"contract_sha256": base.sha256, "parent_sha256": state.sha256,
          "slot": p["slot"], "source_id": e["source_id"],
@@ -232,7 +246,7 @@ def ranked_rows(rows, expected, item_key):
 def _advance(base, previous, d, source):
     e = check_evidence(base, d, source)
     s, c = previous.data, base.data
-    p = plan(base, previous).data
+    p = _plan_for_state(base, previous).data
     require(d["parent_sha256"] == previous.sha256 and d["slot"] == s["next"],
             "Wrong parent or decision order")
     require(e["source_id"] == p["source_id"], "Result belongs to a different batch")
@@ -258,11 +272,27 @@ def _advance(base, previous, d, source):
             require(e["rng_after"] == s["rng"], "Metadata-only transition must preserve RNG")
         _completed(c, s, action, payload, source.sha256)
         s["rng"] = e["rng_after"]
+    _check_group_state(c, s)
     s["version"] += 1
     s["parent_sha256"] = previous.sha256
     s["decision_ref"] = {"id": d["id"], "source_id": e["source_id"],
                          "source_sha256": source.sha256}
     return Record.of(s)
+
+
+def _represented_groups(c, s):
+    """Derived contract-order view, including overlapping group definitions."""
+    variables = set(s["variables"])
+    return [g["id"] for g in c["groups"] if variables.intersection(g["variables"])]
+
+
+def _check_group_state(c, s):
+    groups = {g["id"]: set(g["variables"]) for g in c["groups"]}
+    names(s["selected_groups"]); names(s["variables"])
+    require(set(s["selected_groups"]) <= set(groups), "Unknown accepted group")
+    allowed = {v for g in s["selected_groups"] for v in groups[g]}
+    require(set(s["variables"]) <= allowed, "Variables lack an accepted-group origin")
+    require(not s["selected_groups"] or bool(s["variables"]), "Accepted history has no represented group")
 
 
 def _completed(c, s, action, payload, source_hash):
@@ -291,6 +321,8 @@ def _completed(c, s, action, payload, source_hash):
         require(payload["variables"] == row["variables"], "Confirmation variables changed")
         s["queue"] = s["queue"][1:]
         if payload["accepted"]:
+            require(bool(set(payload["variables"]) & set(groups[payload["group"]])),
+                    "Accepted forward group must be represented at confirmation")
             s["selected_groups"].append(payload["group"])
             s["variables"] = payload["variables"]
             s["remaining"].remove(payload["group"])
@@ -327,6 +359,7 @@ def _completed(c, s, action, payload, source_hash):
     elif action == "backward_round":
         keys(payload, "rows")
         rows = ranked_rows(payload["rows"], s["variables"], "variable")
+        represented = set(_represented_groups(c, s))
         for row in rows:
             keys(row, "variable accepted guard_allows rank")
             require(type(row["accepted"]) is bool and type(row["guard_allows"]) is bool,
@@ -334,7 +367,7 @@ def _completed(c, s, action, payload, source_hash):
             reduced = [v for v in s["variables"] if v != row["variable"]]
             allowed = all(row["variable"] not in groups[g] or
                           len(set(reduced) & set(groups[g])) >= rules["minimum_variables_per_group"]
-                          for g in s["selected_groups"])
+                          for g in s["selected_groups"] if g in represented)
             require(row["guard_allows"] == allowed and (not row["accepted"] or allowed),
                     "Group guard contradicts declared removal")
         accepted = [row for row in rows if row["accepted"]]
@@ -381,6 +414,16 @@ class Selection:
     def state(self):
         return self.states[-1]
 
+    def group_summary(self):
+        """Verified derived view; no extra fields are stored in schema 1.
+
+        History is in acceptance order; representation is in contract order.
+        A later confirmed forward result may remove an earlier representation.
+        """
+        s = self.verify().data
+        return Record.of({"accepted_groups_history": s["selected_groups"],
+                          "represented_groups": _represented_groups(self.base.data, s)})
+
     def verify(self):
         require(contract(self.base.data) == self.base, "Invalid base contract")
         require(all(type(v) is tuple for v in (self.states, self.decisions, self.sources)) and
@@ -422,6 +465,7 @@ class Selection:
 
     def completion(self):
         s = self.verify().data
+        _check_group_state(self.base.data, s)
         require(s["phase"] == "complete" and s["next"] is None and s["issue"] is None and
                 s["forward_reason"] in self.base.data["rules"]["allowed_forward_stops"] and
                 s["backward_status"] in {"complete", "not_applicable"}, "Selection is unfinished")
