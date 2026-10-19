@@ -1,0 +1,31 @@
+name: S1a adaptive state machine (synthetic no-fit only)
+on:
+  push:
+    paths:
+      - 'tools/eiffel_s1a_selection_state_v1.py'
+      - 'tools/tests/test_s1a_selection_state_v1.py'
+      - '.github/workflows/s1a-selection-state-no-fit.yml'
+  pull_request:
+    paths:
+      - 'tools/eiffel_s1a_selection_state_v1.py'
+      - 'tools/tests/test_s1a_selection_state_v1.py'
+      - '.github/workflows/s1a-selection-state-no-fit.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pure synthetic selection-state tests
+        run: python -B tools/tests/test_s1a_selection_state_v1.py
+      - name: Existing checkpoint regression tests (no fitting)
+        run: python -B tools/tests/test_checkpoint_resume_v1.py
